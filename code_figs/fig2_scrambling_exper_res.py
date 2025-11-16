@@ -26,7 +26,7 @@ lower_ben_limit = 0.005
 abn = 1
 
 # Baym data:
-baym_datadir = os.path.join('..', 'alex_code')
+baym_datadir = os.path.join('..', 'data', 'alex_code')
 # load and filter
 Rtable = pd.read_csv(os.path.join(baym_datadir, "Rfitted_fil.txt"), sep="\t") \
               .dropna(subset=["fitted1"])
@@ -56,7 +56,7 @@ baym_dfe15K = k.loc[common_0_15].values    # generation 15K
 
 #  Asencao data:
 dirnum = 2
-asencao_datapath = "../asencao_dfe_arrays"
+asencao_datapath = "../data/asencao_dfe_arrays"
 experiment_dirs = sorted([
     d for d in os.listdir(asencao_datapath)
     if os.path.isdir(os.path.join(asencao_datapath, d))
@@ -186,13 +186,13 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     )
     ax_left.legend(frameon=False)
     ax_left.set_xlabel(r'Fitness effect $(\Delta)$')
-    ax_left.text(
-        0.05, 0.95,
-        fr'$p_{{KS}} = {evo_vs_prop_test.pvalue:.2g}$',
-        transform=ax_left.transAxes,
-        va="top",
-        fontsize=12
-    )
+    # ax_left.text(
+    #     0.05, 0.95,
+    #     fr'$p_{{KS}} = {evo_vs_prop_test.pvalue:.2g}$',
+    #     transform=ax_left.transAxes,
+    #     va="top",
+    #     fontsize=12
+    # )
 
     # Right Panel
     counts2, bin_edges2, _ = thresholded_histogram(data=bdfe_evo, threshold=2, final_bins=12)
@@ -248,13 +248,13 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
 
     ax_right.legend(frameon=False)
     ax_right.set_xlabel(r'Fitness effect $(\Delta)$')
-    ax_right.text(
-        0.05, 0.95,
-        fr'$p_{{KS}} = {anc_vs_prop_test.pvalue:.2g}$',
-        transform=ax_right.transAxes,
-        va="top",
-        fontsize=12
-    )
+    # ax_right.text(
+    #     0.05, 0.95,
+    #     fr'$p_{{KS}} = {anc_vs_prop_test.pvalue:.2g}$',
+    #     transform=ax_right.transAxes,
+    #     va="top",
+    #     fontsize=12
+    # )
 
     # Adjust spines and tick positions for a cleaner look
     for ax in [ax_left, ax_right]:

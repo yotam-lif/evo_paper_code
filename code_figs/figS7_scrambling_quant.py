@@ -110,7 +110,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # FGM
 res_directory_fgm = os.path.join(SCRIPT_DIR, "..", "data", "FGM")
-data_file_fgm = os.path.join(res_directory_fgm, "fgm_rps1000_n32_sig0.05_m2000.pkl")
+data_file_fgm = os.path.join(res_directory_fgm, "fgm_rps1000_n4_sig0.05_m2000.pkl")
 with open(data_file_fgm, "rb") as f:
     data_fgm = pickle.load(f)
 
@@ -298,12 +298,12 @@ for K in NK_K_VALUES:
 def format_axes(ax_list):
     for ax in ax_list:
         # Scientific formatting for x (always) and y (when needed)
-        ax.ticklabel_format(axis="x", style="scientific", scilimits=(0, 0))
-        ax.xaxis.get_offset_text().set_visible(True)
-
-        y_formatter = ScalarFormatter(useMathText=True)
-        y_formatter.set_powerlimits((-1, 1))
-        ax.yaxis.set_major_formatter(y_formatter)
+        # ax.ticklabel_format(axis="x", style="scientific", scilimits=(0, 0))
+        # ax.xaxis.get_offset_text().set_visible(True)
+        #
+        # y_formatter = ScalarFormatter(useMathText=True)
+        # y_formatter.set_powerlimits((-1, 1))
+        # ax.yaxis.set_major_formatter(y_formatter)
 
         # Consistent ticks & spines
         ax.tick_params(width=1.5, length=6, which="major")
@@ -327,7 +327,6 @@ ax = axes[0, 0]
 ax.errorbar(x, fgm_ben_mean, yerr=fgm_ben_std, fmt="-o", label="FGM", color=MODEL_COLORS[0])
 ax.errorbar(x, sk_ben_mean,  yerr=sk_ben_std,  fmt="-o", label="SK",  color=MODEL_COLORS[1])
 ax.errorbar(x, nk_ben_mean,  yerr=nk_ben_std,  fmt="-o", label="NK",  color=MODEL_COLORS[2])
-ax.set_title("Beneficial")
 ax.set_ylabel("CvM distance (normalized)")
 ax.legend(frameon=False)
 
@@ -336,7 +335,6 @@ ax = axes[0, 1]
 ax.errorbar(x, fgm_del_mean, yerr=fgm_del_std, fmt="-o", label="FGM", color=MODEL_COLORS[0])
 ax.errorbar(x, sk_del_mean,  yerr=sk_del_std,  fmt="-o", label="SK",  color=MODEL_COLORS[1])
 ax.errorbar(x, nk_del_mean,  yerr=nk_del_std,  fmt="-o", label="NK",  color=MODEL_COLORS[2])
-ax.set_title("Deleterious")
 ax.legend(frameon=False)
 
 # --- Row 2: parameter sweeps ---
@@ -353,7 +351,6 @@ for i, n in enumerate(FGM_N_VALUES):
         label=fr"$n={n}$",
         color=colors_n[i],
     )
-ax.set_title("FGM: beneficial vs DFE for different $n$")
 ax.set_xlabel("Evolutionary time (%)")
 ax.set_ylabel("CvM distance (normalized)")
 ax.legend(frameon=False)
@@ -370,7 +367,6 @@ for i, K in enumerate(NK_K_VALUES):
         label=fr"$K={K}$",
         color=colors_K[i],
     )
-ax.set_title("NK: beneficial vs DFE for different $K$")
 ax.set_xlabel("Evolutionary time (%)")
 ax.legend(frameon=False)
 
