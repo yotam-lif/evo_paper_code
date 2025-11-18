@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import airy
 import pickle
+import seaborn as sns
 
 # Global bin count for all BDFE histograms
 BDFE_BINS = 30
@@ -222,7 +223,7 @@ def plot_bdfe_exp_fgm(ax, reps, percents=percents_array_fgm):
 
 def plot_bdfe_exp_sk(ax, points_lst, num_flips):
     """Use SK cached data to recompute BDFE and compare to Exp/Airy via KS."""
-    colors = getattr(sk_mod, 'color', plt.rcParams['axes.prop_cycle'].by_key()['color'])
+    colors = sns.color_palette('CMRmap', 5)
     num = len(points_lst)
     for i, point in enumerate(points_lst):
         bdfe = []

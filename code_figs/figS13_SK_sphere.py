@@ -28,6 +28,9 @@ def small_random_rotation(V, rng, theta_std=0.05):
     """
     Apply a small random 2D rotation (in a random plane) to all rows of V.
     V: shape (M, d)
+
+    NOTE: This is no longer used in run_process, but kept here
+    in case you want to compare to the old dynamics.
     """
     M, d = V.shape
 
@@ -89,7 +92,7 @@ def run_process(
       - M random vectors on S^{d-1}
       - Track by sign of initial projection on n
       - repeat:
-        * small random rotation
+        * small random Gaussian step of the normal n on the sphere
         * choose one positive-projection vector and flip it
       - stop when no positive-projection vectors remain
     """
@@ -98,7 +101,7 @@ def run_process(
     if M is None:
         M = 10 * d  # e.g. 10 vectors per dimension
 
-    # Fixed normal n
+    # Initial normal n
     n = np.zeros(d)
     n[0] = 1.0
 
@@ -119,8 +122,9 @@ def run_process(
     while steps < max_steps:
         steps += 1
 
-        # 1. small random rotation
-        V = small_random_rotation(V, rng, theta_std=theta_std)
+        # 1. small random Gaussian step of the normal on the sphere
+        n = n + theta_std * rng.normal(size=d)
+        n /= np.linalg.norm(n)
 
         # 2. flip one vector with positive projection (if any)
         proj = V @ n
@@ -233,7 +237,7 @@ def analyze_once(
 
     ax.set_xlabel(r"projection on $n$")
     ax.set_ylabel("density")
-    ax.set_title(fr"$d={d}, M={M}, \theta={theta_std}$")
+    ax.set_title(fr"$d={d}, M={M}, \theta={theta_std * d}d$")
     ax.set_xlim(xmin, xmax)
     ax.legend(frameon=False)
     for spine in ax.spines.values():
@@ -273,4 +277,5 @@ def analyze_once(
 
 if __name__ == "__main__":
     # Example run
-    analyze_once(d=1000, M=1000, theta_std=0.1, seed=1)
+    N=1000
+    analyze_once(d=N, M=N, theta_std=1/N * 0.1, seed=1)
