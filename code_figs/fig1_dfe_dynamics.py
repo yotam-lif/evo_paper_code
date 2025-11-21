@@ -1,6 +1,5 @@
 import os
 import sys
-import math
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,7 +14,7 @@ from scipy.integrate import trapezoid
 # ----------------------------------------------------------------
 NUM_REPS_EVOL = 10  # Left panels (DFE Evolution)
 NUM_REPS_FINAL = 10  # Middle panels (Final DFE)
-NUM_REPS_BDFE = 10  # Right panels (BDFE analysis)
+NUM_REPS_BDFE = 50  # Right panels (BDFE analysis)
 
 # ----------------------------------------------------------------
 # Setup & Imports
@@ -27,7 +26,6 @@ if SCRIPT_DIR not in sys.path:
 
 # Mock imports for standalone functionality if cmn modules exist
 from cmn import cmn, cmn_sk, cmn_nk
-from cmn.cmn_fgm import Fisher
 from cmn.uncmn_dfe import gen_final_dfe
 
 # ----------------------------------------------------------------
@@ -42,7 +40,6 @@ mpl.rcParams.update({
 })
 
 # Global bin count for all BDFE histograms
-BDFE_BINS = 30
 CMR_COLORS = sns.color_palette('CMRmap', 5)
 
 # ----------------------------------------------------------------
@@ -167,7 +164,7 @@ def load_nk_data():
         else:
             data_arr.append([])
 
-    nk_single_k_data = data_arr[0]  # K=8
+    nk_single_k_data = data_arr[1]  # K=8
     return data_arr, nk_single_k_data, K_values
 
 
@@ -352,6 +349,8 @@ def nk_panel_evolution_dfe(ax, nk_data):
 
     for i, combined_dfe in enumerate(combined_dfes):
         combined_dfe = np.asarray(combined_dfe)
+        # Rescale dfe by N, as data was simulated for the intensive version of the model
+        combined_dfe *= 2000
         if len(combined_dfe) < 2: continue
         kde = gaussian_kde(combined_dfe, bw_method=0.5)
         x_grid = np.linspace(combined_dfe.min(), combined_dfe.max(), 500)
@@ -369,6 +368,8 @@ def nk_panel_final_dfe(ax, data_arr, K_values):
         for entry in data_arr[i][:NUM_REPS_FINAL]:
             combined.extend(entry['dfes'][-1])
         dfe_arr = np.asarray(combined, dtype=float)
+        # Rescale dfe by N, as data was simulated for the intensive version of the model
+        dfe_arr *= 2000
         if len(dfe_arr) < 2: continue
         kde = gaussian_kde(dfe_arr, bw_method=0.25)
         x_grid = np.linspace(dfe_arr.min(), 0.0, 400)
@@ -381,7 +382,7 @@ def nk_panel_final_dfe(ax, data_arr, K_values):
     ax.set_xlim(None, 0)
 
 
-def plot_bdfe_exp_nk(ax, nk_data, percents=[60, 65, 70, 75]):
+def plot_bdfe_exp_nk(ax, nk_data, percents=[75, 80, 85, 90]):
     colors = CMR_COLORS
     for i, p in enumerate(percents):
         bdfe = []
@@ -391,6 +392,8 @@ def plot_bdfe_exp_nk(ax, nk_data, percents=[60, 65, 70, 75]):
             t_idx = int(p * num_flips / 100.0)
             t_idx = max(0, min(t_idx, num_flips - 1))
             dfe_t = np.asarray(entry['dfes'][t_idx])
+            # Rescale dfe by N, as data was simulated for the intensive version of the model
+            dfe_t *= 2000
             bdfe_i, _ = cmn_nk.compute_bdfe(dfe_t)
             bdfe.extend(bdfe_i)
 
@@ -420,7 +423,8 @@ def main():
     nk_data_arr, nk_single_k_data, nk_k_values = load_nk_data()
 
     # 2. Prepare specific arguments for SK plots
-    percents_array_sk = [60, 65, 70, 75]
+    # percents_array_sk = [60, 65, 70, 75]
+    percents_array_sk = [75, 80, 85, 90]
     crossings_repeat_sk = 10
     num_flips_sk = len(sk_data[crossings_repeat_sk]['flip_seq'])
     percentages_C_sk = np.array(percents_array_sk)
