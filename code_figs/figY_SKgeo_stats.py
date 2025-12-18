@@ -16,7 +16,7 @@ mpl.rcParams.update({
 
 # ───────────────────────────────────── Data Loading ─────────────────────────────────────
 FILE_PATH = "../data/SK/N4000_rho100_beta100_repeats50.pkl"
-
+colors = sns.color_palette("CMRmap", 7)
 
 def load_sk_runs(n_repeats=10):
     """Load the first n_repeats SK simulation trajectories."""
@@ -201,39 +201,38 @@ def make_figure(avg_A, avg_C, D_single, xgrid, proj_init, proj_fin, ref_percents
     axA, axB, axC, axD = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
 
     # Panel A: averaged cos_memory
-    axA.plot(xgrid, avg_A, lw=2.5)
-    axA.set_xlabel('Percent of walk completed')
-    axA.set_ylabel(r'$\cos(\phi)$ with initial state')
+    axA.plot(xgrid, avg_A, lw=2.5, color=colors[0])
+    axA.set_xlabel('$t$')
+    axA.set_ylabel(r'$r(t) \cdot r_0 / N $')
     axA.set_ylim(-0.1, 1.1)
     axA.axhline(0, color='gray', linestyle='--', alpha=0.5, lw=1.2)
     axA.axhline(1, color='gray', linestyle=':', alpha=0.5, lw=1.0)
 
     # Panel B: spectral structure (single run; do not average)
     ranks = np.arange(1, len(proj_fin) + 1)
-    axB.scatter(ranks, proj_init, s=6, alpha=0.35, label='Initial')
-    axB.scatter(ranks, proj_fin,  s=6, alpha=0.35, label='Final')
+    axB.scatter(ranks, proj_init, s=6, alpha=0.35, label='Initial', color=colors[3])
+    axB.scatter(ranks, proj_fin,  s=6, alpha=0.35, label='Final', color=colors[0])
     axB.set_xscale('log')
     axB.set_yscale('log')
     axB.set_xlabel('Eigenmode rank (1 = largest eigenvalue)')
-    axB.set_ylabel(r'Projection weight $r_i^2$')
+    axB.set_ylabel(r'$ r_i / N $')
     axB.legend(frameon=False)
 
     # Panel C: averaged eta
-    axC.plot(xgrid, avg_C, lw=2.5)
-    axC.set_xlabel('Percent of walk completed')
+    axC.plot(xgrid, avg_C, lw=2.5, color=colors[0])
+    axC.set_xlabel('$t$')
     axC.set_ylabel(r'$\eta(t)=\|a_\perp(t)\|^2/\|r(t)\|^2$')
     axC.set_ylim(bottom=0)
 
     # Panel D: averaged correlations for multiple t_ref
-    colors = sns.color_palette("CMRmap", 10)
     for j, rp in enumerate(ref_percents):
-        axD.plot(xgrid, D_single[j], lw=2.0, color=colors[j], label=fr'$t_\mathrm{{ref}}={int(rp)}\%$')
+        axD.plot(xgrid, D_single[j], lw=2.0, color=colors[j], label=fr'$t_\mathrm{{ref}}={rp}\%$')
 
-    axD.set_xlabel('Percent of walk completed')
-    axD.set_ylabel(r'$\hat a_\perp(t)\cdot \hat a_\perp(t_{\mathrm{ref}})$')
+    axD.set_xlabel('$t$')
+    axD.set_ylabel(r'$\boldsymbol{ \hat{a}}_\perp(t) \cdot \boldsymbol{ \hat{a}_\perp}(t_{\mathrm{ref}}) $')
     axD.axhline(0, color='gray', linestyle='--', alpha=0.5, lw=1.2)
     axD.set_ylim(0, 1.05)
-    # axD.legend(frameon=False, ncol=2, handlelength=2.2, columnspacing=1.0)
+    axD.legend(frameon=False, handlelength=2.2, columnspacing=1.0, loc='upper right')
 
     # No panel titles (per request)
 
@@ -246,7 +245,7 @@ def make_figure(avg_A, avg_C, D_single, xgrid, proj_init, proj_fin, ref_percents
 
 def main():
     n_repeats = 10
-    ref_percents = list(range(0, 100, 10))  # 0,10,...,90
+    ref_percents = [0, 0.1, 1, 5, 20, 50, 70]
 
     runs = load_sk_runs(n_repeats=n_repeats)
 
@@ -276,8 +275,8 @@ def main():
             D_single = corr_interp
             # spectral projections for Panel B
             # r is in eigenbasis with eigvals ascending; rank 1 corresponds to largest eigval = index N-1
-            proj_init = (r0[::-1] ** 2)
-            proj_fin = (rf[::-1] ** 2)
+            proj_init = (r0[::-1] ** 2) / (r0 @ r0)
+            proj_fin = (rf[::-1] ** 2) / (rf @ rf)
 
     A_stack = np.vstack(A_series)
     C_stack = np.vstack(C_series)
