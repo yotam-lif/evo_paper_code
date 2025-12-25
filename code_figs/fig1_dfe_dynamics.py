@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
-from scipy.stats import gaussian_kde, kstest, expon
+from scipy.stats import gaussian_kde, kstest, expon, beta  # Added beta
 from scipy.special import airy
 from scipy.integrate import trapezoid
 
@@ -72,12 +72,13 @@ def airy_unit_mean_cdf(x):
 # ----------------------------------------------------------------
 # Plotting Helper for BDFE Distributions with KS Test
 # ----------------------------------------------------------------
-def plot_bdfe_distribution(ax, samples, color, t_percent, model_type='fgm'):
+def plot_bdfe_distribution(ax, samples, color, t_percent, model_type='fgm', param_val=None):
     """
     Plots 'untouched' histogram of beneficial fitness effects.
     Calculates KS p-values against specific theories:
-      - FGM: Exp(1) only.
-      - SK/NK: Exp(1) and Airy.
+      - FGM: Beta(1, n/2).
+      - SK: Airy only.
+      - NK: Beta(1, K+1).
     Displays p-values in the legend.
     """
     # 1. Filter for beneficial effects (Delta > 0)
@@ -91,17 +92,37 @@ def plot_bdfe_distribution(ax, samples, color, t_percent, model_type='fgm'):
     mu = data.mean()
     data_norm = data / mu
 
-    # 3. Perform KS Tests
-    # Test 1: Exponential (Exp(1) has mean 1)
-    stat_exp, p_exp = kstest(data_norm, expon.cdf)
+    # 3. Perform KS Tests based on Model Type
+    label_part = ""
 
-    if model_type in ['sk', 'nk']:
-        # Test 2: Airy (Unit Mean) for SK/NK
-        stat_airy, p_val_2 = kstest(data_norm, airy_unit_mean_cdf)
-        label_part = rf'p_{{Exp}}={p_exp:.2g},\, p_{{Airy}}={p_val_2:.2g}'
-    else:
-        # FGM: Only Exponential
-        label_part = rf'p_{{Exp}}={p_exp:.2g}'
+    if model_type == 'fgm':
+        # Fit: Beta(1, n/2)
+        # Note: Mean of Beta(1, b) is 1/(1+b).
+        # We perform KS test against Beta(1, b) scaled to have mean=1.
+        # Scale factor S = 1 + b.
+        n = param_val if param_val is not None else 4
+        b_param = n / 2.0
+        scale_factor = 1.0 + b_param
+
+        stat_beta, p_beta = kstest(data_norm, beta.cdf, args=(1, b_param, 0, scale_factor))
+        label_part = rf'p_{{\beta}}={p_beta:.2g}'
+
+    elif model_type == 'sk':
+        # Fit: Only Airy (Unit Mean)
+        stat_airy, p_airy = kstest(data_norm, airy_unit_mean_cdf)
+        label_part = rf'p_{{Airy}}={p_airy:.2g}'
+
+    elif model_type == 'nk':
+        # Fit: Beta(1, K+1)
+        # Note: Mean of Beta(1, b) is 1/(1+b).
+        # We perform KS test against Beta(1, b) scaled to have mean=1.
+        # Scale factor S = 1 + b.
+        K = param_val if param_val is not None else 8
+        b_param = K + 1.0
+        scale_factor = 1.0 + b_param
+
+        stat_beta, p_beta = kstest(data_norm, beta.cdf, args=(1, b_param, 0, scale_factor))
+        label_part = rf'p_{{\beta}}={p_beta:.2g}'
 
     # 4. Create Label
     label = rf'$t={t_percent:.0f}\%,\; {label_part}$'
@@ -125,6 +146,7 @@ def load_fgm_data():
                 fgm_data[_n] = pickle.load(f)
         else:
             fgm_data[_n] = []
+    # Note: Using n=4 for the reps
     reps = fgm_data.get(4, [])
     final = {}
     for n, rep_list in fgm_data.items():
@@ -210,6 +232,9 @@ def fgm_panel_B(ax, final):
 
 def plot_bdfe_exp_fgm(ax, reps, percents=[75, 80, 85, 90]):
     colors = CMR_COLORS
+    # In load_fgm_data, reps corresponds to n=4
+    n_param = 4
+
     for i, p in enumerate(percents):
         bdfe = []
         for rep in reps[:NUM_REPS_BDFE]:
@@ -221,7 +246,7 @@ def plot_bdfe_exp_fgm(ax, reps, percents=[75, 80, 85, 90]):
             bdfe.extend(dfe_t[dfe_t > 0])
 
         plot_bdfe_distribution(ax, bdfe, colors[i % len(colors)],
-                               t_percent=p, model_type='fgm')
+                               t_percent=p, model_type='fgm', param_val=n_param)
 
     ax.set_xlabel(r'Fitness effect $(\Delta)$')
     ax.set_ylabel(r'$P(\Delta>0, t)$')
@@ -322,7 +347,7 @@ def plot_bdfe_exp_sk(ax, data, points_lst, num_flips):
             bdfe.extend(bdfe_i)
 
         t_percent = (point / (num_flips - 1)) * 100.0
-        # SK compared to Exp and Airy
+        # SK compared to Airy only
         plot_bdfe_distribution(ax, bdfe, colors[i % len(colors)],
                                t_percent=t_percent, model_type='sk')
 
@@ -384,6 +409,9 @@ def nk_panel_final_dfe(ax, data_arr, K_values):
 
 def plot_bdfe_exp_nk(ax, nk_data, percents=[75, 80, 85, 90]):
     colors = CMR_COLORS
+    # In load_nk_data, nk_single_k_data corresponds to K=8
+    k_param = 8
+
     for i, p in enumerate(percents):
         bdfe = []
         for entry in nk_data[:NUM_REPS_BDFE]:
@@ -397,9 +425,9 @@ def plot_bdfe_exp_nk(ax, nk_data, percents=[75, 80, 85, 90]):
             bdfe_i, _ = cmn_nk.compute_bdfe(dfe_t)
             bdfe.extend(bdfe_i)
 
-        # NK compared to Exp and Airy
+        # NK compared to Beta(1, K+1)
         plot_bdfe_distribution(ax, bdfe, colors[i % len(colors)],
-                               t_percent=p, model_type='nk')
+                               t_percent=p, model_type='nk', param_val=k_param)
 
     ax.set_xlabel(r'Fitness effect $(\Delta)$')
     ax.set_ylabel(r'$P(\Delta>0, t)$')
