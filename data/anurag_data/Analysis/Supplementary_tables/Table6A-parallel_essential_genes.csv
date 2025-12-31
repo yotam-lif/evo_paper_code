@@ -1,0 +1,36 @@
+,gene,populations where gene becomes nonessential over evolution,protein product
+0,ftsP,"'Ara–3', 'Ara+3', 'Ara+5'",cell division protein required during stress conditions
+1,nhaA,"'Ara–1', 'Ara+3', 'Ara–6', 'Ara–5'",Na(+):H(+) antiporter NhaA
+2,cmtB,"'Ara+6', 'Ara–6'",mannitol-specific PTS enzyme IIA component CmtB
+3,dedD,"'Ara–5', 'Ara+3', 'Ara–4'",cell division protein DedD
+4,eda,"'Ara+3', 'Ara–4'",KHG/KDPG aldolase
+5,lpxM,"'Ara–5', 'Ara–4', 'Ara+5'",Lipid A biosynthesis myristoyltransferase
+6,alaA,"'Ara–3', 'Ara+1'",glutamate--pyruvate aminotransferase AlaA
+7,rlmH,"'Ara+2', 'Ara+6'",23S rRNA m(3)psi1915 methyltransferase
+8,minE,"'Ara–1', 'Ara+3', 'Ara+5'",Z-ring positioning protein MinE
+9,minD,"'Ara–5', 'Ara–4'",Z-ring positioning protein MinD
+10,skp,"'Ara+2', 'Ara+6', 'Ara–6'",periplasmic chaperone Skp
+11,holC,"'Ara+6', 'Ara–4', 'Ara–1', 'Ara+2', 'Ara+5'",DNA polymerase III subunit chi
+12,ldcA,"'Ara+6', 'Ara–5'","murein L,D-carboxypeptidase"
+13,arcB,"'Ara–6', 'Ara+1'",sensor histidine kinase ArcB
+14,gdhA,"'Ara–3', 'Ara–1', 'Ara–6'",glutamate dehydrogenase
+15,fecD,"'Ara–3', 'Ara–4'",ferric citrate ABC transporter membrane subunit FecD
+16,fecC,"'Ara–3', 'Ara+3'",ferric citrate ABC transporter membrane subunit FecC
+17,fecB,"'Ara–3', 'Ara+3'",ferric citrate ABC transporter periplasmic binding protein
+18,yhcB,"'Ara+6', 'Ara–1', 'Ara+3', 'Ara+2', 'Ara–3', 'Ara+5'",DUF1043 domain-containing inner membrane protein YhcB
+19,yqjA,"'Ara–3', 'Ara+3', 'Ara–4'",DedA family protein YqjA
+20,kdsB,"'Ara+6', 'Ara–4', 'Ara–1', 'Ara+3', 'Ara+2', 'Ara–3', 'Ara+1'",3-deoxy-manno-octulosonate cytidylyltransferase
+21,rfaG,"'Ara–5', 'Ara–4', 'Ara+3', 'Ara+1', 'Ara+5'",lipopolysaccharide glucosyltransferase I
+22,pgpA,"'Ara–1', 'Ara–4'",phosphatidylglycerophosphatase A
+23,hfq,"'Ara+6', 'Ara–5', 'Ara–4', 'Ara+3', 'Ara+2'",RNA-binding protein Hfq
+24,ilvY,"'Ara–4', 'Ara–1', 'Ara+3', 'Ara–3', 'Ara+5'",DNA-binding transcriptional dual regulator IlvY
+25,cyoD,"'Ara+6', 'Ara+3'",cytochrome bo3 ubiquinol oxidase subunit 4
+26,cyoC,"'Ara–1', 'Ara+3', 'Ara+5'",cytochrome bo3 ubiquinol oxidase subunit 3
+27,fis,"'Ara+2', 'Ara+6', 'Ara+1', 'Ara+5'",DNA-binding transcriptional dual regulator Fis
+28,ecpR,"'Ara+6', 'Ara+3'",DNA-binding transcriptional dual regulator MatA
+29,envZ,"'Ara+6', 'Ara–5', 'Ara–6', 'Ara+2', 'Ara+1', 'Ara+5'",sensor histidine kinase EnvZ
+30,ompR,"'Ara–5', 'Ara–4', 'Ara–6', 'Ara+2', 'Ara+1', 'Ara+5'",DNA-binding transcriptional dual regulator OmpR
+31,mcrC,"'Ara+6', 'Ara+5'",5-methylcytosine-specific restriction enzyme subunit McrC
+32,yciE,"'Ara+6', 'Ara–4'",DUF892 domain-containing protein YciE
+33,prc,"'Ara–3', 'Ara+6'",tail-specific protease
+34,ftsN,"'Ara+6', 'Ara–5', 'Ara–1', 'Ara–6', 'Ara–3', 'Ara+5'",cell division protein FtsN

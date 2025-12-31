@@ -1,0 +1,18 @@
+
+
+
+
+
+Analysis Type:	PANTHER Overrepresentation Test (Released 20220202)
+Annotation Version and Release Date:	GO Ontology database DOI:  10.5281/zenodo.6399963 Released 2022-03-22
+Analyzed List:	upload_1 (Escherichia coli)
+Reference List:	Escherichia coli (all genes in database)
+Test Type:	FISHER
+Correction:	FDR
+GO biological process complete	Escherichia coli - REFLIST (4392)	upload_1 (18)	upload_1 (expected)	upload_1 (over/under)	upload_1 (fold Enrichment)	upload_1 (raw P-value)	upload_1 (FDR)
+phosphate ion transport (GO:0006817)	13	3	.05	+	56.31	3.09E-05	4.87E-02
+recombinational repair (GO:0000725)	13	3	.05	+	56.31	3.09E-05	3.25E-02
+regulation of phosphorus metabolic process (GO:0051174)	17	3	.07	+	43.06	6.24E-05	3.92E-02
+regulation of phosphate metabolic process (GO:0019220)	17	3	.07	+	43.06	6.24E-05	3.27E-02
+response to radiation (GO:0009314)	97	6	.40	+	15.09	2.07E-06	6.53E-03
+response to abiotic stimulus (GO:0009628)	254	7	1.04	+	6.72	4.25E-05	3.34E-02

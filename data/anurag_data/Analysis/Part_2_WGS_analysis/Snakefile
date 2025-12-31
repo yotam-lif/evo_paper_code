@@ -1,0 +1,86 @@
+# ╭───────────────────────────────────────────────────────────────────────────╮
+#   FILTERING AND RUNNING BRESEQ ON LTEE WHOLE GENOME SEQUENCING DATA
+#   FOR STRUCTURAL VARIATION ANALYSIS
+#
+#   author: Anurag Limdi
+#   email: alimdi@fas.harvard.edu
+# ╰───────────────────────────────────────────────────────────────────────────╯
+
+#samples = ['AL_WGS_REL606_S145', 'AL_WGS_REL11330_S146', 'AL_WGS_REL11333_S147',
+#	  'AL_WGS_REL11364_S148', 'AL_WGS_REL11336_S149', 'AL_WGS_REL11339_S150',
+#	  'AL_WGS_REL11389_S151', 'AL_WGS_REL607_S152', 'AL_WGS_REL11392_S153',
+#	  'AL_WGS_REL11342_S154', 'AL_WGS_REL11345_S155', 'AL_WGS_REL11348_S156',
+#	  'AL_WGS_REL11367_S157', 'AL_WGS_REL11370_S158']
+
+samples = ['AL_WGS_REL606_S145']
+
+# RULE ALL
+# -----------------------------------------------------------------------------
+
+rule all:
+    input:
+        expand('Breseq_output/{sample}_output.gd', sample=samples),
+        expand('Sequencing_depth/{sample}.txt', sample=samples),
+
+# RULE: Concatenate fastqs from different sequencing runs and delete originals
+# -----------------------------------------------------------------------------
+
+rule cat:
+    input:
+        r1_lane3 = 'data/{sample}_L003_R1_001.fastq.gz',
+        r1_lane4 = 'data/{sample}_L004_R1_001.fastq.gz',
+        r2_lane3 = 'data/{sample}_L003_R2_001.fastq.gz',
+        r2_lane4 = 'data/{sample}_L004_R2_001.fastq.gz'
+    output:
+        r1_merge = 'data_merged/{sample}_R1.fastq.gz',
+        r2_merge = 'data_merged/{sample}_R2.fastq.gz'
+    shell:
+        'cat {input.r1_lane3} {input.r1_lane4} > {output.r1_merge} '\
+        '&& cat {input.r2_lane3} {input.r2_lane4} > {output.r2_merge} '\
+        '&& rm {input.r1_lane3} {input.r1_lane4} '\
+        '&& rm {input.r2_lane3} {input.r2_lane4} '
+    
+# RULE: Running breseq on all the samples
+# -----------------------------------------------------------------------------
+       
+rule breseq:
+    input:
+        r1_file = 'data_merged/{sample}_R1.fastq.gz',
+        r2_file = 'data_merged/{sample}_R2.fastq.gz'
+    output:
+        gd_file = 'breseq/{sample}/data/output.gd',
+        bam_file = 'breseq/{sample}/data/reference.bam'
+    params:
+        reference = 'reference/REL606_PROKKA_03162021.gff',
+        output_dir = 'breseq/{sample}'
+    conda:
+        'envs/breseq.yml'
+    shell:
+        'breseq -r '\
+        '{params.reference} '\
+        '{input.r1_file} {input.r2_file} '\
+        ' -o {params.output_dir} '
+
+# RULE: Moving the output.gd files to a common folder and renaming them
+# -----------------------------------------------------------------------------
+
+rule move_gd:
+    input:
+        gd_og = 'breseq/{sample}/data/output.gd'
+    output:
+        gd_renamed = 'Breseq_output/{sample}_output.gd'
+    shell:
+        'cp {input.gd_og} {output.gd_renamed}'
+
+# RULE: Running samtools depth on the reference bam file for each sample
+# -----------------------------------------------------------------------------
+
+rule depth:
+    input:
+        bam = 'breseq/{sample}/data/reference.bam'
+    output:
+        depth = 'Sequencing_depth/{sample}.txt'
+    conda:
+        'envs/breseq.yml'
+    shell:
+        'samtools depth {input.bam} > {output.depth}'

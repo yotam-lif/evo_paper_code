@@ -1,0 +1,196 @@
+Homolog 1	Locus Tag 1	Uniprot ID 1	Product 1	Homolog 2	Locus Tag 2	Uniprot ID 2	Product 2	
+gsiA	FJKNNBLA_00823	P75796	glutathione ABC transporter ATP binding subunit GsiA	yejF	FJKNNBLA_02152	P33916	putative oligopeptide ABC transporter ATP binding subunit YejF
+potI	FJKNNBLA_00886	P0AFL1	putrescine ABC transporter membrane subunit PotI	potC	FJKNNBLA_01149	P0AFK6	spermidine preferential ABC transporter membrane subunit PotC
+puuP	FJKNNBLA_01306	P76037	putrescine:H(+)symporter PuuP	plaP	FJKNNBLA_01961	P0AA47	putrescine:H(+)symporter PlaP
+purR	FJKNNBLA_01660	P0ACP7	DNA-binding transcriptional repressor PurR	rbsR	FJKNNBLA_03725	P0ACQ0	DNA-binding transcriptional dual regulator RbsR
+metQ	FJKNNBLA_00195	P28635	L-methionine/D-methionine ABC transporter membrane anchored binding protein	nlpA	FJKNNBLA_03630	P04846	lipoprotein-28
+potH	FJKNNBLA_00885	P31135	putrescine ABC transporter membrane subunit PotH	potB	FJKNNBLA_01150	P0AFK4	spermidine preferential ABC transporter membrane subunit PotB
+puuE	FJKNNBLA_01312	P50457	4-aminobutyrate aminotransferase PuuE	gabT	FJKNNBLA_02577	P22256	4-aminobutyrate aminotransferase GabT
+tqsA	FJKNNBLA_01600	P0AFS5	autoinducer 2 exporter	yhhT	FJKNNBLA_03410	P0AGM0	putative transporter YhhT
+yaaX	FJKNNBLA_00004	P75616	DUF2502 domain-containing protein YaaX	ypeC	FJKNNBLA_02346	P64542	DUF2502 domain-containing protein YpeC
+ybiJ	FJKNNBLA_00796	P0AAX3	DUF1471 domain-containing protein YbiJ	yhcN	FJKNNBLA_03173	P64614	DUF1471 domain-containing stress-induced protein YhcN
+artJ	FJKNNBLA_00889	P30860	L-arginine ABC transporter periplasmic binding protein	artI	FJKNNBLA_00892	P30859	putative ABC transporter periplasmic binding protein ArtI
+aspC	FJKNNBLA_00957	P00509	aspartate aminotransferase	tyrB	FJKNNBLA_04047	P04693	tyrosine aminotransferase
+pinQ	FJKNNBLA_01377	P77170	Qin prophage;putative recombinase PinQ	pinR	FJKNNBLA_01537	P0ADI0	Rac prophage;putative site-specific recombinase
+mdtB	FJKNNBLA_02026	P76398	multidrug efflux pump RND permease subunit MdtB	mdtC	FJKNNBLA_02027	P76399	multidrug efflux pump RND permease subunit MdtC
+hns	FJKNNBLA_01242	P0ACF8	DNA-binding transcriptional dual regulator H-NS	stpA	FJKNNBLA_02584	P0ACG1	DNA-binding transcriptional repressor StpA with RNA chaperone activity
+yphA	FJKNNBLA_02489	P0AD47	putative inner membrane protein	yqjF	FJKNNBLA_03044	P42619	DoxX family protein
+yiaW	FJKNNBLA_03534	P0ADK4	DUF3302 domain-containing protein YiaW	yibI	FJKNNBLA_03546	P32108	DUF3302 domain-containing protein YibI
+dgoA	FJKNNBLA_03663	Q6BF16	2-dehydro-3-deoxy-6-phosphogalactonate aldolase	dgoA	FJKNNBLA_03816	Q6BF16	2-dehydro-3-deoxy-6-phosphogalactonate aldolase
+ompR	FJKNNBLA_03342	P0AA16	DNA-binding transcriptional dual regulator OmpR	cpxR	FJKNNBLA_03902	P0AE88	DNA-binding transcriptional dual regulator CpxR
+torR	FJKNNBLA_01023	P38684	DNA-binding transcriptional dual regulator TorR	arcA	FJKNNBLA_04415	P0A9Q1	DNA-binding transcriptional dual regulator ArcA
+ydfK	FJKNNBLA_01378	P76154	Qin prophage;cold shock protein YdfK	ydfK	FJKNNBLA_01536	P76154	Qin prophage;cold shock protein YdfK
+fixA	FJKNNBLA_00043	P60566	putative electron transfer flavoprotein FixA	ydiQ	FJKNNBLA_01700	P76201	putative electron transfer flavoprotein subunit YdiQ
+mdtD	FJKNNBLA_02028	P36554	putative multidrug efflux pump MdtD	hsrA	FJKNNBLA_03726	P31474	putative transporter HsrA
+ygdI	FJKNNBLA_02729	P65292	DUF903 domain-containing lipoprotein YgdI	ygdR	FJKNNBLA_02754	P65294	DUF903 domain-containing lipoprotein YgdR
+gntK	FJKNNBLA_03374	P46859	D-gluconate kinase, thermostable	idnK	FJKNNBLA_04264	P39208	D-gluconate kinase, thermosensitive
+ydaF	FJKNNBLA_01365	P0ACW0	Rac prophage;DUF1391 domain-containing protein YdaF	ydfA	FJKNNBLA_01571	P0ACW8	Qin prophage;DUF1391 domain-containing protein YdfA
+fixB	FJKNNBLA_00044	P31574	putative electron transfer flavoprotein FixB	ydiR	FJKNNBLA_01701	P77378	putative electron transfer flavoprotein subunit YdiR
+gntR	FJKNNBLA_03375	P0ACP5	DNA-binding transcriptional repressor GntR	idnR	FJKNNBLA_04260	P39343	DNA-binding transcriptional dual regulator IdnR
+allR	FJKNNBLA_00464	P0ACN4	DNA-binding transcriptional repressor AllR	iclR	FJKNNBLA_04008	P16528	DNA-binding transcriptional repressor IclR
+ybcL	FJKNNBLA_00502	P77368	DLP12 prophage;periplasmic protein YbcL	ybhB	FJKNNBLA_00767	P12994	putative kinase inhibitor
+ymgE	FJKNNBLA_01197	P76011	PF04226 family protein YmgE	yeaQ	FJKNNBLA_01798	P64485	PF04226 family protein YeaQ
+ygiC	FJKNNBLA_02982	P0ADT5	putative acid--amine ligase YgiC	yjfC	FJKNNBLA_04185	P33222	putative acid--amine ligase YjfC
+yhaH	FJKNNBLA_03046	P64590	putative inner membrane protein	yhaI	FJKNNBLA_03047	P64592	putative inner membrane protein
+cybB	FJKNNBLA_01406	P0ABE5	superoxide oxidase	yodB	FJKNNBLA_01930	P76345	putative cytochrome b561 YodB
+agaD	FJKNNBLA_03073	P42911	galactosamine-specific PTS enzyme IID component	agaD	FJKNNBLA_03080	P42911	galactosamine-specific PTS enzyme IID component
+tdcF	FJKNNBLA_03054	P0AGL2	putative enamine/imine deaminase	ridA	FJKNNBLA_04242	P0AF93	enamine/imine deaminase, redox-regulated chaperone
+caiA	FJKNNBLA_00041	P60584	crotonobetainyl-CoA reductase	ydiO	FJKNNBLA_01698	P0A9U8	putative acyl-CoA dehydrogenase YdiO
+hyi	FJKNNBLA_00466	P30147	hydroxypyruvate isomerase	otnI	FJKNNBLA_02655	Q46891	putative 2-oxo-tetronate isomerase YgbM
+kefF	FJKNNBLA_00048	P0A754	regulator of KefC-mediated potassium transport and quinone oxidoreductase	kefG	FJKNNBLA_03286	P0A756	glutathione-regulated potassium-efflux system ancillary protein KefG
+bluR	FJKNNBLA_01163	P75989	DNA-binding transcriptional repressor BluR	mlrA	FJKNNBLA_02098	P33358	DNA-binding transcriptional activator MlrA
+ydhJ	FJKNNBLA_01645	P76185	putative membrane fusion protein YdhJ	aaeA	FJKNNBLA_03176	P46482	aromatic carboxylic acid efflux pump membrane fusion protein
+manB	FJKNNBLA_01975	P24175	phosphomannomutase	manB	FJKNNBLA_01997	P24175	phosphomannomutase
+FJKNNBLA_00868	FJKNNBLA_00868	nan	['hypothetical protein']	FJKNNBLA_02039	FJKNNBLA_02039	nan	['hypothetical protein']
+nupX	FJKNNBLA_02132	P33021	putative nucleoside transporter	psuT	FJKNNBLA_02135	P33024	putative pseudouridine transporter
+sufS	FJKNNBLA_01682	P77444	L-cysteine desulfurase	csdA	FJKNNBLA_02730	Q46925	cysteine sulfinate desulfinase
+rutF	FJKNNBLA_01035	P75893	FMN reductase RutF	rutF	FJKNNBLA_04354	P75893	FMN reductase RutF
+ymdF	FJKNNBLA_01033	P56614	stress-induced bacterial acidophilic repeat motifs-containing protein YmdF	yciG	FJKNNBLA_01264	P21361	stress-induced bacterial acidophilic repeat motifs-containing protein YciG
+yebC	FJKNNBLA_01873	P0A8A0	putative transcriptional regulator YebC	yeeN	FJKNNBLA_01939	P0A8A2	putative transcriptional regulator YeeN
+hyfJ	FJKNNBLA_02435	P77453	putative hydrogenase 4 assembly protein	hycH	FJKNNBLA_02633	P0AEV7	formate hydrogenlyase assembly protein
+dlsT	FJKNNBLA_03052	P42628	cysteine detoxification protein CyuP	yhjV	FJKNNBLA_03480	P37660	putative transporter YhjV
+yiaV	FJKNNBLA_03533	P37683	putative membrane fusion protein YiaV	yibH	FJKNNBLA_03545	P0AFV0	inner membrane protein YibH
+gnsA	FJKNNBLA_01019	P0AC92	putative phosphatidylethanolamine synthesis regulator GnsA	gnsB	FJKNNBLA_01547	P77695	Qin prophage;protein GnsB
+ydjE	FJKNNBLA_01773	P38055	putative transporter YdjE	ydjK	FJKNNBLA_01779	P76230	putative transporter YdjK
+dmlR	FJKNNBLA_01805	P76250	DNA-binding transcriptional regulator DmlR	ttdR	FJKNNBLA_03003	P45463	DNA-binding transcriptional activator Dan
+fdnI	FJKNNBLA_01466	P0AEK7	formate dehydrogenase N subunit gamma	fdoI	FJKNNBLA_03880	P0AEL0	formate dehydrogenase O subunit gamma
+yghB	FJKNNBLA_02956	P0AA60	DedA family protein YghB	yqjA	FJKNNBLA_03038	P0AA63	DedA family protein YqjA
+baeR	FJKNNBLA_02030	P69228	DNA-binding transcriptional activator BaeR	creB	FJKNNBLA_04411	P08368	DNA-binding transcriptional regulator CreB
+fixX	FJKNNBLA_00046	P68646	putative ferredoxin FixX	ydiT	FJKNNBLA_01703	P77714	ferredoxin-like protein YdiT
+FJKNNBLA_00865	FJKNNBLA_00865	nan	['hypothetical protein']	FJKNNBLA_02042	FJKNNBLA_02042	nan	['hypothetical protein']
+galS	FJKNNBLA_02122	P25748	DNA-binding transcriptional dual regulator GalS	galR	FJKNNBLA_02758	P03024	DNA-binding transcriptional dual regulator GalR
+yeaY	FJKNNBLA_01812	P0AA91	Slp family lipoprotein YeaY	slp	FJKNNBLA_03442	P37194	starvation lipoprotein
+cysP	FJKNNBLA_02377	P16700	thiosulfate/sulfate ABC transporter periplasmic binding protein CysP	sbp	FJKNNBLA_03907	P0AG78	sulfate/thiosulfate ABC transporter periplasmic binding protein Sbp
+glxR	FJKNNBLA_00467	P77161	tartronate semialdehyde reductase 2	garR	FJKNNBLA_03063	P0ABQ2	tartronate semialdehyde reductase
+ydhX	FJKNNBLA_01673	P77375	putative 4Fe-4S ferredoxin-like protein YdhX	nrfC	FJKNNBLA_04067	P0AAK7	putative menaquinol-cytochrome c reductase 4Fe-4S subunit
+pflB	FJKNNBLA_00932	P09373	pyruvate formate-lyase	tdcE	FJKNNBLA_03055	P42632	2-ketobutyrate formate-lyase/pyruvate formate-lyase 4
+narL	FJKNNBLA_01227	P0AF28	DNA-binding transcriptional dual regulator NarL	narP	FJKNNBLA_02163	P31802	DNA-binding transcriptional dual regulator NarP
+yfcJ	FJKNNBLA_02291	P77549	putative transporter YfcJ	yhhS	FJKNNBLA_03409	P37621	putative transporter YhhS
+emrK	FJKNNBLA_02324	P52599	tripartite efflux pump membrane fusion protein EmrK	emrA	FJKNNBLA_02599	P27303	multidrug efflux pump membrane fusion protein EmrA
+aegA	FJKNNBLA_02410	P37127	putative oxidoreductase AegA	uacF	FJKNNBLA_02793	Q46820	putative oxidoreductase YgfT
+envY	FJKNNBLA_00526	P10805	DNA-binding transcriptional activator EnvY	adiY	FJKNNBLA_04113	P33234	DNA-binding transcriptional activator AdiY
+bioD1	FJKNNBLA_00772	P13000	dethiobiotin synthetase	bioD2	FJKNNBLA_01592	P0A6E9	putative dethiobiotin synthetase
+mdfA	FJKNNBLA_00836	P0AEY8	multidrug efflux pump MdfA/Na(+):H(+) antiporter/K(+):H(+) antiporter	mdtM	FJKNNBLA_04339	P39386	multidrug efflux pump/bile salt:H(+) antiporter/Na(+):H(+) antiporter/K(+):H(+)antiporter
+dadX	FJKNNBLA_01191	P29012	alanine racemase 2	alr	FJKNNBLA_04046	P0A6B4	alanine racemase 1
+kdsB	FJKNNBLA_00947	P04951	3-deoxy-manno-octulosonate cytidylyltransferase	kdsB	FJKNNBLA_02891	P04951	3-deoxy-manno-octulosonate cytidylyltransferase
+kefC	FJKNNBLA_00049	P03819	K(+) : H(+)antiporter KefC	kefB	FJKNNBLA_03285	P45522	K(+) : H(+)antiporter KefB
+xanQ	FJKNNBLA_02789	P67444	xanthine:H(+)symporter XanQ	xanP	FJKNNBLA_03606	P0AGM9	xanthine:H(+)symporter XanP
+gfcC	FJKNNBLA_01015	P75883	capsule biosynthesis GfcC family protein	yjbG	FJKNNBLA_04018	P32688	capsule biosynthesis GfcC family protein YjbG
+betT	FJKNNBLA_00276	P0ABC9	choline:H(+)symporter	betT	FJKNNBLA_04279	P0ABC9	choline:H(+)symporter
+sdhA	FJKNNBLA_00702	P0AC41	succinate:quinone oxidoreductase, FAD binding protein	frdA	FJKNNBLA_04155	P00363	fumarate reductase flavoprotein subunit
+cysB	FJKNNBLA_01282	P0A9F3	DNA-binding transcriptional dual regulator CysB	cbl	FJKNNBLA_01943	Q47083	DNA-binding transcriptional activator Cbl
+manC	FJKNNBLA_01976	P24174	mannose-1-phosphate guanylyltransferase	manC	FJKNNBLA_01998	P24174	mannose-1-phosphate guanylyltransferase
+FJKNNBLA_00867	FJKNNBLA_00867	nan	['hypothetical protein']	FJKNNBLA_02040	FJKNNBLA_02040	nan	['hypothetical protein']
+ackA	FJKNNBLA_02265	P0A6A3	acetate kinase	tdcD	FJKNNBLA_03056	P11868	propionate kinase
+hyfG	FJKNNBLA_02432	P77329	hydrogenase 4 catalytic subunit HyfG	hycE	FJKNNBLA_02636	P16431	formate hydrogenlyase subunit HycE
+malP	FJKNNBLA_03354	P00490	maltodextrin phosphorylase	glgP	FJKNNBLA_03366	P0AC86	glycogen phosphorylase
+fumA	FJKNNBLA_01611	P0AC33	fumarase A	fumB	FJKNNBLA_04119	P14407	fumarase B
+ytfJ	FJKNNBLA_02930	P39187	PF09695 family protein YtfJ	ytfJ	FJKNNBLA_04219	P39187	PF09695 family protein YtfJ
+narJ	FJKNNBLA_01233	P0AF26	nitrate reductase 1 molybdenum cofactor assembly chaperone	narW	FJKNNBLA_01455	P19317	NarW, putative private chaperone for NarZ nitrate reductase subunit
+ydeM	FJKNNBLA_01487	P76134	putative anaerobic sulfatase maturation enzyme YdeM	aslB	FJKNNBLA_03770	P25550	putative anaerobic sulfatase maturation enzyme AslB
+etk	FJKNNBLA_01011	P38134	protein-tyrosine kinase Etk	wzc	FJKNNBLA_02009	P76387	protein-tyrosine kinase Wzc
+FJKNNBLA_00866	FJKNNBLA_00866	nan	['hypothetical protein']	FJKNNBLA_02041	FJKNNBLA_02041	nan	['hypothetical protein']
+hyfH	FJKNNBLA_02433	P77423	hydrogenase 4 component H	hycF	FJKNNBLA_02635	P16432	formate hydrogenlyase subunit HycF
+gspD	FJKNNBLA_02911	P45758	Type II secretion system protein GspD	gspD	FJKNNBLA_03259	P45758	Type II secretion system protein GspD
+etp	FJKNNBLA_01012	P0ACZ2	phosphotyrosine-protein phosphatase Etp	wzb	FJKNNBLA_02010	P0AAB2	protein-tyrosine phosphatase
+hyfI	FJKNNBLA_02434	P77668	hydrogenase 4 catalytic subunit HyfI	hycG	FJKNNBLA_02634	P16433	formate hydrogenlyase subunit HycG
+gudD	FJKNNBLA_02700	P0AES2	D-glucarate dehydratase	gudX	FJKNNBLA_02701	Q46915	glucarate dehydratase-related protein
+gspE	FJKNNBLA_02910	P45759	Type II secretion system protein GspE	gspE	FJKNNBLA_03260	P45759	Type II secretion system protein GspE
+dam	FJKNNBLA_00851	P0AEE8	DNA adenine methyltransferase	dam	FJKNNBLA_03324	P0AEE8	DNA adenine methyltransferase
+frmB	FJKNNBLA_00317	P51025	S-formylglutathione hydrolase FrmB	yeiG	FJKNNBLA_02125	P33018	S-formylglutathione hydrolase/S-lactoylglutathione hydrolase
+ybdD	FJKNNBLA_00574	P0AAS9	PF04328 family protein YbdD	yjiX	FJKNNBLA_04352	P0ADC8	PF04328 family protein YjiX
+narG	FJKNNBLA_01231	P09152	nitrate reductase A subunit alpha	narZ	FJKNNBLA_01457	P19319	nitrate reductase Z subunit alpha
+gfcE	FJKNNBLA_01013	P0A932	putative exopolysaccharide export lipoprotein GfcE	wza	FJKNNBLA_02011	P0A930	outer membrane polysaccharide export protein Wza
+glnK	FJKNNBLA_00410	P0AC55	nitrogen regulator GlnK	glnB	FJKNNBLA_02499	P0A9Z1	nitrogen regulatory protein PII-1
+emrY	FJKNNBLA_02323	P52600	tripartite efflux pump membrane subunit EmrY	emrB	FJKNNBLA_02600	P0AEJ0	multidrug efflux pump membrane subunit EmrB
+fldA	FJKNNBLA_00661	P61949	flavodoxin 1	fldB	FJKNNBLA_02802	P0ABY4	flavodoxin 2
+gspF	FJKNNBLA_02909	P41441	Type II secretion system protein GspF	gspF	FJKNNBLA_03261	P41441	Type II secretion system protein GspF
+hupB	FJKNNBLA_00400	P0ACF4	DNA-binding protein HU-beta	hupA	FJKNNBLA_03990	P0ACF0	DNA-binding protein HU-alpha
+ydeQ	FJKNNBLA_01492	P77588	putative fimbrial adhesin protein YdeQ	fimH	FJKNNBLA_04319	P08191	type 1 fimbriae D-mannose specific adhesin
+cydA	FJKNNBLA_00711	P0ABJ9	cytochrome bd-I ubiquinol oxidase subunit I	appC	FJKNNBLA_01007	P26459	cytochrome bd-II ubiquinol oxidase subunit I
+narH	FJKNNBLA_01232	P11349	nitrate reductase A subunit beta	narY	FJKNNBLA_01456	P19318	nitrate reductase Z subunit beta
+narK	FJKNNBLA_01230	P10903	nitrate:nitrite antiporter NarK	narU	FJKNNBLA_01458	P37758	nitrate/nitrite transporter NarU
+elaB	FJKNNBLA_02237	P0AEH5	tail-anchored inner membrane protein ElaB	yqjD	FJKNNBLA_03041	P64581	ribosome-and membrane-associated DUF883 domain-containing protein YqjD
+hyfA	FJKNNBLA_02425	P23481	hydrogenase 4 component A	hycB	FJKNNBLA_02639	P0AAK1	formate hydrogenlyase subunit HycB
+gspG	FJKNNBLA_02908	P41442	Type II secretion system protein GspG	gspG	FJKNNBLA_03262	P41442	Type II secretion system protein GspG
+gadB	FJKNNBLA_01483	P69910	glutamate decarboxylase B	gadA	FJKNNBLA_03454	P69908	glutamate decarboxylase A
+FJKNNBLA_03616	FJKNNBLA_03616	nan	['Single-stranded DNA-binding protein']	ssb	FJKNNBLA_04053	P0AGE0	ssDNA-binding protein
+cydB	FJKNNBLA_00712	P0ABK2	cytochrome bd-I ubiquinol oxidase subunit II	appB	FJKNNBLA_01008	P26458	cytochrome bd-II ubiquinol oxidase subunit II
+cysK	FJKNNBLA_02366	P0ABK5	cysteine synthase A	cysM	FJKNNBLA_02373	P16703	cysteine synthase B
+focA	FJKNNBLA_00933	P0AC23	formate channel FocA	focB	FJKNNBLA_02437	P77733	formate channel FocB
+yggF	FJKNNBLA_02836	P21437	fructose 1,6-bisphosphatase YggF	glpX	FJKNNBLA_03915	P0A9C9	fructose-1,6-bisphosphatase 2
+speF	FJKNNBLA_00669	P24169	inducible ornithine decarboxylase	speC	FJKNNBLA_02868	P21169	constitutive ornithine decarboxylase
+glxK	FJKNNBLA_00471	P77364	glycerate 2-kinase 2	garK	FJKNNBLA_03062	P23524	glycerate 2-kinase 1
+csqR	FJKNNBLA_03359	P32144	DNA-binding transcriptional dual regulator CsqR	csqR	FJKNNBLA_03869	P32144	DNA-binding transcriptional dual regulator CsqR
+ldcC	FJKNNBLA_00183	P52095	lysine decarboxylase 2	cadA	FJKNNBLA_04130	P0A9H3	lysine decarboxylase 1
+narI	FJKNNBLA_01234	P11350	nitrate reductase A subunit gamma	narV	FJKNNBLA_01454	P0AF32	nitrate reductase Z subunit gamma
+dmsB	FJKNNBLA_00924	P18776	dimethyl sulfoxide reductase subunit B	ynfG	FJKNNBLA_01588	P0AAJ1	putative oxidoreductase YnfG
+talB	FJKNNBLA_00007	P0A870	transaldolase B	talA	FJKNNBLA_02406	P0A867	transaldolase A
+yghR	FJKNNBLA_02933	P64572	putative ATP-binding protein YghR	yghS	FJKNNBLA_02934	Q46843	putative ATP-binding protein YghS
+treA	FJKNNBLA_01199	P13482	periplasmic trehalase	treF	FJKNNBLA_03456	P62601	cytoplasmic trehalase
+gmhA	FJKNNBLA_00223	P63224	D-sedoheptulose 7-phosphate isomerase	diaA	FJKNNBLA_03089	P66817	DnaA initiator-associating factor for replication initiation
+essD	FJKNNBLA_00514	P0A9R2	DLP12 prophage;putative phage lysis protein	essD	FJKNNBLA_01553	P0A9R2	DLP12 prophage;putative phage lysis protein
+ybiV	FJKNNBLA_00816	P75792	sugar phosphatase YbiV	ybjI	FJKNNBLA_00838	P75809	5-amino-6-(5-phospho-D-ribitylamino)uracil phosphatase
+potA	FJKNNBLA_01151	P69874	spermidine preferential ABC transporter ATP binding subunit	ydcT	FJKNNBLA_01429	P77795	putative ABC transporter ATP-binding protein YdcT
+ydeR	FJKNNBLA_01493	P77294	putative fimbrial protein YdeR	fimG	FJKNNBLA_04318	P08190	type 1 fimbriae minor subunit FimG
+dmsC	FJKNNBLA_00925	P18777	dimethyl sulfoxide reductase subunit C	ynfH	FJKNNBLA_01589	P76173	putative menaquinol dehydrogenase
+glcA	FJKNNBLA_02916	Q46839	glycolate/lactate:H(+)symporter GlcA	lldP	FJKNNBLA_03554	P33231	lactate/glycolate:H(+)symporter LldP
+lacA	FJKNNBLA_00304	P07464	galactoside O-acetyltransferase	maa	FJKNNBLA_00418	P77791	maltose O-acetyltransferase
+ppiB	FJKNNBLA_00482	P23869	peptidyl-prolyl cis-trans isomerase B	ppiA	FJKNNBLA_03298	P0AFL3	peptidyl-prolyl cis-trans isomerase A
+ydeS	FJKNNBLA_01494	P77789	putative fimbrial protein YdeS	fimF	FJKNNBLA_04317	P08189	type 1 fimbriae minor subunit FimF
+entH	FJKNNBLA_00571	P0A8Y8	proofreading thioesterase in enterobactin biosynthesis	menI	FJKNNBLA_01688	P77781	1,4-dihydroxy-2-naphthoyl-CoA hydrolase
+astC	FJKNNBLA_01752	P77581	succinylornithine transaminase	argD	FJKNNBLA_03294	P18335	N-acetylornithine aminotransferase/N-succinyldiaminopimelate aminotransferase
+dnaK	FJKNNBLA_00012	P0A6Y8	chaperone protein DnaK	hscA	FJKNNBLA_02472	P0A6Z1	iron-sulfur cluster biosynthesis chaperone HscA
+sgbH	FJKNNBLA_03525	P37678	3-keto-L-gulonate-6-phosphate decarboxylase SgbH	ulaD	FJKNNBLA_04195	P39304	3-keto-L-gulonate-6-phosphate decarboxylase UlaD
+exuR	FJKNNBLA_03037	P0ACL2	DNA-binding transcriptional repressor ExuR	uxuR	FJKNNBLA_04324	P39161	DNA-binding transcriptional repressor UxuR
+lpxL	FJKNNBLA_01077	P0ACV0	lauroyl acyltransferase	lpxP	FJKNNBLA_02334	P0ACV2	palmitoleoyl acyltransferase
+fdnG	FJKNNBLA_01463	P24183	formate dehydrogenase N subunit alpha	fdoG	FJKNNBLA_03883	P32176	formate dehydrogenase O subunit alpha
+blc	FJKNNBLA_01559	P0A901	outer membrane lipoprotein Blc	blc	FJKNNBLA_04150	P0A901	outer membrane lipoprotein Blc
+fryA	FJKNNBLA_02339	P77439	putative PTS multiphosphoryl transfer protein FryA	ptsA	FJKNNBLA_03938	P32670	putative PTS multiphosphoryl transfer protein PtsA
+tktB	FJKNNBLA_02407	P33570	transketolase 2	tktA	FJKNNBLA_02840	P27302	transketolase 1
+lysS	FJKNNBLA_02797	P0A8N3	lysine--tRNA ligase, constitutive	lysU	FJKNNBLA_04128	P0A8N5	lysine--tRNA ligase/Ap4A synthetase/Ap3A synthetase
+sgbU	FJKNNBLA_03526	P37679	putative L-xylulose 5-phosphate 3-epimerase	ulaE	FJKNNBLA_04196	P39305	L-ribulose-5-phosphate 3-epimerase UlaE
+fsaA	FJKNNBLA_00819	P78055	fructose-6-phosphate aldolase 1	fsaB	FJKNNBLA_03937	P32669	fructose-6-phosphate aldolase 2
+fdnG	FJKNNBLA_01464	P24183	formate dehydrogenase N subunit alpha	fdoG	FJKNNBLA_03882	P32176	formate dehydrogenase O subunit alpha
+quuD	FJKNNBLA_00509	Q47274	DLP12 prophage;prophage antitermination protein Q QuuD	quuD	FJKNNBLA_01560	Q47274	DLP12 prophage;prophage antitermination protein Q QuuD
+ybiI	FJKNNBLA_00850	P41039	zinc finger domain-containing protein YbiI	FJKNNBLA_02050	FJKNNBLA_02050	nan	['hypothetical protein']
+sdaC	FJKNNBLA_02709	P0AAD6	L-serine:H(+)symporter SdaC	tdcC	FJKNNBLA_03057	P0AAD8	threonine/serine:H(+)symporter
+ycaL	FJKNNBLA_00938	P43674	periplasmic protease YcaL	loiP	FJKNNBLA_02841	P25894	metalloprotease LoiP
+livK	FJKNNBLA_03394	P04816	L-leucine/L-phenylalanine ABC transporter periplasmic binding protein	livJ	FJKNNBLA_03396	P0AD96	branched chain amino acid/phenylalanine ABC transporter periplasmic binding protein
+dtpD	FJKNNBLA_00687	P75742	dipeptide:H(+)symporter DtpD	dtpC	FJKNNBLA_04129	P39276	dipeptide/tripeptide:H(+)symporter DtpC
+moeB	FJKNNBLA_00820	P12282	molybdopterin-synthase adenylyltransferase	thiF	FJKNNBLA_03982	P30138	sulfur carrier protein ThiS adenylyltransferase
+gfcD	FJKNNBLA_01014	P75882	putative lipoprotein GfcD	yjbH	FJKNNBLA_04019	P32689	YjbH family protein
+rrrQ	FJKNNBLA_01369	P76159	Qin prophage;putative lysozyme	rrrQ	FJKNNBLA_01550	P76159	Qin prophage;putative lysozyme
+ortT	FJKNNBLA_01433	P64453	orphan toxin OrtT	ghoT	FJKNNBLA_04127	P64646	toxin of the GhoTS toxin-antitoxin system
+fdnH	FJKNNBLA_01465	P0AAJ3	formate dehydrogenase N subunit beta	fdoH	FJKNNBLA_03881	P0AAJ5	formate dehydrogenase O subunit beta
+nagC	FJKNNBLA_00652	P0AF20	DNA-binding transcriptional dual regulator NagC	mlc	FJKNNBLA_01593	P50456	DNA-binding transcriptional repressor Mlc
+sodB	FJKNNBLA_01657	P0AGD3	superoxide dismutase (Fe)	sodA	FJKNNBLA_03898	P00448	superoxide dismutase (Mn)
+hypC	FJKNNBLA_02643	P0AAM3	hydrogenase 3 maturation protein HypC	hybG	FJKNNBLA_02939	P0AAM7	hydrogenase maturation factor HybG
+pitB	FJKNNBLA_02936	P43676	metal phosphate:H(+)symporter PitB	pitA	FJKNNBLA_03429	P0AFJ7	metal phosphate:H(+)symporter PitA
+rfbB	FJKNNBLA_01990	P37759	dTDP-glucose 4,6-dehydratase 1	rffG	FJKNNBLA_03757	P27830	dTDP-glucose 4,6-dehydratase 2
+yihO	FJKNNBLA_03861	P32136	putative sulfoquinovose transporter	yihP	FJKNNBLA_03862	P32137	putative 2,3-dihydroxypropane-1-sulfonate export protein
+rfbA	FJKNNBLA_01988	P37744	dTDP-glucose pyrophosphorylase	rffH	FJKNNBLA_03758	P61887	dTDP-glucose pyrophosphorylase 2
+hypA	FJKNNBLA_02641	P0A700	hydrogenase 3 nickel incorporation protein HypA	hybF	FJKNNBLA_02940	P0A703	hydrogenase maturation protein HybF
+mtr	FJKNNBLA_03101	P0AAD2	tryptophan:H(+)symporter Mtr	tnaB	FJKNNBLA_03678	P23173	tryptophan:H(+)symporter TnaB
+sfmA	FJKNNBLA_00487	P0ABW5	putative fimbrial protein SfmA	fimA	FJKNNBLA_04313	P04128	type 1 fimbriae major subunit
+trkG	FJKNNBLA_01371	P23849	Rac prophage;K(+) transporter TrkG	trkH	FJKNNBLA_03834	P0AFZ7	K(+) transporter TrkH
+fucO	FJKNNBLA_02712	P0A9S1	L-1,2-propanediol oxidoreductase	yiaY	FJKNNBLA_03537	P37686	L-threonine dehydrogenase
+FJKNNBLA_02884	FJKNNBLA_02884	nan	['hypothetical protein']	FJKNNBLA_03625	FJKNNBLA_03625	nan	['hypothetical protein']
+ibpB	FJKNNBLA_03656	P0C058	small heat shock protein IbpB	ibpA	FJKNNBLA_03657	P0C054	small heat shock protein IbpA
+rihC	FJKNNBLA_00031	P22564	ribonucleoside hydrolase RihC	rihA	FJKNNBLA_00628	P41409	pyrimidine-specific ribonucleoside hydrolase RihA
+flhA	FJKNNBLA_00230	P76298	flagellar biosynthesis protein FlhA	flhA	FJKNNBLA_01888	P76298	flagellar biosynthesis protein FlhA
+yoaE	FJKNNBLA_01822	P0AEC0	putative inner membrane protein YoaE	yegH	FJKNNBLA_02012	P76389	inner membrane protein YegH
+hisJ	FJKNNBLA_02278	P0AEU0	histidine ABC transporter periplasmic binding protein	argT	FJKNNBLA_02279	P09551	lysine/arginine/ornithine ABC transporter periplasmic binding protein
+yfcZ	FJKNNBLA_02311	P0AD33	DUF406 domain-containing protein YfcZ	yiiS	FJKNNBLA_03912	P32162	DUF406 domain-containing protein YiiS
+citT	FJKNNBLA_00589	P0AE74	citrate:succinate antiporter	ttdT	FJKNNBLA_03006	P39414	L-tartrate:succinate antiporter
+agaV	FJKNNBLA_03071	P42904	N-acetyl-D-galactosamine specific PTS enzyme IIB component	agaB	FJKNNBLA_03078	P42909	galactosamine-specific PTS enzyme IIB component
+degP	FJKNNBLA_00158	P0C0V0	periplasmic serine endoprotease DegP	degQ	FJKNNBLA_03169	P39099	periplasmic serine endoprotease
+dtpA	FJKNNBLA_01635	P77304	dipeptide/tripeptide:H(+)symporter DtpA	dtpB	FJKNNBLA_03432	P36837	dipeptide/tripeptide:H(+)symporter DtpB
+FJKNNBLA_02885	FJKNNBLA_02885	nan	['hypothetical protein']	FJKNNBLA_03626	FJKNNBLA_03626	nan	['hypothetical protein']
+FJKNNBLA_00522	FJKNNBLA_00522	nan	['hypothetical protein']	FJKNNBLA_01539	FJKNNBLA_01539	nan	['hypothetical protein']
+galU	FJKNNBLA_01241	P0AEP3	UTP--glucose-1-phosphate uridylyltransferase	galF	FJKNNBLA_01991	P0AAB6	UTP:glucose-1-phosphate uridylyltransferase, low activity
+pphA	FJKNNBLA_01844	P55798	phosphoprotein phosphatase 1	pphB	FJKNNBLA_02650	P55799	phosphoprotein phosphatase 2
+araE	FJKNNBLA_02762	P0AE24	arabinose:H(+)symporter	galP	FJKNNBLA_02846	P0AEP1	galactose:H(+)symporter
+hyaB	FJKNNBLA_01002	P0ACD8	hydrogenase 1 large subunit	hybC	FJKNNBLA_02943	P0ACE0	hydrogenase 2 large subunit
+tufA	FJKNNBLA_03273	P0CE47	translation elongation factor Tu 1	tufB	FJKNNBLA_03969	P0CE48	translation elongation factor Tu 2
+sgcC	FJKNNBLA_02062	P39365	putative PTS enzyme IIC component SgcC	sgcC	FJKNNBLA_04299	P39365	putative PTS enzyme IIC component SgcC

@@ -1,0 +1,17 @@
+
+
+
+
+
+Analysis Type:	PANTHER Overrepresentation Test (Released 20220202)
+Annotation Version and Release Date:	GO Ontology database DOI:  10.5281/zenodo.6399963 Released 2022-03-22
+Analyzed List:	upload_1 (Escherichia coli)
+Reference List:	Escherichia coli (all genes in database)
+Test Type:	FISHER
+Correction:	FDR
+GO biological process complete	Escherichia coli - REFLIST (4392)	upload_1 (35)	upload_1 (expected)	upload_1 (over/under)	upload_1 (fold Enrichment)	upload_1 (raw P-value)	upload_1 (FDR)
+cytokinetic process (GO:0032506)	23	4	.18	+	21.82	5.05E-05	5.30E-02
+cytokinesis (GO:0000910)	45	5	.36	+	13.94	3.77E-05	5.93E-02
+cell cycle process (GO:0022402)	53	5	.42	+	11.84	7.79E-05	6.13E-02
+cell cycle (GO:0007049)	53	5	.42	+	11.84	7.79E-05	4.90E-02
+biological regulation (GO:0065007)	769	17	6.13	+	2.77	2.71E-05	8.51E-02

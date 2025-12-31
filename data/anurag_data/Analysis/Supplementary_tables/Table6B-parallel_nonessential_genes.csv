@@ -1,0 +1,20 @@
+,gene,populations where gene becomes nonessential over evolution,protein product
+0,nicS,"'Ara+1', 'Ara–5'",['HTH-type transcriptional repressor NicS']
+1,yeiL,"'Ara+6', 'Ara–5', 'Ara–4', 'Ara+2', 'Ara+1'",putative DNA-binding transcriptional regulator YeiL
+2,zwf,"'Ara+6', 'Ara–4', 'Ara–1', 'Ara–6', 'Ara–3', 'Ara+5'",NADP(+)-dependent glucose-6-phosphate dehydrogenase
+3,holD,"'Ara–3', 'Ara+1'",DNA polymerase III subunit psi
+4,ruvB,"'Ara–3', 'Ara–6', 'Ara+5'",Holliday junction branch migration complex subunit RuvB
+5,ruvA,"'Ara–3', 'Ara–6', 'Ara+1', 'Ara+5'",Holliday junction branch migration complex subunit RuvA
+6,ruvC,"'Ara–3', 'Ara–6', 'Ara+5'",crossover junction endodeoxyribonuclease RuvC
+7,yejM,"'Ara+6', 'Ara–6', 'Ara–4', 'Ara+5'",LPS homeostasis protein YejM
+8,cydD,"'Ara+2', 'Ara+3'",glutathione/L-cysteine ABC exporter subunit CydD
+9,arcA,"'Ara+2', 'Ara–4'",DNA-binding transcriptional dual regulator ArcA
+10,phoU,"'Ara+6', 'Ara–4'",negative regulator of the pho regulon
+11,pstB,"'Ara+6', 'Ara–4'",phosphate ABC transporter ATP binding subunit
+12,pstC,"'Ara+2', 'Ara+6', 'Ara+3', 'Ara–4'",phosphate ABC transporter membrane subunit PstC
+13,yhiJ,"'Ara–1', 'Ara–4'",DUF4049 domain-containing protein YhiJ
+14,hns,"'Ara+2', 'Ara+6', 'Ara–4', 'Ara+5'",DNA-binding transcriptional dual regulator H-NS
+15,clpP,"'Ara–1', 'Ara–5'",ATP-dependent Clp protease proteolytic subunit
+16,cydA,"'Ara+2', 'Ara+3', 'Ara+5'",cytochrome bd-I ubiquinol oxidase subunit I
+17,cydB,"'Ara+2', 'Ara+3'",cytochrome bd-I ubiquinol oxidase subunit II
+18,ompA,"'Ara+2', 'Ara–5', 'Ara+5'",outer membrane protein A

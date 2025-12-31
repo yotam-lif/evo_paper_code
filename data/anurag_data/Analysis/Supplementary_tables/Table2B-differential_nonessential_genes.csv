@@ -1,0 +1,99 @@
+,gene,populations where gene becomes nonessential over evolution,protein product
+0,rpmE,'Ara+6',50S ribosomal subunit protein L31
+1,yhhZ,'Ara–4',putative endonuclease YhhZ
+2,ppc,"'Ara–3', 'Ara–6'",phosphoenolpyruvate carboxylase
+3,argE,'Ara–6',acetylornithine deacetylase
+4,argC,'Ara–6',N-acetylglutamylphosphate reductase
+5,argB,'Ara–6',acetylglutamate kinase
+6,ycgX,'Ara+2',DUF1398 domain-containing protein YcgX
+7,argH,'Ara–6',argininosuccinate lyase
+8,sixA,"'Ara–6', 'Ara–4'",phosphohistidine phosphatase SixA
+9,mlaA,"'Ara–1', 'Ara–6'",intermembrane phospholipid transport system - outer membrane lipoprotein MlaA
+10,yhiJ,"'Ara–1', 'Ara–4'",DUF4049 domain-containing protein YhiJ
+11,fur,'Ara+6',DNA-binding transcriptional dual regulator Fur
+12,gltX,'Ara–6',glutamate--tRNA ligase
+13,gadE,'Ara–5',DNA-binding transcriptional activator GadE
+14,ligA,'Ara–6',DNA ligase
+15,zipA,'Ara–6',cell division protein ZipA
+16,cysK,'Ara–6',cysteine synthase A
+17,ptsH,'Ara–6',phosphocarrier protein HPr
+18,ptsI,'Ara–6',PTS enzyme I
+19,crr,'Ara–6',Enzyme IIA(Glc)
+20,lexA,'Ara+6',DNA-binding transcriptional repressor LexA
+21,hns,"'Ara+2', 'Ara+6', 'Ara–4', 'Ara+5'",DNA-binding transcriptional dual regulator H-NS
+22,cysA,'Ara–6',sulfate/thiosulfate ABC transporter ATP binding subunit
+23,tsaB,'Ara–6',"N(6)-L-threonylcarbamoyladenine synthase, TsaB subunit"
+24,pabB,'Ara–6',aminodeoxychorismate synthase subunit 1
+25,cydA,"'Ara+2', 'Ara+3', 'Ara+5'",cytochrome bd-I ubiquinol oxidase subunit I
+26,cydB,"'Ara+2', 'Ara+3'",cytochrome bd-I ubiquinol oxidase subunit II
+27,dapE,'Ara–6',succinyl-diaminopimelate desuccinylase
+28,purC,'Ara–6',phosphoribosylaminoimidazole-succinocarboxamide synthase
+29,dapA,'Ara–6',4-hydroxy-tetrahydrodipicolinate synthase
+30,zwf,"'Ara+6', 'Ara–4', 'Ara–1', 'Ara–6', 'Ara–3', 'Ara+5'",NADP(+)-dependent glucose-6-phosphate dehydrogenase
+31,map,'Ara–6',methionine aminopeptidase
+32,ruvB,"'Ara–3', 'Ara–6', 'Ara+5'",Holliday junction branch migration complex subunit RuvB
+33,ruvA,"'Ara–3', 'Ara–6', 'Ara+1', 'Ara+5'",Holliday junction branch migration complex subunit RuvA
+34,ruvC,"'Ara–3', 'Ara–6', 'Ara+5'",crossover junction endodeoxyribonuclease RuvC
+35,aspS,'Ara–6',aspartate--tRNA ligase
+36,hda,'Ara–6',inibitor of reinitiation of DNA replication
+37,purM,'Ara–6',phosphoribosylformylglycinamide cyclo-ligase
+38,argS,'Ara–6',arginine--tRNA ligase
+39,guaA,'Ara–6',GMP synthetase
+40,guaB,'Ara–6',inosine 5'-monophosphate dehydrogenase
+41,der,'Ara–6',50S ribosomal subunit stability factor
+42,bamB,'Ara–6',outer membrane protein assembly factor BamB
+43,hisS,'Ara–6',histidine--tRNA ligase
+44,ispG,'Ara–6',(E)-4-hydroxy-3-methylbut-2-enyl-diphosphate synthase (flavodoxin)
+45,iscU,'Ara–1',scaffold protein for iron-sulfur cluster assembly
+46,iscS,'Ara–6',cysteine desulfurase IscS
+47,suhB,'Ara–6',inositol-phosphate phosphatase
+48,pgsA,'Ara–6',CDP-diacylglycerol--glycerol-3-phosphate 3-phosphatidyltransferase
+49,glyA,'Ara–6',serine hydroxymethyltransferase
+50,purL,'Ara–6',phosphoribosylformylglycinamide synthetase
+51,tadA,'Ara–6',tRNA adenosine(34)deaminase
+52,acpS,'Ara–6',holo-[acyl-carrier-protein
+53,pdxJ,'Ara–6',pyridoxine 5'-phosphate synthase
+54,era,'Ara–6',30S ribosomal subunit maturation GTPase Era
+55,lepB,'Ara–6',signal peptidase I
+56,hisD,'Ara–6',histidinal/histidinol dehydrogenase
+57,hisC,'Ara–6',histidinol-phosphate aminotransferase
+58,hisB,'Ara–6',imidazoleglycerol-phosphate dehydratase/histidinol-phosphatase
+59,hisH,'Ara–6',imidazole glycerol phosphate synthase subunit HisH
+60,hisA,'Ara–6',1-(5-phosphoribosyl)-5-[(5- phosphoribosylamino)methylideneamino
+61,hisF,'Ara–6',imidazole glycerol phosphate synthase subunit HisF
+62,hisI,'Ara–6',putative bifunctional phosphoribosyl-AMP cyclohydrolase/phosphoribosyl-ATP pyrophosphatase
+63,rpoE,'Ara–6',RNA polymerase sigma E factor
+64,nadB,'Ara–6',L-aspartate oxidase
+65,pssA,'Ara–6',phosphatidylserine synthase
+66,nicS,"'Ara+1', 'Ara–5'",['HTH-type transcriptional repressor NicS']
+67,ratA,'Ara+1',ribosome association toxin RatA
+68,dcd,'Ara–6',dCTP deaminase
+69,yddL,'Ara–5',putative uncharacterized protein YddL
+70,hemB,'Ara–1',porphobilinogen synthase
+71,cydD,"'Ara+2', 'Ara+3'",glutathione/L-cysteine ABC exporter subunit CydD
+72,ptsN,'Ara–6',phosphotransferase system enzyme IIA(Ntr)
+73,proC,'Ara–1',pyrroline-5-carboxylate reductase
+74,phoU,"'Ara+6', 'Ara–4'",negative regulator of the pho regulon
+75,pstB,"'Ara+6', 'Ara–4'",phosphate ABC transporter ATP binding subunit
+76,pstC,"'Ara+2', 'Ara+6', 'Ara+3', 'Ara–4'",phosphate ABC transporter membrane subunit PstC
+77,csrA,'Ara+2',carbon storage regulator
+78,alaS,'Ara+2',alanine--tRNA ligase/DNA-binding transcriptional repressor
+79,metG,'Ara–6',methionine--tRNA ligase
+80,clpP,"'Ara–1', 'Ara–5'",ATP-dependent Clp protease proteolytic subunit
+81,clpX,'Ara–1',ATP-dependent Clp protease ATP-binding subunit ClpX
+82,ispF,'Ara+2',"2-C-methyl-D-erythritol 2,4-cyclodiphosphate synthase"
+83,ispD,'Ara+2',2-C-methyl-D-erythritol 4-phosphate cytidylyltransferase
+84,ftsB,'Ara+2',cell division protein FtsB
+85,cysC,'Ara+2',adenylyl-sulfate kinase
+86,ompA,"'Ara+2', 'Ara–5', 'Ara+5'",outer membrane protein A
+87,cysD,'Ara+2',sulfate adenylyltransferase subunit 2
+88,folE,'Ara–6',GTP cyclohydrolase 1
+89,yeiL,"'Ara+6', 'Ara–5', 'Ara–4', 'Ara+2', 'Ara+1'",putative DNA-binding transcriptional regulator YeiL
+90,holD,"'Ara–3', 'Ara+1'",DNA polymerase III subunit psi
+91,yejL,'Ara–6',DUF1414 domain-containing protein YejL
+92,yejM,"'Ara+6', 'Ara–6', 'Ara–4', 'Ara+5'",LPS homeostasis protein YejM
+93,arcA,"'Ara+2', 'Ara–4'",DNA-binding transcriptional dual regulator ArcA
+94,gyrA,'Ara–6',DNA gyrase subunit A
+95,ubiG,'Ara–6',bifunctional 3-demethylubiquinone-8 3-O-methyltransferase and 2-octaprenyl-6-hydroxyphenol methylase
+96,nrdA,'Ara–6',ribonucleoside-diphosphate reductase 1 subunit alpha
+97,nrdB,'Ara–6',ribonucleoside-diphosphate reductase 1 subunit beta

@@ -1,0 +1,81 @@
+,gene,populations where gene becomes nonessential over evolution,protein product
+0,glpD,'Ara+6',aerobic glycerol 3-phosphate dehydrogenase
+1,epd,'Ara–3',D-erythrose-4-phosphate dehydrogenase
+2,ycfZ,'Ara+5',putative inner membrane protein
+3,nhaA,"'Ara–1', 'Ara+3', 'Ara–6', 'Ara–5'",Na(+):H(+) antiporter NhaA
+4,cmtB,"'Ara+6', 'Ara–6'",mannitol-specific PTS enzyme IIA component CmtB
+5,dedD,"'Ara–5', 'Ara+3', 'Ara–4'",cell division protein DedD
+6,dacA,'Ara+6',D-alanyl-D-alanine carboxypeptidase DacA
+7,rlmH,"'Ara+2', 'Ara+6'",23S rRNA m(3)psi1915 methyltransferase
+8,rsfS,'Ara+2',ribosomal silencing factor RsfS
+9,minE,"'Ara–1', 'Ara+3', 'Ara+5'",Z-ring positioning protein MinE
+10,minD,"'Ara–5', 'Ara–4'",Z-ring positioning protein MinD
+11,nhaB,'Ara+1',Na(+):H(+)antiporter NhaB
+12,ldcA,"'Ara+6', 'Ara–5'","murein L,D-carboxypeptidase"
+13,nagA,'Ara+6',N-acetylglucosamine-6-phosphate deacetylase
+14,gdhA,"'Ara–3', 'Ara–1', 'Ara–6'",glutamate dehydrogenase
+15,kdsB,'Ara+6',3-deoxy-manno-octulosonate cytidylyltransferase
+16,cra,'Ara+6',DNA-binding transcriptional dual regulator Cra
+17,rsmH,'Ara+2',16S rRNA m(4)C1402 methyltransferase
+18,chaA,'Ara+1',Na(+)/K(+):H(+)antiporter ChaA
+19,secM,'Ara–6',SecA translation regulator
+20,sdhA,'Ara–3',"succinate:quinone oxidoreductase, FAD binding protein"
+21,sucD,'Ara+5',succinyl-CoA synthetase subunit alpha
+22,yciE,"'Ara+6', 'Ara–4'",DUF892 domain-containing protein YciE
+23,prc,"'Ara–3', 'Ara+6'",tail-specific protease
+24,ftsP,"'Ara–3', 'Ara+3', 'Ara+5'",cell division protein required during stress conditions
+25,ytcA,'Ara+2',putative lipoprotein YtcA
+26,eda,"'Ara+3', 'Ara–4'",KHG/KDPG aldolase
+27,sapF,'Ara–4',putrescine ABC exporter ATP binding protein SapF
+28,lpxM,"'Ara–5', 'Ara–4', 'Ara+5'",Lipid A biosynthesis myristoyltransferase
+29,znuB,'Ara+3',Zn(2(+)) ABC transporter membrane subunit
+30,perM,'Ara–4',putative transporter YfgO
+31,ygiM,'Ara+5',putative signal transduction protein (SH3 domain)
+32,skp,"'Ara+2', 'Ara+6', 'Ara–6'",periplasmic chaperone Skp
+33,mntR,'Ara+6',DNA-binding transcriptional dual regulator MntR
+34,yqjA,"'Ara–3', 'Ara+3', 'Ara–4'",DedA family protein YqjA
+35,rfaG,"'Ara–5', 'Ara–4', 'Ara+3', 'Ara+1', 'Ara+5'",lipopolysaccharide glucosyltransferase I
+36,glnB,'Ara+3',nitrogen regulatory protein PII-1
+37,hfq,"'Ara+6', 'Ara–5', 'Ara–4', 'Ara+3', 'Ara+2'",RNA-binding protein Hfq
+38,spoT,'Ara+3',bifunctional(p)ppGpp synthase/hydrolase SpoT
+39,recG,'Ara+2',ATP-dependent DNA helicase RecG
+40,ecpR,"'Ara+6', 'Ara+3'",DNA-binding transcriptional dual regulator MatA
+41,aroF,'Ara+5',"3-deoxy-7-phosphoheptulonate synthase, Tyr-sensitive"
+42,bamE,"'Ara+6', 'Ara+3'",outer membrane protein assembly factor BamE
+43,smpB,'Ara–4',SsrA-binding protein
+44,ygaP,'Ara+6',thiosulfate sulfurtransferase YgaP
+45,ddlA,'Ara–3',D-alanine--D-alanine ligase A
+46,holC,"'Ara+6', 'Ara–4', 'Ara–1', 'Ara+2', 'Ara+5'",DNA polymerase III subunit chi
+47,arcB,"'Ara–6', 'Ara+1'",sensor histidine kinase ArcB
+48,fecE,'Ara–3',ferric citrate ABC transporter ATP binding subunit
+49,fecD,"'Ara–3', 'Ara–4'",ferric citrate ABC transporter membrane subunit FecD
+50,fecC,"'Ara–3', 'Ara+3'",ferric citrate ABC transporter membrane subunit FecC
+51,nanR,'Ara–3',DNA-binding transcriptional dual regulator NanR
+52,fecB,"'Ara–3', 'Ara+3'",ferric citrate ABC transporter periplasmic binding protein
+53,fimD,'Ara+5',type I fimbriae usher protein
+54,yhcB,"'Ara+6', 'Ara–1', 'Ara+3', 'Ara+2', 'Ara–3', 'Ara+5'",DUF1043 domain-containing inner membrane protein YhcB
+55,kdsB,"'Ara+6', 'Ara–4', 'Ara–1', 'Ara+3', 'Ara+2', 'Ara–3', 'Ara+1'",3-deoxy-manno-octulosonate cytidylyltransferase
+56,pgpA,"'Ara–1', 'Ara–4'",phosphatidylglycerophosphatase A
+57,yhdP,'Ara+6',outer membrane permeability factor YhdP
+58,ilvY,"'Ara–4', 'Ara–1', 'Ara+3', 'Ara–3', 'Ara+5'",DNA-binding transcriptional dual regulator IlvY
+59,cyoD,"'Ara+6', 'Ara+3'",cytochrome bo3 ubiquinol oxidase subunit 4
+60,cyoC,"'Ara–1', 'Ara+3', 'Ara+5'",cytochrome bo3 ubiquinol oxidase subunit 3
+61,fis,"'Ara+2', 'Ara+6', 'Ara+1', 'Ara+5'",DNA-binding transcriptional dual regulator Fis
+62,rffG,"'Ara+2', 'Ara–1', 'Ara–6', 'Ara–4'","dTDP-glucose 4,6-dehydratase 2"
+63,rffH,"'Ara–5', 'Ara–4', 'Ara–1', 'Ara–6', 'Ara+2', 'Ara+1'",dTDP-glucose pyrophosphorylase 2
+64,wecE,"'Ara+6', 'Ara–5', 'Ara–4', 'Ara–1', 'Ara–6', 'Ara+2', 'Ara–3', 'Ara+1', 'Ara+5'",dTDP-4-dehydro-6-deoxy-D-glucose transaminase
+65,wzxE,"'Ara+6', 'Ara–5', 'Ara–4', 'Ara–1', 'Ara+3', 'Ara–6', 'Ara+2', 'Ara–3', 'Ara+1', 'Ara+5'",lipid III flippase
+66,wecF,"'Ara+6', 'Ara–5', 'Ara–1', 'Ara–6', 'Ara+2', 'Ara–3', 'Ara+1'",TDP-N-acetylfucosamine:lipid II N-acetylfucosaminyltransferase
+67,mcrC,"'Ara+6', 'Ara+5'",5-methylcytosine-specific restriction enzyme subunit McrC
+68,trkA,'Ara–4',NAD-binding component of Trk potassium transporters
+69,corA,'Ara–3',Ni(2(+))/Co(2(+))/Mg(2(+))transporter
+70,ybaB,'Ara–5',putative nucleoid-associated protein YbaB
+71,mdtJ,'Ara–6',multidrug/spermidine efflux pump membrane subunit MdtJ
+72,polA,'Ara–5',DNA polymerase I
+73,rsxB,'Ara–1',SoxR [2Fe-2S
+74,ompL,'Ara+2',putative outer membrane porin L
+75,envZ,"'Ara+6', 'Ara–5', 'Ara–6', 'Ara+2', 'Ara+1', 'Ara+5'",sensor histidine kinase EnvZ
+76,ompR,"'Ara–5', 'Ara–4', 'Ara–6', 'Ara+2', 'Ara+1', 'Ara+5'",DNA-binding transcriptional dual regulator OmpR
+77,nuoH,'Ara+3',NADH:quinone oxidoreductase subunit H
+78,alaA,"'Ara–3', 'Ara+1'",glutamate--pyruvate aminotransferase AlaA
+79,ftsN,"'Ara+6', 'Ara–5', 'Ara–1', 'Ara–6', 'Ara–3', 'Ara+5'",cell division protein FtsN
