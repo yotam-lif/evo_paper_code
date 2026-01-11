@@ -48,7 +48,7 @@ class Fisher:
 
         # Pre-sample Gaussian mutation steps
         self.deltas = self.rng.normal(loc=0.0, scale=self.sigma, size=(self.m, self.n))
-        # Initialize r_0 = (n, 0, ..., 0), isotropic so only initial radius of n matters
+        # Initialize r_0 = (sqrt(n), 0, ..., 0), isotropic so only initial radius of n matters
         # Instead of starting at random r and taking iid gaussian entries of sigma_0 so that r_0 ~ n * sigma_0 ^2,
         # We set scale by sigma_0 = 1 and sigma becomes in units of sigma_0.
         # initial radius scales with n so that effective initial position doesn't become smaller as n increases (mutation size scales with n as well).
