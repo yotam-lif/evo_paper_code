@@ -3,7 +3,6 @@ import os
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 # ───────────────────────────────────── Data Loading ─────────────────────────────────────
 FILE_PATH = "../data/SK/N4000_rho100_beta100_repeats50.pkl"
