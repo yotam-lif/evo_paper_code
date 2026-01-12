@@ -161,8 +161,8 @@ def run_experiment():
     # --- Shared Params ---
     N = 20
     SIGMA = 0.01
-    M = 1 * 10 ** 4
-    REPS = 100
+    M = 3 * 10 ** 4
+    REPS = 300
 
     # --- Configuration for Subplots ---
 
@@ -189,7 +189,7 @@ def run_experiment():
     # --- Time Setup ---
 
     # Panel A: Run for 2.5 * Tau
-    MAX_T_A = int(2.5 * TAU_A)
+    MAX_T_A = int(2 * TAU_A)
     tp_A = np.arange(0, MAX_T_A + 1, max(1, MAX_T_A // 50))
 
     # Panels B & D: Estimate time to drop from 200 to 100
