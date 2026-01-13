@@ -42,6 +42,8 @@ def apply_axis_style(ax, label):
 def expected_max_gaussian(m, sigma):
     """Calculates E[max(X1, ..., Xm)] where Xi ~ N(0, sigma^2)."""
 
+    # Note: This is kept for the 'greedy' comparison, but we now use
+    # the weighted v_eff for the SSWM theory in Panel D.
     def integrand(x):
         z = x / sigma
         pdf_z = norm.pdf(z)
@@ -159,10 +161,10 @@ def run_single_replicate(args):
 # ----------------------------------------------------------------
 def run_experiment():
     # --- Shared Params ---
-    N = 20
-    SIGMA = 0.01
-    M = 3 * 10 ** 4
-    REPS = 300
+    N = 10
+    SIGMA = 0.025
+    M = 2 * 10 ** 4
+    REPS = 150
 
     # --- Configuration for Subplots ---
 
@@ -170,15 +172,20 @@ def run_experiment():
     R0_A = 100 * SIGMA
 
     # PANELS B & D: Variable Radius (Large -> Medium)
-    R0_BD = 50 * SIGMA
-    RF_BD = 35 * SIGMA  # Stop when we hit 100 sigma
+    R0_BD = 100 * SIGMA
+    RF_BD = 30 * SIGMA  # Stop when we hit 100 sigma
 
     # PANEL C: Variable Radius (Medium -> Small)
     R0_C = 100 * SIGMA
     RF_C = 20 * SIGMA  # Stop when we hit 20 sigma (near peak)
 
     # --- Theory Calculations ---
-    V_THEORY = expected_max_gaussian(M, SIGMA)
+    # 1. Greedy Velocity (for estimation)
+    V_GREEDY = expected_max_gaussian(M, SIGMA)
+
+    # 2. Weighted SSWM Velocity (for Panel D Theory)
+    # v = sigma * sqrt(pi/2)
+    V_SSWM = SIGMA * np.sqrt(np.pi / 2)
 
     # Panel A Tau (Eq A6)
     TAU_A = (2 * R0_A ** 2) / ((N - 1) * SIGMA ** 2)
@@ -192,18 +199,19 @@ def run_experiment():
     MAX_T_A = int(2 * TAU_A)
     tp_A = np.arange(0, MAX_T_A + 1, max(1, MAX_T_A // 50))
 
-    # Panels B & D: Estimate time to drop from 200 to 100
-    EST_STEPS_BD = int((R0_BD - RF_BD) / V_THEORY)
-    MAX_T_BD_SAFE = EST_STEPS_BD * 3
+    # Panels B & D: Estimate time based on Greedy (faster bound to be safe)
+    EST_STEPS_BD = int((R0_BD - RF_BD) / V_SSWM)
+    MAX_T_BD_SAFE = int(EST_STEPS_BD * 1.5)
     tp_BD = np.arange(0, MAX_T_BD_SAFE + 1, max(1, MAX_T_BD_SAFE // 100))
 
-    # Panel C: Estimate time to drop from 100 to 20
-    EST_STEPS_C = int((R0_C - RF_C) / V_THEORY)
-    MAX_T_C_SAFE = EST_STEPS_C * 3
+    # Panel C
+    EST_STEPS_C = int((R0_C - RF_C) / V_SSWM)
+    MAX_T_C_SAFE = int(EST_STEPS_C * 1.5)
     tp_C = np.arange(0, MAX_T_C_SAFE + 1, max(1, MAX_T_C_SAFE // 100))
 
     print(f"--- Configuration ---")
     print(f"N={N}, Sigma={SIGMA}, M={M}")
+    print(f"V_SSWM (Theoretical) = {V_SSWM:.4f}")
     print(f"Panel A: R0={R0_A:.2f}")
     print(f"Panel B/D: R0={R0_BD:.2f} -> Rf={RF_BD:.2f}")
     print(f"Panel C: R0={R0_C:.2f} -> Rf={RF_C:.2f}")
@@ -275,13 +283,12 @@ def run_experiment():
     ax.legend(frameon=False, loc='lower left')
 
     # ==========================
-    # Panel B: Var Radius vs Constant Tau Approx
+    # Panel B: Constant Tau Approx
     # ==========================
     ax = axes[0, 1]
     apply_axis_style(ax, "B")
     x_B = np.linspace(0, df_BD['Time'].max(), 100)
 
-    # Theory: Constant slope determined by R(0)
     ax.plot(x_B, -x_B / TAU_B, color=CMR_COLORS[2], lw=2.5,
             label=rf'$\tau_{{th}} \approx {int(TAU_B)}$')
 
@@ -290,52 +297,61 @@ def run_experiment():
     ax.legend(frameon=False, loc='lower left')
 
     # ==========================
-    # Panel C: Integrated Theory (REVERTED)
+    # Panel C: Numerical Integration (Simulation Data)
     # ==========================
     ax = axes[1, 0]
     apply_axis_style(ax, "C")
 
-    # Avg Radii
+    # Avg Radii from Sim
     max_len = max(len(r) for r in radii_C)
     r_mat = np.full((REPS, max_len), np.nan)
     for i, r in enumerate(radii_C): r_mat[i, :len(r)] = r
     mean_r_C = np.nanmean(r_mat, axis=0)
 
-    # Trim to plot length
     common_len = min(len(tp_C), len(mean_r_C))
-    # Further trim to actual data max
     max_step_idx = np.searchsorted(tp_C, df_C['Time'].max()) + 2
     common_len = min(common_len, max_step_idx)
 
     tp_C_calc = tp_C[:common_len]
     r_C_calc = mean_r_C[:common_len]
-    r_C_calc[r_C_calc < 1e-9] = 1e-9  # Avoid div0
+    r_C_calc[r_C_calc < 1e-9] = 1e-9
 
     rate_t = - ((N - 1) * SIGMA ** 2) / (2 * r_C_calc ** 2)
     y_integ_C = integrate.cumulative_trapezoid(rate_t, tp_C_calc, initial=0)
 
-    ax.plot(tp_C_calc, y_integ_C, color='red', lw=2.5, label='Theory')
+    ax.plot(tp_C_calc, y_integ_C, color='red', lw=2.5, label='Theory (Sim R)')
     sns.lineplot(data=df_C, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
                  color=CMR_COLORS[1], lw=2, label='Simulation')
     ax.legend(frameon=False, loc='lower left')
 
     # ==========================
-    # Panel D: Modified Linear Theory (UPDATED)
+    # Panel D: Dynamic R Theory (Analytical R)
     # ==========================
     ax = axes[1, 1]
     apply_axis_style(ax, "D")
 
-    # Use R0_BD (which is R0_D)
-    # Formula: tau = 2*R0^2 / ( (n-1)*sigma^2 + V*R0 )
-    tau_D_new = (2 * R0_BD ** 2) / ((N - 1) * SIGMA ** 2 + SIGMA * R0_BD )
+    # 1. Create time array for theory
+    x_D = np.linspace(0, df_BD['Time'].max(), 200)
 
-    x_D = np.linspace(0, df_BD['Time'].max(), 100)
+    # 2. Approximate Deterministic Radius R(t) = R0 - v*t
+    #    Clamp at small epsilon to prevent singularity/negative values
+    R_theory = R0_BD - V_SSWM * x_D
+    R_theory[R_theory < 1e-6] = 1e-6
 
-    ax.plot(x_D, -x_D / tau_D_new, color=CMR_COLORS[2], lw=2.5,
-            label=rf'$\tau_{{new}} \approx {int(tau_D_new)}$')
+    # 3. Calculate Rate(t) = - (n-1)sigma^2 / 2 R(t)^2
+    rate_theory_D = - ((N - 1) * SIGMA ** 2) / (2 * R_theory ** 2)
+
+    # 4. Integrate Rate(t) to get Log Correlation
+    y_theory_D = integrate.cumulative_trapezoid(rate_theory_D, x_D, initial=0)
+
+    ax.plot(x_D, y_theory_D, color=CMR_COLORS[2], lw=2.5,
+            label=r'Theory ($R(t) \approx R_0 - v_{eff} t$)')
 
     sns.lineplot(data=df_BD, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
                  color=CMR_COLORS[1], lw=2, label='Simulation')
+
+    # Add text for v_eff
+    ax.text(0.5, 0.5, rf"$v_{{eff}} = {V_SSWM:.3f}$", transform=ax.transAxes)
     ax.legend(frameon=False, loc='lower left')
 
     # Save
