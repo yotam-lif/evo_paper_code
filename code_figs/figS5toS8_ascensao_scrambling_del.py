@@ -24,7 +24,7 @@ def _save_new_figs_as_svg():
         if num in _saved_fig_ids:
             continue
         fig = plt.figure(num)
-        out = os.path.join(out_dir, f"figS{num+7}_ascensao_scrambling.svg")
+        out = os.path.join(out_dir, f"figS{num+4}_ascensao_scrambling.svg")
         fig.savefig(out, bbox_inches="tight")
         _saved_fig_ids.add(num)
 

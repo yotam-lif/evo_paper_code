@@ -332,7 +332,7 @@ def main():
     ax_bottom_middle = fig.add_subplot(gs[1, 1])
     ax_bottom_right = fig.add_subplot(gs[1, 2])
 
-    create_segben(ax_top_left, baym_dfe0K_15, baym_dfe15K, labels=('0', '2K'))
+    create_segben(ax_top_left, baym_dfe0K_15, baym_dfe15K, labels=('0', '15K'))
     create_segben(ax_bottom_left, asenc_R, asenc_S, labels=('R', 'S'))
     create_overlapping_dfes(ax_top_middle, ax_top_right, baym_dfe0K_15, baym_dfe15K)
     create_overlapping_dfes(ax_bottom_middle, ax_bottom_right, asenc_R, asenc_S)
@@ -357,7 +357,7 @@ def main():
     # Save the figure.
     output_dir = os.path.join('..', 'figs_paper')
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, "fig2_scrambling_exper_res.svg")
+    output_path = os.path.join(output_dir, "fig1_scrambling_exper_res.svg")
     fig.savefig(output_path, format="svg", bbox_inches='tight')
     plt.close(fig)
 
