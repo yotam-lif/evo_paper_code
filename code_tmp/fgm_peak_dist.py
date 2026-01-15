@@ -14,7 +14,7 @@ FGM_NS = [4, 8, 16, 32]
 NUM_REPS_MAX = 100  # Load as many as possible for better histograms
 
 # ----------------------------------------------------------------
-# Style & Setup (Matched to fig1_dfe_dynamics.py)
+# Style & Setup (Matched to fig3_dfe_dynamics.py)
 # ----------------------------------------------------------------
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 os.chdir(SCRIPT_DIR)
