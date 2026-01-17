@@ -4,6 +4,7 @@ import matplotlib as mpl
 import seaborn as sns
 from scipy.stats import linregress, pearsonr, norm
 from scipy import integrate
+from scipy.integrate import odeint, cumulative_trapezoid
 import multiprocessing
 import os
 import pandas as pd
@@ -16,7 +17,7 @@ mpl.rcParams.update({
     "axes.labelsize": 16,
     "xtick.labelsize": 14,
     "ytick.labelsize": 14,
-    "legend.fontsize": 11,
+    "legend.fontsize": 14,
 })
 CMR_COLORS = sns.color_palette('CMRmap', 5)
 
@@ -42,8 +43,6 @@ def apply_axis_style(ax, label):
 def expected_max_gaussian(m, sigma):
     """Calculates E[max(X1, ..., Xm)] where Xi ~ N(0, sigma^2)."""
 
-    # Note: This is kept for the 'greedy' comparison, but we now use
-    # the weighted v_eff for the SSWM theory in Panel D.
     def integrand(x):
         z = x / sigma
         pdf_z = norm.pdf(z)
@@ -161,33 +160,29 @@ def run_single_replicate(args):
 # ----------------------------------------------------------------
 def run_experiment():
     # --- Shared Params ---
-    N = 10
+    N = 16
     SIGMA = 0.025
-    M = 2 * 10 ** 4
-    REPS = 150
+    M = 3 * 10 ** 4
+    REPS = 500
 
     # --- Configuration for Subplots ---
 
     # PANEL A: Constant Radius
     R0_A = 100 * SIGMA
 
-    # PANELS B & D: Variable Radius (Large -> Medium)
-    R0_BD = 100 * SIGMA
-    RF_BD = 30 * SIGMA  # Stop when we hit 100 sigma
+    # PANEL B: Variable Radius (Large -> Medium)
+    R0_BD = 50 * SIGMA
+    RF_BD = 30 * SIGMA
 
-    # PANEL C: Variable Radius (Medium -> Small)
-    R0_C = 100 * SIGMA
-    RF_C = 20 * SIGMA  # Stop when we hit 20 sigma (near peak)
+    # PANEL C: Variable Radius (Large -> Peak)
+    R0_C = 130 * SIGMA
+    RF_C = 25 * SIGMA
 
     # --- Theory Calculations ---
-    # 1. Greedy Velocity (for estimation)
-    V_GREEDY = expected_max_gaussian(M, SIGMA)
-
-    # 2. Weighted SSWM Velocity (for Panel D Theory)
-    # v = sigma * sqrt(pi/2)
+    # 1. Weighted SSWM Velocity (v_eff)
     V_SSWM = SIGMA * np.sqrt(np.pi / 2)
 
-    # Panel A Tau (Eq A6)
+    # Panel A Tau (Eq A16)
     TAU_A = (2 * R0_A ** 2) / ((N - 1) * SIGMA ** 2)
 
     # Panel B Tau (Constant Tau approx using R0_BD)
@@ -195,16 +190,16 @@ def run_experiment():
 
     # --- Time Setup ---
 
-    # Panel A: Run for 2.5 * Tau
+    # Panel A: Run for 2 * Tau
     MAX_T_A = int(2 * TAU_A)
     tp_A = np.arange(0, MAX_T_A + 1, max(1, MAX_T_A // 50))
 
-    # Panels B & D: Estimate time based on Greedy (faster bound to be safe)
+    # Panels B: Estimate time
     EST_STEPS_BD = int((R0_BD - RF_BD) / V_SSWM)
     MAX_T_BD_SAFE = int(EST_STEPS_BD * 1.5)
     tp_BD = np.arange(0, MAX_T_BD_SAFE + 1, max(1, MAX_T_BD_SAFE // 100))
 
-    # Panel C
+    # Panel C: Run deeper
     EST_STEPS_C = int((R0_C - RF_C) / V_SSWM)
     MAX_T_C_SAFE = int(EST_STEPS_C * 1.5)
     tp_C = np.arange(0, MAX_T_C_SAFE + 1, max(1, MAX_T_C_SAFE // 100))
@@ -213,7 +208,7 @@ def run_experiment():
     print(f"N={N}, Sigma={SIGMA}, M={M}")
     print(f"V_SSWM (Theoretical) = {V_SSWM:.4f}")
     print(f"Panel A: R0={R0_A:.2f}")
-    print(f"Panel B/D: R0={R0_BD:.2f} -> Rf={RF_BD:.2f}")
+    print(f"Panel B: R0={R0_BD:.2f} -> Rf={RF_BD:.2f}")
     print(f"Panel C: R0={R0_C:.2f} -> Rf={RF_C:.2f}")
 
     # --- Parallel Simulation ---
@@ -225,7 +220,7 @@ def run_experiment():
         tasks.append(('constant', base_seed + i, N, SIGMA, M, R0_A,
                       {'epsilon': SIGMA, 'R_final': 0}, MAX_T_A, tp_A))
 
-    # Task Set B/D
+    # Task Set B
     for i in range(REPS):
         tasks.append(('sswm', base_seed + i + REPS, N, SIGMA, M, R0_BD,
                       {'R_final': RF_BD}, MAX_T_BD_SAFE, tp_BD))
@@ -241,7 +236,7 @@ def run_experiment():
 
     # Unpack
     res_A = results[:REPS]
-    res_BD = results[REPS:2 * REPS]
+    res_B = results[REPS:2 * REPS]
     res_C = results[2 * REPS:]
 
     # --- Data Processing ---
@@ -256,108 +251,130 @@ def run_experiment():
         return pd.DataFrame(data), radii_list
 
     df_A, _ = results_to_df(res_A, tp_A)
-    df_BD, radii_BD = results_to_df(res_BD, tp_BD)
+    df_B, _ = results_to_df(res_B, tp_BD)
     df_C, radii_C = results_to_df(res_C, tp_C)
 
-    # --- Plotting ---
-    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-    fig.subplots_adjust(hspace=0.35, wspace=0.25)
+    # --- Plotting 1x3 ---
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig.subplots_adjust(wspace=0.25)
 
     # ==========================
     # Panel A: Constant Radius
     # ==========================
-    ax = axes[0, 0]
+    ax = axes[0]
     apply_axis_style(ax, "A")
     x_A = np.linspace(df_A['Time'].min(), df_A['Time'].max(), 100)
 
-    # Theory
-    ax.plot(x_A, -x_A / TAU_A, color='red', lw=2.5,
-            label=rf'$\tau_{{th}} \approx {int(TAU_A)}$')
     # Sim
     sns.lineplot(data=df_A, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
                  color=CMR_COLORS[1], lw=2, label='Simulation')
-    # Fit
-    slope, intercept, _, _, _ = linregress(df_A['Time'], df_A['Log Correlation'])
-    ax.plot(x_A, intercept + slope * x_A, color=CMR_COLORS[0], lw=2,
-            label=rf'$\tau_{{fit}} \approx {int(-1.0 / slope)}$')
+
+    # Theory
+    ax.plot(x_A, -x_A / TAU_A, color='red', lw=2, ls='--',
+            label=rf'Constant R approx. (eq. A16)')
+
+    # Fit (Forced through origin: y = ax)
+    x_dat = df_A['Time'].values
+    y_dat = df_A['Log Correlation'].values
+    # Least squares solution for y = ax is sum(xy) / sum(xx)
+    slope_zero_intercept = np.sum(x_dat * y_dat) / np.sum(x_dat ** 2)
+
+    ax.plot(x_A, slope_zero_intercept * x_A, color=CMR_COLORS[0], lw=2, ls='--',
+            label=rf'Linear Fit')
+
+    ax.set_ylabel("Log Correlation")
+    ax.set_xlabel("Time (steps)")
     ax.legend(frameon=False, loc='lower left')
 
     # ==========================
-    # Panel B: Constant Tau Approx
+    # Panel B: Variable Radius vs Constant Tau Approx
     # ==========================
-    ax = axes[0, 1]
+    ax = axes[1]
     apply_axis_style(ax, "B")
-    x_B = np.linspace(0, df_BD['Time'].max(), 100)
+    x_B = np.linspace(0, df_B['Time'].max(), 100)
 
-    ax.plot(x_B, -x_B / TAU_B, color=CMR_COLORS[2], lw=2.5,
-            label=rf'$\tau_{{th}} \approx {int(TAU_B)}$')
-
-    sns.lineplot(data=df_BD, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
+    # ADDED: y='Log Correlation' (this was missing)
+    sns.lineplot(data=df_B, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
                  color=CMR_COLORS[1], lw=2, label='Simulation')
+
+    ax.plot(x_B, -x_B / TAU_B, color='red', lw=2.5, ls='--',
+            label=rf'Constant R approx. (eq. A16)')
+
+    ax.set_ylabel("")  # Explicitly remove Y label
+    ax.set_xlabel("Time (steps)")
     ax.legend(frameon=False, loc='lower left')
 
     # ==========================
-    # Panel C: Numerical Integration (Simulation Data)
+    # Panel C: Dynamic R Theory (Simulated vs Analytical ODE)
     # ==========================
-    ax = axes[1, 0]
+    ax = axes[2]
     apply_axis_style(ax, "C")
 
-    # Avg Radii from Sim
+    # 1. Theory using Simulation Radii (Integrate Eq A17 with real R)
+    # ----------------------------------------------------------------
+    # Calculate avg R(t) from simulation
     max_len = max(len(r) for r in radii_C)
     r_mat = np.full((REPS, max_len), np.nan)
     for i, r in enumerate(radii_C): r_mat[i, :len(r)] = r
     mean_r_C = np.nanmean(r_mat, axis=0)
 
+    # Align time points
     common_len = min(len(tp_C), len(mean_r_C))
-    max_step_idx = np.searchsorted(tp_C, df_C['Time'].max()) + 2
-    common_len = min(common_len, max_step_idx)
+    # Cut off if radius gets too small (unstable numerics/singularity)
+    valid_mask = mean_r_C[:common_len] > 0.5 * SIGMA
+    tp_C_cut = tp_C[:common_len][valid_mask]
+    r_C_cut = mean_r_C[:common_len][valid_mask]
 
-    tp_C_calc = tp_C[:common_len]
-    r_C_calc = mean_r_C[:common_len]
-    r_C_calc[r_C_calc < 1e-9] = 1e-9
+    rate_sim_R = - ((N - 1) * SIGMA ** 2) / (2 * r_C_cut ** 2)
+    y_theory_sim_R = cumulative_trapezoid(rate_sim_R, tp_C_cut, initial=0)
 
-    rate_t = - ((N - 1) * SIGMA ** 2) / (2 * r_C_calc ** 2)
-    y_integ_C = integrate.cumulative_trapezoid(rate_t, tp_C_calc, initial=0)
+    # 2. Theory using Analytical ODE for R(t)
+    # ----------------------------------------------------------------
+    # ODE: dR/dt = (n-1)sigma^2 / 2R - v_eff
+    def radial_dynamics(r, t, v_eff, n, sigma):
+        if r <= 1e-6: return 0
+        repulsion = ((n - 1) * sigma ** 2) / (2 * r)
+        d_rdt = repulsion - v_eff
+        return d_rdt
 
-    ax.plot(tp_C_calc, y_integ_C, color='red', lw=2.5, label='Theory (Sim R)')
+    # Integrate ODE
+    t_ode = np.linspace(0, tp_C_cut[-1], 200)
+    R_ode = odeint(
+        radial_dynamics,
+        y0=R0_C,
+        t=t_ode,
+        args=(V_SSWM, N, SIGMA)
+    ).flatten()
+
+    # Avoid div by zero
+    R_ode[R_ode < 1e-6] = 1e-6
+
+    # Calculate Log Corr
+    rate_ode = - ((N - 1) * SIGMA ** 2) / (2 * R_ode ** 2)
+    y_theory_ode = cumulative_trapezoid(rate_ode, t_ode, initial=0)
+
+    # 3. Plotting
+    # ----------------------------------------------------------------
+    # Simulation Data - ADDED: y='Log Correlation' (this was missing)
     sns.lineplot(data=df_C, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
                  color=CMR_COLORS[1], lw=2, label='Simulation')
-    ax.legend(frameon=False, loc='lower left')
 
-    # ==========================
-    # Panel D: Dynamic R Theory (Analytical R)
-    # ==========================
-    ax = axes[1, 1]
-    apply_axis_style(ax, "D")
+    # Theory (Sim R) - "Perfect" Theory
+    ax.plot(tp_C_cut, y_theory_sim_R, color=CMR_COLORS[0], lw=2.5, ls='--',
+            label=r'eq. A17 (using Simulated $R(t)$)')
 
-    # 1. Create time array for theory
-    x_D = np.linspace(0, df_BD['Time'].max(), 200)
+    # Theory (ODE R) - "Predictive" Theory
+    ax.plot(t_ode, y_theory_ode, color=CMR_COLORS[2], lw=2.5, ls='--',
+            label=r'eq. A17 (using eq. A18 for $R(t)$)')
 
-    # 2. Approximate Deterministic Radius R(t) = R0 - v*t
-    #    Clamp at small epsilon to prevent singularity/negative values
-    R_theory = R0_BD - V_SSWM * x_D
-    R_theory[R_theory < 1e-6] = 1e-6
-
-    # 3. Calculate Rate(t) = - (n-1)sigma^2 / 2 R(t)^2
-    rate_theory_D = - ((N - 1) * SIGMA ** 2) / (2 * R_theory ** 2)
-
-    # 4. Integrate Rate(t) to get Log Correlation
-    y_theory_D = integrate.cumulative_trapezoid(rate_theory_D, x_D, initial=0)
-
-    ax.plot(x_D, y_theory_D, color=CMR_COLORS[2], lw=2.5,
-            label=r'Theory ($R(t) \approx R_0 - v_{eff} t$)')
-
-    sns.lineplot(data=df_BD, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
-                 color=CMR_COLORS[1], lw=2, label='Simulation')
-
-    # Add text for v_eff
-    ax.text(0.5, 0.5, rf"$v_{{eff}} = {V_SSWM:.3f}$", transform=ax.transAxes)
+    ax.set_ylabel("")  # Explicitly remove Y label
+    ax.set_xlabel("Time (steps)")
     ax.legend(frameon=False, loc='lower left')
 
     # Save
     out_dir = "../figs_paper"
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "scrambling_2x2_verification.svg")
+    out_path = os.path.join(out_dir, "figA1_azimuthal_timescale.svg")
     fig.savefig(out_path, format="svg", bbox_inches="tight")
     print(f"Figure saved to {out_path}")
 
