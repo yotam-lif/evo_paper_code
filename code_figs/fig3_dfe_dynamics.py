@@ -429,8 +429,8 @@ def main():
     # 5. Save
     out_dir = os.path.join("..", "figs_paper")
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "fig3_dfe_dynamics.svg")
-    fig.savefig(out_path, format="svg", bbox_inches="tight")
+    out_path = os.path.join(out_dir, "fig3_dfe_dynamics.pdf")
+    fig.savefig(out_path, format="pdf", bbox_inches="tight")
     print(f"Saved: {out_path}")
 
 

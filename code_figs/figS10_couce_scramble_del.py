@@ -219,8 +219,8 @@ def main():
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
-    output_path = os.path.join(out_dir, "figS10_couce_scramble_del.svg")
-    fig.savefig(output_path, format="svg", bbox_inches='tight')
+    output_path = os.path.join(out_dir, "figS10_couce_scramble_del.pdf")
+    fig.savefig(output_path, format="pdf", bbox_inches='tight')
     print(f"Saved {output_path}")
 
 

@@ -357,8 +357,8 @@ def main():
     # Save the figure.
     output_dir = os.path.join('..', 'figs_paper')
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, "fig1_scrambling_exper_res.svg")
-    fig.savefig(output_path, format="svg", bbox_inches='tight')
+    output_path = os.path.join(output_dir, "fig1_scrambling_exper_res.pdf")
+    fig.savefig(output_path, format="pdf", bbox_inches='tight')
     plt.close(fig)
 
 

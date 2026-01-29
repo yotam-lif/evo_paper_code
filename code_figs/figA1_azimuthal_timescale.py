@@ -374,8 +374,8 @@ def run_experiment():
     # Save
     out_dir = "../figs_paper"
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "figA1_azimuthal_timescale.svg")
-    fig.savefig(out_path, format="svg", bbox_inches="tight")
+    out_path = os.path.join(out_dir, "figA1_azimuthal_timescale.pdf")
+    fig.savefig(out_path, format="pdf", bbox_inches="tight")
     print(f"Figure saved to {out_path}")
 
 

@@ -126,4 +126,4 @@ create_overlapping_dfes_sim(axH, axI, nk_dfe1, nk_dfe2, xlim=0.01)
 # Save the figure
 output_dir = "../figs_paper"
 os.makedirs(output_dir, exist_ok=True)
-fig.savefig(os.path.join(output_dir, "fig2_scrambling_sim_res.svg"), format="svg", bbox_inches="tight")
+fig.savefig(os.path.join(output_dir, "fig2_scrambling_sim_res.pdf"), format="pdf", bbox_inches="tight")

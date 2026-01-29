@@ -17,15 +17,15 @@ os.makedirs(out_dir, exist_ok=True)
 # --- Auto-added helper to save new figures as SVG without closing ---
 _saved_fig_ids = set()
 
-def _save_new_figs_as_svg():
+def _save_new_figs_as_pdf():
     import matplotlib.pyplot as plt
     nums = plt.get_fignums()
     for num in nums:
         if num in _saved_fig_ids:
             continue
         fig = plt.figure(num)
-        out = os.path.join(out_dir, f"figS{num+4}_ascensao_scrambling.svg")
-        fig.savefig(out, bbox_inches="tight")
+        out = os.path.join(out_dir, f"figS{num+4}_ascensao_scrambling.pdf")
+        fig.savefig(out, bbox_inches="tight", format='pdf')
         _saved_fig_ids.add(num)
 
 
@@ -317,7 +317,7 @@ for i, exp_dir in enumerate(experiment_dirs):
     S_valid = S[valid_indices]
     create_overlapping_dfes(ax3, ax4, R_valid, S_valid)
     plt.tight_layout()
-    _save_new_figs_as_svg()
+    _save_new_figs_as_pdf()
 
 # Final safeguard: save any figures that weren't saved yet
-_save_new_figs_as_svg()
+_save_new_figs_as_pdf()
