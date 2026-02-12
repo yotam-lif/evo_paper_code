@@ -365,7 +365,7 @@ def run_experiment():
 
     # Theory (ODE R) - "Predictive" Theory
     ax.plot(t_ode, y_theory_ode, color=CMR_COLORS[2], lw=2.5, ls='--',
-            label=r'eq. A17 (using eq. A18 for $R(t)$)')
+            label=r'eq. A17 (using eq. A19 for $R(t)$)')
 
     ax.set_ylabel("")  # Explicitly remove Y label
     ax.set_xlabel("Time (steps)")
