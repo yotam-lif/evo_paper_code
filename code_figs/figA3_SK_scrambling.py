@@ -11,7 +11,7 @@ mpl.rcParams.update({
     "axes.labelsize": 16,
     "xtick.labelsize": 14,
     "ytick.labelsize": 14,
-    "legend.fontsize": 10,
+    "legend.fontsize": 14,
 })
 
 # ───────────────────────────────────── Data Loading ─────────────────────────────────────
@@ -161,14 +161,13 @@ def _interp_to_grid(x, y, xgrid):
 
 # ───────────────────────────────────── Plotting ─────────────────────────────────────
 
-def make_figure(avg_theta, u_corr_single, xgrid, ref_percents, out_path):
+def make_figure(avg_cos_theta, u_corr_single, xgrid, ref_percents, out_path):
     fig, (ax_theta, ax_u) = plt.subplots(1, 2, figsize=(12.5, 4.8))
 
-    # Panel A: averaged theta(t)
-    ax_theta.plot(xgrid, avg_theta, lw=2.5, color=colors[0])
+    # Panel A: averaged cos(theta(t))
+    ax_theta.plot(xgrid, avg_cos_theta, lw=2.5, color=colors[0])
     ax_theta.set_xlabel('Walk completed (%)')
-    ax_theta.set_ylabel(r'$\langle \theta(t) \rangle$')
-    ax_theta.set_ylim(bottom=0.0)
+    ax_theta.set_ylabel(r'$\langle \cos\theta(t) \rangle$')
 
     # Panel B: azimuthal memory using u-hat
     for j, rp in enumerate(ref_percents):
@@ -176,9 +175,7 @@ def make_figure(avg_theta, u_corr_single, xgrid, ref_percents, out_path):
 
     ax_u.set_xlabel('Walk completed (%)')
     ax_u.set_ylabel(r'$\hat{\mathbf{u}}(t)\cdot\hat{\mathbf{u}}(t_{\mathrm{ref}})$')
-    ax_u.axhline(0, color='gray', linestyle='--', alpha=0.5, lw=1.2)
-    ax_u.set_ylim(-1.05, 1.05)
-    ax_u.legend(frameon=False, handlelength=2.2, columnspacing=1.0, loc='upper right')
+    ax_u.legend(frameon=False, handlelength=2.2, columnspacing=1.0, loc='lower left')
 
     plt.tight_layout()
     fig.savefig(out_path, format='pdf', bbox_inches='tight')
@@ -189,7 +186,7 @@ def make_figure(avg_theta, u_corr_single, xgrid, ref_percents, out_path):
 
 def main():
     n_repeats = 10
-    ref_percents = [0, 0.1, 1, 5, 20, 50, 70]
+    ref_percents = [0, 20, 40, 60, 80]
 
     runs = load_sk_runs(n_repeats=n_repeats)
 
@@ -212,7 +209,7 @@ def main():
             u_corr_single = corr_interp
 
     theta_stack = np.vstack(theta_series)
-    avg_theta = np.nanmean(theta_stack, axis=0)
+    avg_cos_theta = np.nanmean(np.cos(theta_stack), axis=0)
 
     out_dir = "../figs_paper"
     os.makedirs(out_dir, exist_ok=True)
@@ -221,7 +218,7 @@ def main():
     if u_corr_single is None:
         raise RuntimeError('u_corr_single was not set; no runs loaded?')
 
-    make_figure(avg_theta, u_corr_single, xgrid, ref_percents, out_path)
+    make_figure(avg_cos_theta, u_corr_single, xgrid, ref_percents, out_path)
 
 
 if __name__ == "__main__":
