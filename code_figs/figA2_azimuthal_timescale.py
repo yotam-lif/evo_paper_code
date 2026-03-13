@@ -1,61 +1,44 @@
+import os
+import multiprocessing
+
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
-from scipy.stats import linregress, pearsonr, norm
-from scipy import integrate
-from scipy.integrate import odeint, cumulative_trapezoid
-import multiprocessing
-import os
-import pandas as pd
+from matplotlib.ticker import MaxNLocator
 
 # ----------------------------------------------------------------
 # 1. VISUAL STYLE CONFIGURATION
 # ----------------------------------------------------------------
-plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams["font.family"] = "sans-serif"
 mpl.rcParams.update({
     "axes.labelsize": 16,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
     "legend.fontsize": 14,
 })
-CMR_COLORS = sns.color_palette('CMRmap', 5)
+CMR_COLORS = sns.color_palette("CMRmap", 7)
 
 
 def apply_axis_style(ax, label):
-    """Applies specific styling: No grid, bold label, thicker spines."""
     ax.text(
-        -0.1, 1.05, label,
+        -0.08, 1.04, label,
         transform=ax.transAxes,
-        fontsize=18, fontweight="bold",
-        va="bottom", ha="left",
+        fontsize=17,
+        fontweight="bold",
+        va="bottom",
+        ha="left",
     )
     for spine in ax.spines.values():
-        spine.set_linewidth(1.5)
-    ax.tick_params(width=1.5, length=6, which="major")
-    ax.tick_params(width=1.5, length=3, which="minor")
+        spine.set_linewidth(1.4)
+    ax.tick_params(width=1.4, length=5, which="major")
+    ax.tick_params(width=1.2, length=3, which="minor")
     ax.grid(False)
 
 
 # ----------------------------------------------------------------
-# 2. HELPER FUNCTIONS
-# ----------------------------------------------------------------
-def expected_max_gaussian(m, sigma):
-    """Calculates E[max(X1, ..., Xm)] where Xi ~ N(0, sigma^2)."""
-
-    def integrand(x):
-        z = x / sigma
-        pdf_z = norm.pdf(z)
-        cdf_z = norm.cdf(z)
-        return x * m * pdf_z * (cdf_z ** (m - 1)) / sigma
-
-    peak_est = sigma * np.sqrt(2 * np.log(m))
-    val, err = integrate.quad(integrand, -sigma, peak_est + 5 * sigma)
-    return val
-
-
-# ----------------------------------------------------------------
-# 3. MODEL CLASSES
+# 2. MODEL CLASSES
 # ----------------------------------------------------------------
 class FisherModel:
     def __init__(self, n, sigma, m, R0, seed=None):
@@ -65,7 +48,7 @@ class FisherModel:
         self.rng = np.random.default_rng(seed)
         self.deltas = self.rng.normal(loc=0.0, scale=self.sigma, size=(self.m, self.n))
         self.R0 = float(R0)
-        self.r = np.zeros(n)
+        self.r = np.zeros(self.n)
         self.r[0] = self.R0
 
     def compute_fitness(self, r):
@@ -74,9 +57,16 @@ class FisherModel:
     def compute_dfe(self, r):
         w0 = self.compute_fitness(r)
         r_new = r + self.deltas
-        r2_new = np.einsum('ij,ij->i', r_new, r_new)
+        r2_new = np.einsum("ij,ij->i", r_new, r_new)
         w_new = np.exp(-0.5 * r2_new)
         return w_new - w0
+
+    @staticmethod
+    def normalize(vec):
+        norm = np.linalg.norm(vec)
+        if norm <= 0:
+            return np.zeros_like(vec)
+        return vec / norm
 
 
 class FisherConstantRadius(FisherModel):
@@ -85,7 +75,8 @@ class FisherConstantRadius(FisherModel):
         dists = np.linalg.norm(r_candidates, axis=1)
         valid_mask = (dists >= (self.R0 - epsilon)) & (dists <= (self.R0 + epsilon))
         valid_indices = np.nonzero(valid_mask)[0]
-        if len(valid_indices) == 0: return False
+        if len(valid_indices) == 0:
+            return False
         choice = self.rng.choice(valid_indices)
         self.r += self.deltas[choice]
         return True
@@ -95,283 +86,475 @@ class FisherSSWM(FisherModel):
     def step(self):
         dfe = self.compute_dfe(self.r)
         beneficial_mask = dfe > 0
-        if not np.any(beneficial_mask): return False
+        if not np.any(beneficial_mask):
+            return False
         ben_indices = np.nonzero(beneficial_mask)[0]
         ben_effects = dfe[ben_indices]
         probs = ben_effects / np.sum(ben_effects)
         choice = self.rng.choice(ben_indices, p=probs)
         self.r += self.deltas[choice]
+        # In FGM, if a mutation fixes, the forward mutation flips sign
         self.deltas[choice] *= -1
         return True
 
 
 # ----------------------------------------------------------------
-# 4. SIMULATION WORKER
+# 3. SIMULATION WORKER
 # ----------------------------------------------------------------
 def run_single_replicate(args):
-    mode, seed, N, SIGMA, M, R0, params, MAX_T, time_points = args
+    mode, seed, n, sigma, m, R0, params, max_t, time_points = args
 
-    # Extract Termination Condition (R_final) if present
-    R_FINAL = params.get('R_final', 0.0)
+    R_final = params.get("R_final", 0.0)
 
-    if mode == 'constant':
-        model = FisherConstantRadius(N, SIGMA, M, R0, seed=seed)
-        epsilon = params['epsilon']
-    elif mode == 'sswm':
-        model = FisherSSWM(N, SIGMA, M, R0, seed=seed)
+    if mode == "constant":
+        model = FisherConstantRadius(n, sigma, m, R0, seed=seed)
+        epsilon = params["epsilon"]
+    elif mode == "sswm":
+        model = FisherSSWM(n, sigma, m, R0, seed=seed)
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
 
-    dfe_0 = model.compute_dfe(model.r)
+    rhat0 = FisherModel.normalize(model.r)
 
-    correlations = np.full(len(time_points), np.nan)
+    # Use a static copy of the exact initial mutations generated by the model
+    # to track Pearson correlation (ignoring sign flips from fixation)
+    initial_deltas = model.deltas.copy()
+    delta_norms_sq = np.sum(initial_deltas ** 2, axis=1)
+
+    def get_malthusian(r):
+        return -0.5 * delta_norms_sq - np.dot(initial_deltas, r)
+
+    m0 = get_malthusian(model.r)
+
+    cosines = np.full(len(time_points), np.nan)
     radii = np.full(len(time_points), np.nan)
+    pearsons = np.full(len(time_points), np.nan)
+    integrals = np.full(len(time_points), np.nan)  # Array for the running integral
+
+    cosines[0] = 1.0
+    radii[0] = np.linalg.norm(model.r)
+    pearsons[0] = 1.0
+    integrals[0] = 0.0
 
     current_t_idx = 0
-    correlations[0] = 1.0
-    radii[0] = np.linalg.norm(model.r)
-
     time_points_set = set(time_points)
 
-    for t in range(1, MAX_T + 1):
-        if mode == 'constant':
-            success = model.step(epsilon)
-        else:
-            success = model.step()
+    # Track the integral step-by-step to avoid subsampling trapezoidal errors
+    running_integral = 0.0
+    prev_R = radii[0]
 
-        # Stop if stuck
-        if not success: break
-
-        # Stop if reached Target Radius (for SSWM)
-        current_R = np.linalg.norm(model.r)
-        if mode == 'sswm' and current_R < R_FINAL:
+    for t in range(1, max_t + 1):
+        success = model.step(epsilon) if mode == "constant" else model.step()
+        if not success:
             break
+
+        current_R = np.linalg.norm(model.r)
+
+        # Calculate the continuous area for this specific step (dt = 1)
+        running_integral += 0.5 * (1.0 / prev_R ** 2 + 1.0 / current_R ** 2)
+        prev_R = current_R
 
         if t in time_points_set:
             current_t_idx += 1
-            dfe_t = model.compute_dfe(model.r)
-            corr, _ = pearsonr(dfe_0, dfe_t)
-            correlations[current_t_idx] = corr
+            rhatt = FisherModel.normalize(model.r)
+            cos_val = float(np.dot(rhat0, rhatt))
+            cosines[current_t_idx] = np.clip(cos_val, -1.0, 1.0)
             radii[current_t_idx] = current_R
+            integrals[current_t_idx] = running_integral  # Save the running tally
 
-    return correlations, radii
+            # Track Pearson correlation of Malthusian fitness effects
+            mt = get_malthusian(model.r)
+            if np.std(mt) > 1e-12 and np.std(m0) > 1e-12:
+                pearsons[current_t_idx] = np.corrcoef(m0, mt)[0, 1]
+
+        # Break after recording to ensure the final state is captured
+        if mode == "sswm" and current_R < R_final:
+            break
+
+    return cosines, radii, pearsons, integrals
+
+
+# ----------------------------------------------------------------
+# 4. HELPERS
+# ----------------------------------------------------------------
+def stack_results(res_list):
+    values = np.array([res[0] for res in res_list], dtype=float)
+    radii = np.array([res[1] for res in res_list], dtype=float)
+    pearsons = np.array([res[2] for res in res_list], dtype=float)
+    integrals = np.array([res[3] for res in res_list], dtype=float)
+    return values, radii, pearsons, integrals
+
+
+def summarize_log_traces(values, tiny=1e-12, log_offset=0.0):
+    mean = np.nanmean(values, axis=0)
+    std = np.nanstd(values, axis=0)
+
+    mean_shift = mean + log_offset
+    lower_shift = mean - std + log_offset
+    upper_shift = mean + std + log_offset
+
+    mean_clip = np.clip(mean_shift, tiny, None)
+    lower_clip = np.clip(lower_shift, tiny, None)
+    upper_clip = np.clip(upper_shift, tiny, None)
+
+    return np.log(mean_clip), np.log(lower_clip), np.log(upper_clip), mean, std
+
+
+def make_long_df(values, time_points, value_name):
+    rows = []
+    for rep_idx in range(values.shape[0]):
+        for t, val in zip(time_points, values[rep_idx]):
+            if not np.isnan(val):
+                rows.append({"Time": int(t), value_name: float(val), "Rep": rep_idx})
+    return pd.DataFrame(rows)
 
 
 # ----------------------------------------------------------------
 # 5. MAIN EXPERIMENT
 # ----------------------------------------------------------------
 def run_experiment():
-    # --- Shared Params ---
-    N = 16
-    SIGMA = 0.025
-    M = 3 * 10 ** 4
-    REPS = 500
+    sigma = 0.125
+    reps = 300
 
-    # --- Configuration for Subplots ---
+    # ------------------------------
+    # Panel A
+    # ------------------------------
+    n_A = 16
+    m_A = 3 * 10 ** 3
+    R0_A_tilde = 100
+    R0_A = R0_A_tilde * sigma
+    epsilon_A = sigma
+    max_t_A = 1000
+    tp_A = np.arange(0, max_t_A + 1)
+    tau_A = (2 * R0_A ** 2) / ((n_A - 1) * sigma ** 2)
+    log_offset_A = 1e-3
 
-    # PANEL A: Constant Radius
-    R0_A = 100 * SIGMA
+    # ------------------------------
+    # Panel B
+    # ------------------------------
+    n_B = 20
+    m_B = 5 * 10 ** 3
+    R0_B_tilde = 80
+    RF_B_tilde = 5
+    R0_B = R0_B_tilde * sigma
+    RF_B = RF_B_tilde * sigma
+    V_SSWM_B = sigma * np.sqrt(np.pi / 2)
+    est_steps_B = int((R0_B - RF_B) / V_SSWM_B)
+    max_t_B = int(est_steps_B * 1.5)
+    tp_B = np.arange(0, max_t_B + 1, max(1, max_t_B // 100))
 
-    # PANEL B: Variable Radius (Large -> Medium)
-    R0_BD = 50 * SIGMA
-    RF_BD = 30 * SIGMA
+    # ------------------------------
+    # Panel C
+    # ------------------------------
+    n_C = 30
+    m_C = 2 * 10 ** 3
+    R0_C_tilde = 130
+    RF_C_tilde = 25
+    R0_C = R0_C_tilde * sigma
+    RF_C = RF_C_tilde * sigma
+    V_SSWM_C = sigma * np.sqrt(np.pi / 2)
+    est_steps_C = int((R0_C - RF_C) / V_SSWM_C)
+    max_t_C = int(est_steps_C * 1.5)
+    tp_C = np.arange(0, max_t_C + 1, max(1, max_t_C // 100))
 
-    # PANEL C: Variable Radius (Large -> Peak)
-    R0_C = 130 * SIGMA
-    RF_C = 25 * SIGMA
+    # ------------------------------
+    # Panel D
+    # ------------------------------
+    n_D = 30
+    m_D = 2 * 10 ** 3
+    R0_D_tilde = 3 * n_D
+    R0_D = R0_D_tilde * sigma
+    max_t_D = 50
+    tp_D = np.arange(0, max_t_D + 1)
+    tau_D = (2 * R0_D ** 2) / ((n_D - 1) * sigma ** 2)
 
-    # --- Theory Calculations ---
-    # 1. Weighted SSWM Velocity (v_eff)
-    V_SSWM = SIGMA * np.sqrt(np.pi / 2)
+    # ------------------------------
+    # Panel E
+    # ------------------------------
+    n_E = 30
+    m_E = 2 * 10 ** 3
+    R0_E_tilde = n_E
+    R0_E = R0_E_tilde * sigma
+    max_t_E = 18
+    tp_E = np.arange(0, max_t_E + 1)
+    tau_E = (2 * R0_E ** 2) / ((n_E - 1) * sigma ** 2)
 
-    # Panel A Tau (Eq A16)
-    TAU_A = (2 * R0_A ** 2) / ((N - 1) * SIGMA ** 2)
+    # ------------------------------
+    # Panel F
+    # ------------------------------
+    n_F = 30
+    m_F = 2 * 10 ** 3
+    R0_F_tilde = 8
+    R0_F = R0_F_tilde * sigma
+    max_t_F = 3
+    tp_F = np.arange(0, max_t_F + 1)
+    tau_F = (2 * R0_F ** 2) / ((n_F - 1) * sigma ** 2)
 
-    # Panel B Tau (Constant Tau approx using R0_BD)
-    TAU_B = (2 * R0_BD ** 2) / ((N - 1) * SIGMA ** 2)
+    print("--- Configuration ---")
+    print(f"A: n={n_A}, m={m_A}, R0_tilde={R0_A_tilde}, max_t={max_t_A}")
+    print(f"B: n={n_B}, m={m_B}, R0_tilde={R0_B_tilde}, Rf_tilde={RF_B_tilde}, max_t={max_t_B}")
+    print(f"C: n={n_C}, m={m_C}, R0_tilde={R0_C_tilde}, Rf_tilde={RF_C_tilde}, max_t={max_t_C}")
+    print(f"D: n={n_D}, m={m_D}, R0_tilde={R0_D_tilde}, max_t={max_t_D}")
+    print(f"E: n={n_E}, m={m_E}, R0_tilde={R0_E_tilde}, max_t={max_t_E}")
+    print(f"F: n={n_F}, m={m_F}, R0_tilde={R0_F_tilde}, max_t={max_t_F}")
 
-    # --- Time Setup ---
-
-    # Panel A: Run for 2 * Tau
-    MAX_T_A = int(2 * TAU_A)
-    tp_A = np.arange(0, MAX_T_A + 1, max(1, MAX_T_A // 50))
-
-    # Panels B: Estimate time
-    EST_STEPS_BD = int((R0_BD - RF_BD) / V_SSWM)
-    MAX_T_BD_SAFE = int(EST_STEPS_BD * 1.5)
-    tp_BD = np.arange(0, MAX_T_BD_SAFE + 1, max(1, MAX_T_BD_SAFE // 100))
-
-    # Panel C: Run deeper
-    EST_STEPS_C = int((R0_C - RF_C) / V_SSWM)
-    MAX_T_C_SAFE = int(EST_STEPS_C * 1.5)
-    tp_C = np.arange(0, MAX_T_C_SAFE + 1, max(1, MAX_T_C_SAFE // 100))
-
-    print(f"--- Configuration ---")
-    print(f"N={N}, Sigma={SIGMA}, M={M}")
-    print(f"V_SSWM (Theoretical) = {V_SSWM:.4f}")
-    print(f"Panel A: R0={R0_A:.2f}")
-    print(f"Panel B: R0={R0_BD:.2f} -> Rf={RF_BD:.2f}")
-    print(f"Panel C: R0={R0_C:.2f} -> Rf={RF_C:.2f}")
-
-    # --- Parallel Simulation ---
-    base_seed = np.random.randint(0, 1e6)
+    base_seed = np.random.randint(0, 1_000_000)
     tasks = []
 
-    # Task Set A
-    for i in range(REPS):
-        tasks.append(('constant', base_seed + i, N, SIGMA, M, R0_A,
-                      {'epsilon': SIGMA, 'R_final': 0}, MAX_T_A, tp_A))
+    # A
+    start_A = len(tasks)
+    for i in range(reps):
+        tasks.append((
+            "constant",
+            base_seed + 10_000 + i,
+            n_A,
+            sigma,
+            m_A,
+            R0_A,
+            {"epsilon": epsilon_A, "R_final": 0.0},
+            max_t_A,
+            tp_A,
+        ))
+    end_A = len(tasks)
 
-    # Task Set B
-    for i in range(REPS):
-        tasks.append(('sswm', base_seed + i + REPS, N, SIGMA, M, R0_BD,
-                      {'R_final': RF_BD}, MAX_T_BD_SAFE, tp_BD))
+    # B
+    start_B = len(tasks)
+    for i in range(reps):
+        tasks.append((
+            "sswm",
+            base_seed + 20_000 + i,
+            n_B,
+            sigma,
+            m_B,
+            R0_B,
+            {"R_final": RF_B},
+            max_t_B,
+            tp_B,
+        ))
+    end_B = len(tasks)
 
-    # Task Set C
-    for i in range(REPS):
-        tasks.append(('sswm', base_seed + i + 2 * REPS, N, SIGMA, M, R0_C,
-                      {'R_final': RF_C}, MAX_T_C_SAFE, tp_C))
+    # C
+    start_C = len(tasks)
+    for i in range(reps):
+        tasks.append((
+            "sswm",
+            base_seed + 30_000 + i,
+            n_C,
+            sigma,
+            m_C,
+            R0_C,
+            {"R_final": RF_C},
+            max_t_C,
+            tp_C,
+        ))
+    end_C = len(tasks)
+
+    # D
+    start_D = len(tasks)
+    for i in range(reps):
+        tasks.append((
+            "sswm",
+            base_seed + 40_000 + i,
+            n_D,
+            sigma,
+            m_D,
+            R0_D,
+            {"R_final": 0.0},
+            max_t_D,
+            tp_D,
+        ))
+    end_D = len(tasks)
+
+    # E
+    start_E = len(tasks)
+    for i in range(reps):
+        tasks.append((
+            "sswm",
+            base_seed + 50_000 + i,
+            n_E,
+            sigma,
+            m_E,
+            R0_E,
+            {"R_final": 0.0},
+            max_t_E,
+            tp_E,
+        ))
+    end_E = len(tasks)
+
+    # F
+    start_F = len(tasks)
+    for i in range(reps):
+        tasks.append((
+            "sswm",
+            base_seed + 60_000 + i,
+            n_F,
+            sigma,
+            m_F,
+            R0_F,
+            {"R_final": 0.0},
+            max_t_F,
+            tp_F,
+        ))
+    end_F = len(tasks)
 
     num_proc = min(multiprocessing.cpu_count(), len(tasks))
     with multiprocessing.Pool(processes=num_proc) as pool:
         results = pool.map(run_single_replicate, tasks)
 
-    # Unpack
-    res_A = results[:REPS]
-    res_B = results[REPS:2 * REPS]
-    res_C = results[2 * REPS:]
+    # ------------------------------
+    # Unpack A
+    # ------------------------------
+    cos_A, rad_A, pear_A, int_A = stack_results(results[start_A:end_A])
+    yA, yA_lo, yA_hi, mean_cos_A, std_cos_A = summarize_log_traces(
+        cos_A, tiny=1e-12, log_offset=log_offset_A
+    )
 
-    # --- Data Processing ---
-    def results_to_df(res_list, t_points):
-        data = []
-        radii_list = []
-        for rep_idx, (corr, rad) in enumerate(res_list):
-            radii_list.append(rad)
-            for t, c in zip(t_points, corr):
-                if c > 0.001 and not np.isnan(c):
-                    data.append({'Time': t, 'Log Correlation': np.log(c), 'Rep': rep_idx})
-        return pd.DataFrame(data), radii_list
+    # ------------------------------
+    # Unpack B
+    # ------------------------------
+    cos_B, rad_B, pear_B, int_B = stack_results(results[start_B:end_B])
+    yB, yB_lo, yB_hi, mean_cos_B, std_cos_B = summarize_log_traces(
+        cos_B, tiny=1e-2, log_offset=0.0
+    )
 
-    df_A, _ = results_to_df(res_A, tp_A)
-    df_B, _ = results_to_df(res_B, tp_BD)
-    df_C, radii_C = results_to_df(res_C, tp_C)
+    mean_integral_B = np.nanmean(int_B, axis=0)
+    log_theory_B = -0.5 * (n_B - 1) * (sigma ** 2) * mean_integral_B
 
-    # --- Plotting 1x3 ---
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-    fig.subplots_adjust(wspace=0.25)
+    pear_B_log = np.log(np.clip(pear_B, 1e-2, None))
+    mean_pear_B = np.nanmean(pear_B_log, axis=0)
+    std_pear_B = np.nanstd(pear_B_log, axis=0)
 
-    # ==========================
-    # Panel A: Constant Radius
-    # ==========================
-    ax = axes[0]
+    # ------------------------------
+    # Unpack C
+    # ------------------------------
+    cos_C, rad_C, pear_C, int_C = stack_results(results[start_C:end_C])
+    yC, yC_lo, yC_hi, mean_cos_C, std_cos_C = summarize_log_traces(
+        cos_C, tiny=1e-12, log_offset=0.0
+    )
+
+    mean_integral_C = np.nanmean(int_C, axis=0)
+    log_theory_C = -0.5 * (n_C - 1) * (sigma ** 2) * mean_integral_C
+
+    pear_C_log = np.log(np.clip(pear_C, 1e-12, None))
+    mean_pear_C = np.nanmean(pear_C_log, axis=0)
+    std_pear_C = np.nanstd(pear_C_log, axis=0)
+
+    # ------------------------------
+    # Unpack D
+    # ------------------------------
+    cos_D, rad_D, pear_D, int_D = stack_results(results[start_D:end_D])
+    yD, yD_lo, yD_hi, mean_cos_D, std_cos_D = summarize_log_traces(
+        cos_D, tiny=1e-12, log_offset=0.0
+    )
+
+    # ------------------------------
+    # Unpack E
+    # ------------------------------
+    cos_E, rad_E, pear_E, int_E = stack_results(results[start_E:end_E])
+    yE, yE_lo, yE_hi, mean_cos_E, std_cos_E = summarize_log_traces(
+        cos_E, tiny=1e-12, log_offset=0.0
+    )
+
+    # ------------------------------
+    # Unpack F
+    # ------------------------------
+    cos_F, rad_F, pear_F, int_F = stack_results(results[start_F:end_F])
+    yF, yF_lo, yF_hi, mean_cos_F, std_cos_F = summarize_log_traces(
+        cos_F, tiny=1e-12, log_offset=0.0
+    )
+
+    # Optional long dataframes
+    df_A = make_long_df(cos_A, tp_A, "C")
+    df_B = make_long_df(cos_B, tp_B, "C")
+    df_C = make_long_df(cos_C, tp_C, "C")
+    df_D = make_long_df(cos_D, tp_D, "C")
+    df_E = make_long_df(cos_E, tp_E, "C")
+    df_F = make_long_df(cos_F, tp_F, "C")
+    _ = (df_A, df_B, df_C, df_D, df_E, df_F, rad_A, rad_B, rad_C, rad_D, rad_E, rad_F)
+
+    # ------------------------------
+    # Plotting: 2 rows x 3 columns
+    # ------------------------------
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    fig.subplots_adjust(wspace=0.28, hspace=0.35)
+
+    # A
+    ax = axes[0, 0]
     apply_axis_style(ax, "A")
-    x_A = np.linspace(df_A['Time'].min(), df_A['Time'].max(), 100)
-
-    # Sim
-    sns.lineplot(data=df_A, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
-                 color=CMR_COLORS[1], lw=2, label='Simulation')
-
-    # Theory
-    ax.plot(x_A, -x_A / TAU_A, color='red', lw=2, ls='--',
-            label=rf'Constant R approx. (eq. A16)')
-
-    # Fit (Forced through origin: y = ax)
-    x_dat = df_A['Time'].values
-    y_dat = df_A['Log Correlation'].values
-    # Least squares solution for y = ax is sum(xy) / sum(xx)
-    slope_zero_intercept = np.sum(x_dat * y_dat) / np.sum(x_dat ** 2)
-
-    ax.plot(x_A, slope_zero_intercept * x_A, color=CMR_COLORS[0], lw=2, ls='--',
-            label=rf'Linear Fit')
-
-    ax.set_ylabel("Log Correlation")
+    ax.plot(tp_A, yA, color=CMR_COLORS[1], lw=2.4, label="Simulation")
+    ax.fill_between(tp_A, yA_lo, yA_hi, color=CMR_COLORS[1], alpha=0.25, linewidth=0)
+    ax.plot(tp_A, -tp_A / tau_A, color="red", lw=2.0, ls="--", label=r"Constant $R$ approx.")
+    ax.set_xlim(0, max_t_A)
     ax.set_xlabel("Time (steps)")
-    ax.legend(frameon=False, loc='lower left')
+    ax.set_ylabel(r"$\log\!\left(C(\hat r(0),\hat r(t)) \right)$")
+    ax.legend(frameon=False)
 
-    # ==========================
-    # Panel B: Variable Radius vs Constant Tau Approx
-    # ==========================
-    ax = axes[1]
+    # B
+    ax = axes[0, 1]
     apply_axis_style(ax, "B")
-    x_B = np.linspace(0, df_B['Time'].max(), 100)
+    ax.plot(tp_B, yB, color=CMR_COLORS[1], lw=2.5, ls="-", label="Simulation (Angular)")
+    ax.fill_between(tp_B, yB_lo, yB_hi, color=CMR_COLORS[1], alpha=0.30, linewidth=0)
+    ax.plot(tp_B, log_theory_B, color=CMR_COLORS[5], lw=2.3, ls=":",
+            label=r"Diffusion Approximation (eq. (*))")
 
-    # ADDED: y='Log Correlation' (this was missing)
-    sns.lineplot(data=df_B, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
-                 color=CMR_COLORS[1], lw=2, label='Simulation')
+    # Overlay Pearson correlation with error bars
+    step = max(1, len(tp_B) // 15)
+    ax.errorbar(tp_B[::step], mean_pear_B[::step], yerr=std_pear_B[::step],
+                fmt='o', color='black', alpha=0.6, markersize=4, capsize=3, label="Simulation (Pearson)")
 
-    ax.plot(x_B, -x_B / TAU_B, color='red', lw=2.5, ls='--',
-            label=rf'Constant R approx. (eq. A16)')
-
-    ax.set_ylabel("")  # Explicitly remove Y label
     ax.set_xlabel("Time (steps)")
-    ax.legend(frameon=False, loc='lower left')
+    ax.legend(frameon=False)
 
-    # ==========================
-    # Panel C: Dynamic R Theory (Simulated vs Analytical ODE)
-    # ==========================
-    ax = axes[2]
+    # C
+    ax = axes[0, 2]
     apply_axis_style(ax, "C")
+    ax.plot(tp_C, yC, color=CMR_COLORS[1], lw=2.5, ls="-", label="Simulation (Angular)")
+    ax.fill_between(tp_C, yC_lo, yC_hi, color=CMR_COLORS[1], alpha=0.30, linewidth=0)
+    ax.plot(tp_C, log_theory_C, color=CMR_COLORS[5], lw=2.3, ls=":",
+            label="Diffusion Approximation (eq. (*))")
 
-    # 1. Theory using Simulation Radii (Integrate Eq A17 with real R)
-    # ----------------------------------------------------------------
-    # Calculate avg R(t) from simulation
-    max_len = max(len(r) for r in radii_C)
-    r_mat = np.full((REPS, max_len), np.nan)
-    for i, r in enumerate(radii_C): r_mat[i, :len(r)] = r
-    mean_r_C = np.nanmean(r_mat, axis=0)
+    # Overlay Pearson correlation with error bars
+    step = max(1, len(tp_C) // 15)
+    ax.errorbar(tp_C[::step], mean_pear_C[::step], yerr=std_pear_C[::step],
+                fmt='o', color='black', alpha=0.6, markersize=4, capsize=3, label="Simulation (Pearson)")
 
-    # Align time points
-    common_len = min(len(tp_C), len(mean_r_C))
-    # Cut off if radius gets too small (unstable numerics/singularity)
-    valid_mask = mean_r_C[:common_len] > 0.5 * SIGMA
-    tp_C_cut = tp_C[:common_len][valid_mask]
-    r_C_cut = mean_r_C[:common_len][valid_mask]
-
-    rate_sim_R = - ((N - 1) * SIGMA ** 2) / (2 * r_C_cut ** 2)
-    y_theory_sim_R = cumulative_trapezoid(rate_sim_R, tp_C_cut, initial=0)
-
-    # 2. Theory using Analytical ODE for R(t)
-    # ----------------------------------------------------------------
-    # ODE: dR/dt = (n-1)sigma^2 / 2R - v_eff
-    def radial_dynamics(r, t, v_eff, n, sigma):
-        if r <= 1e-6: return 0
-        repulsion = ((n - 1) * sigma ** 2) / (2 * r)
-        d_rdt = repulsion - v_eff
-        return d_rdt
-
-    # Integrate ODE
-    t_ode = np.linspace(0, tp_C_cut[-1], 200)
-    R_ode = odeint(
-        radial_dynamics,
-        y0=R0_C,
-        t=t_ode,
-        args=(V_SSWM, N, SIGMA)
-    ).flatten()
-
-    # Avoid div by zero
-    R_ode[R_ode < 1e-6] = 1e-6
-
-    # Calculate Log Corr
-    rate_ode = - ((N - 1) * SIGMA ** 2) / (2 * R_ode ** 2)
-    y_theory_ode = cumulative_trapezoid(rate_ode, t_ode, initial=0)
-
-    # 3. Plotting
-    # ----------------------------------------------------------------
-    # Simulation Data - ADDED: y='Log Correlation' (this was missing)
-    sns.lineplot(data=df_C, x='Time', y='Log Correlation', errorbar='sd', ax=ax,
-                 color=CMR_COLORS[1], lw=2, label='Simulation')
-
-    # Theory (Sim R) - "Perfect" Theory
-    ax.plot(tp_C_cut, y_theory_sim_R, color=CMR_COLORS[0], lw=2.5, ls='--',
-            label=r'eq. A17 (using Simulated $R(t)$)')
-
-    # Theory (ODE R) - "Predictive" Theory
-    ax.plot(t_ode, y_theory_ode, color=CMR_COLORS[2], lw=2.5, ls='--',
-            label=r'eq. A17 (using eq. A19 for $R(t)$)')
-
-    ax.set_ylabel("")  # Explicitly remove Y label
     ax.set_xlabel("Time (steps)")
-    ax.legend(frameon=False, loc='lower left')
+    ax.legend(frameon=False)
 
-    # Save
+    # D
+    ax = axes[1, 0]
+    apply_axis_style(ax, "D")
+    ax.plot(tp_D, yD, color=CMR_COLORS[1], lw=2.5, ls="-", label="Simulation")
+    ax.fill_between(tp_D, yD_lo, yD_hi, color=CMR_COLORS[1], alpha=0.40, linewidth=0)
+    ax.plot(tp_D, -tp_D / tau_D, color=CMR_COLORS[1], lw=2.0, ls=":", label=r"Constant $R$ approx. (eq. (**))")
+    ax.set_xlabel("Time (steps)")
+    ax.set_ylabel(r"$\log C(\hat r(0),\hat r(t))$")
+    ax.set_title(rf"$\tilde{{R}}_0 = {R0_D_tilde:g}$")
+    ax.legend(frameon=False, loc="lower left")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # E
+    ax = axes[1, 1]
+    apply_axis_style(ax, "E")
+    ax.plot(tp_E, yE, color=CMR_COLORS[2], lw=2.5, ls="-", label="Simulation")
+    ax.fill_between(tp_E, yE_lo, yE_hi, color=CMR_COLORS[2], alpha=0.40, linewidth=0)
+    ax.plot(tp_E, -tp_E / tau_E, color=CMR_COLORS[2], lw=2.0, ls=":", label=r"Constant $R$ approx. (eq. (**))")
+    ax.set_xlabel("Time (steps)")
+    ax.set_title(rf"$\tilde{{R}}_0 = {R0_E_tilde:g}$")
+    ax.legend(frameon=False, loc="lower left")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # F
+    ax = axes[1, 2]
+    apply_axis_style(ax, "F")
+    ax.plot(tp_F, yF, color=CMR_COLORS[3], lw=2.5, ls="-", label="Simulation")
+    ax.fill_between(tp_F, yF_lo, yF_hi, color=CMR_COLORS[3], alpha=0.40, linewidth=0)
+    ax.plot(tp_F, -tp_F / tau_F, color=CMR_COLORS[3], lw=2.0, ls=":", label=r"Constant $R$ approx. (eq. (**))")
+    ax.set_xlabel("Time (steps)")
+    ax.set_title(rf"$\tilde{{R}}_0 = {R0_F_tilde:g}$")
+    ax.legend(frameon=False, loc="lower left")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
     out_dir = "../figs_paper"
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "figA2_azimuthal_timescale.pdf")
