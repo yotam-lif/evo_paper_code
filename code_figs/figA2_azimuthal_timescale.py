@@ -18,7 +18,8 @@ mpl.rcParams.update({
     "ytick.labelsize": 12,
     "legend.fontsize": 14,
 })
-CMR_COLORS = sns.color_palette("CMRmap", 7)
+
+CMR_COLORS = sns.color_palette("CMRmap", 4)
 
 
 def apply_axis_style(ax, label):
@@ -214,13 +215,14 @@ def make_long_df(values, time_points, value_name):
 # ----------------------------------------------------------------
 def run_experiment():
     sigma = 0.125
-    reps = 300
+    reps = 200
+    CONST_R_COLOR = "lime"
 
     # ------------------------------
     # Panel A
     # ------------------------------
-    n_A = 16
-    m_A = 3 * 10 ** 3
+    n_A = 20
+    m_A = 3 * 10 ** 4
     R0_A_tilde = 100
     R0_A = R0_A_tilde * sigma
     epsilon_A = sigma
@@ -235,7 +237,7 @@ def run_experiment():
     n_B = 20
     m_B = 5 * 10 ** 3
     R0_B_tilde = 80
-    RF_B_tilde = 5
+    RF_B_tilde = 10
     R0_B = R0_B_tilde * sigma
     RF_B = RF_B_tilde * sigma
     V_SSWM_B = sigma * np.sqrt(np.pi / 2)
@@ -246,57 +248,31 @@ def run_experiment():
     # ------------------------------
     # Panel C
     # ------------------------------
-    n_C = 30
-    m_C = 2 * 10 ** 3
-    R0_C_tilde = 130
-    RF_C_tilde = 25
+    n_C = 40
+    m_C = 5 * 10 ** 3
+    R0_C_tilde = 80
     R0_C = R0_C_tilde * sigma
-    RF_C = RF_C_tilde * sigma
-    V_SSWM_C = sigma * np.sqrt(np.pi / 2)
-    est_steps_C = int((R0_C - RF_C) / V_SSWM_C)
-    max_t_C = int(est_steps_C * 1.5)
-    tp_C = np.arange(0, max_t_C + 1, max(1, max_t_C // 100))
+    max_t_C = 50
+    tp_C = np.arange(0, max_t_C + 1)
+    tau_C = (2 * R0_C ** 2) / ((n_C - 1) * sigma ** 2)
 
     # ------------------------------
     # Panel D
     # ------------------------------
-    n_D = 30
-    m_D = 2 * 10 ** 3
-    R0_D_tilde = 3 * n_D
+    n_D = 40
+    m_D = 5 * 10 ** 3
+    R0_D_tilde = 8
     R0_D = R0_D_tilde * sigma
-    max_t_D = 50
+    max_t_D = 3
     tp_D = np.arange(0, max_t_D + 1)
     tau_D = (2 * R0_D ** 2) / ((n_D - 1) * sigma ** 2)
 
-    # ------------------------------
-    # Panel E
-    # ------------------------------
-    n_E = 30
-    m_E = 2 * 10 ** 3
-    R0_E_tilde = n_E
-    R0_E = R0_E_tilde * sigma
-    max_t_E = 18
-    tp_E = np.arange(0, max_t_E + 1)
-    tau_E = (2 * R0_E ** 2) / ((n_E - 1) * sigma ** 2)
-
-    # ------------------------------
-    # Panel F
-    # ------------------------------
-    n_F = 30
-    m_F = 2 * 10 ** 3
-    R0_F_tilde = 8
-    R0_F = R0_F_tilde * sigma
-    max_t_F = 3
-    tp_F = np.arange(0, max_t_F + 1)
-    tau_F = (2 * R0_F ** 2) / ((n_F - 1) * sigma ** 2)
 
     print("--- Configuration ---")
     print(f"A: n={n_A}, m={m_A}, R0_tilde={R0_A_tilde}, max_t={max_t_A}")
     print(f"B: n={n_B}, m={m_B}, R0_tilde={R0_B_tilde}, Rf_tilde={RF_B_tilde}, max_t={max_t_B}")
-    print(f"C: n={n_C}, m={m_C}, R0_tilde={R0_C_tilde}, Rf_tilde={RF_C_tilde}, max_t={max_t_C}")
+    print(f"C: n={n_C}, m={m_C}, R0_tilde={R0_C_tilde}, max_t={max_t_C}")
     print(f"D: n={n_D}, m={m_D}, R0_tilde={R0_D_tilde}, max_t={max_t_D}")
-    print(f"E: n={n_E}, m={m_E}, R0_tilde={R0_E_tilde}, max_t={max_t_E}")
-    print(f"F: n={n_F}, m={m_F}, R0_tilde={R0_F_tilde}, max_t={max_t_F}")
 
     base_seed = np.random.randint(0, 1_000_000)
     tasks = []
@@ -343,7 +319,7 @@ def run_experiment():
             sigma,
             m_C,
             R0_C,
-            {"R_final": RF_C},
+            {"R_final": 0.0},
             max_t_C,
             tp_C,
         ))
@@ -365,37 +341,6 @@ def run_experiment():
         ))
     end_D = len(tasks)
 
-    # E
-    start_E = len(tasks)
-    for i in range(reps):
-        tasks.append((
-            "sswm",
-            base_seed + 50_000 + i,
-            n_E,
-            sigma,
-            m_E,
-            R0_E,
-            {"R_final": 0.0},
-            max_t_E,
-            tp_E,
-        ))
-    end_E = len(tasks)
-
-    # F
-    start_F = len(tasks)
-    for i in range(reps):
-        tasks.append((
-            "sswm",
-            base_seed + 60_000 + i,
-            n_F,
-            sigma,
-            m_F,
-            R0_F,
-            {"R_final": 0.0},
-            max_t_F,
-            tp_F,
-        ))
-    end_F = len(tasks)
 
     num_proc = min(multiprocessing.cpu_count(), len(tasks))
     with multiprocessing.Pool(processes=num_proc) as pool:
@@ -432,13 +377,6 @@ def run_experiment():
         cos_C, tiny=1e-12, log_offset=0.0
     )
 
-    mean_integral_C = np.nanmean(int_C, axis=0)
-    log_theory_C = -0.5 * (n_C - 1) * (sigma ** 2) * mean_integral_C
-
-    pear_C_log = np.log(np.clip(pear_C, 1e-12, None))
-    mean_pear_C = np.nanmean(pear_C_log, axis=0)
-    std_pear_C = np.nanstd(pear_C_log, axis=0)
-
     # ------------------------------
     # Unpack D
     # ------------------------------
@@ -447,46 +385,29 @@ def run_experiment():
         cos_D, tiny=1e-12, log_offset=0.0
     )
 
-    # ------------------------------
-    # Unpack E
-    # ------------------------------
-    cos_E, rad_E, pear_E, int_E = stack_results(results[start_E:end_E])
-    yE, yE_lo, yE_hi, mean_cos_E, std_cos_E = summarize_log_traces(
-        cos_E, tiny=1e-12, log_offset=0.0
-    )
-
-    # ------------------------------
-    # Unpack F
-    # ------------------------------
-    cos_F, rad_F, pear_F, int_F = stack_results(results[start_F:end_F])
-    yF, yF_lo, yF_hi, mean_cos_F, std_cos_F = summarize_log_traces(
-        cos_F, tiny=1e-12, log_offset=0.0
-    )
 
     # Optional long dataframes
     df_A = make_long_df(cos_A, tp_A, "C")
     df_B = make_long_df(cos_B, tp_B, "C")
     df_C = make_long_df(cos_C, tp_C, "C")
     df_D = make_long_df(cos_D, tp_D, "C")
-    df_E = make_long_df(cos_E, tp_E, "C")
-    df_F = make_long_df(cos_F, tp_F, "C")
-    _ = (df_A, df_B, df_C, df_D, df_E, df_F, rad_A, rad_B, rad_C, rad_D, rad_E, rad_F)
+    _ = (df_A, df_B, df_C, df_D, rad_A, rad_B, rad_C, rad_D)
 
     # ------------------------------
-    # Plotting: 2 rows x 3 columns
+    # Plotting: 2 rows x 2 columns
     # ------------------------------
-    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
     fig.subplots_adjust(wspace=0.28, hspace=0.35)
 
-    # A
+    # A (Constant R approx)
     ax = axes[0, 0]
     apply_axis_style(ax, "A")
-    ax.plot(tp_A, yA, color=CMR_COLORS[1], lw=2.4, label="Simulation")
-    ax.fill_between(tp_A, yA_lo, yA_hi, color=CMR_COLORS[1], alpha=0.25, linewidth=0)
-    ax.plot(tp_A, -tp_A / tau_A, color="red", lw=2.0, ls="--", label=r"Constant $R$ approx.")
+    ax.plot(tp_A, yA, color="navy", lw=2.4, label="Simulation")
+    ax.fill_between(tp_A, yA_lo, yA_hi, color="navy", alpha=0.25, linewidth=0)
+    ax.plot(tp_A, -tp_A / tau_A, color=CONST_R_COLOR, lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlim(0, max_t_A)
     ax.set_xlabel("Time (steps)")
-    ax.set_ylabel(r"$\log\!\left(C(\hat r(0),\hat r(t)) \right)$")
+    ax.set_ylabel(r"$\log C(\hat r(0),\hat r(t))$")
     ax.legend(frameon=False)
 
     # B
@@ -494,64 +415,47 @@ def run_experiment():
     apply_axis_style(ax, "B")
     ax.plot(tp_B, yB, color=CMR_COLORS[1], lw=2.5, ls="-", label="Simulation (Angular)")
     ax.fill_between(tp_B, yB_lo, yB_hi, color=CMR_COLORS[1], alpha=0.30, linewidth=0)
-    ax.plot(tp_B, log_theory_B, color=CMR_COLORS[5], lw=2.3, ls=":",
-            label=r"Diffusion Approximation (eq. (*))")
 
     # Overlay Pearson correlation with error bars
     step = max(1, len(tp_B) // 15)
     ax.errorbar(tp_B[::step], mean_pear_B[::step], yerr=std_pear_B[::step],
-                fmt='o', color='black', alpha=0.6, markersize=4, capsize=3, label="Simulation (Pearson)")
+                fmt='o', color="slategray", markersize=4, capsize=3, label="Simulation (Pearson)")
+
+    ax.plot(tp_B, log_theory_B, color="black", lw=2.3, ls=":",
+            label=r"Diffusion Approximation (**)")
 
     ax.set_xlabel("Time (steps)")
-    ax.legend(frameon=False)
+
+    # Force the diffusion equation label to the bottom of the legend
+    handles, labels = ax.get_legend_handles_labels()
+    target_label = r"Diffusion Approximation (**)"
+    if target_label in labels:
+        idx = labels.index(target_label)
+        order = [i for i in range(len(labels)) if i != idx] + [idx]
+        ax.legend([handles[i] for i in order], [labels[i] for i in order], frameon=False)
+    else:
+        ax.legend(frameon=False)
 
     # C
-    ax = axes[0, 2]
-    apply_axis_style(ax, "C")
-    ax.plot(tp_C, yC, color=CMR_COLORS[1], lw=2.5, ls="-", label="Simulation (Angular)")
-    ax.fill_between(tp_C, yC_lo, yC_hi, color=CMR_COLORS[1], alpha=0.30, linewidth=0)
-    ax.plot(tp_C, log_theory_C, color=CMR_COLORS[5], lw=2.3, ls=":",
-            label="Diffusion Approximation (eq. (*))")
-
-    # Overlay Pearson correlation with error bars
-    step = max(1, len(tp_C) // 15)
-    ax.errorbar(tp_C[::step], mean_pear_C[::step], yerr=std_pear_C[::step],
-                fmt='o', color='black', alpha=0.6, markersize=4, capsize=3, label="Simulation (Pearson)")
-
-    ax.set_xlabel("Time (steps)")
-    ax.legend(frameon=False)
-
-    # D
     ax = axes[1, 0]
-    apply_axis_style(ax, "D")
-    ax.plot(tp_D, yD, color=CMR_COLORS[1], lw=2.5, ls="-", label="Simulation")
-    ax.fill_between(tp_D, yD_lo, yD_hi, color=CMR_COLORS[1], alpha=0.40, linewidth=0)
-    ax.plot(tp_D, -tp_D / tau_D, color=CMR_COLORS[1], lw=2.0, ls=":", label=r"Constant $R$ approx. (eq. (**))")
+    apply_axis_style(ax, "C")
+    ax.plot(tp_C, yC, color="blueviolet", lw=2.5, ls="-", label="Simulation")
+    ax.fill_between(tp_C, yC_lo, yC_hi, color="blueviolet", alpha=0.40, linewidth=0)
+    ax.plot(tp_C, -tp_C / tau_C, color=CONST_R_COLOR, lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlabel("Time (steps)")
     ax.set_ylabel(r"$\log C(\hat r(0),\hat r(t))$")
-    ax.set_title(rf"$\tilde{{R}}_0 = {R0_D_tilde:g}$")
+    ax.set_title(rf"$\tilde{{R}}_0 = {R0_C_tilde:g}$")
     ax.legend(frameon=False, loc="lower left")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    # E
+    # D
     ax = axes[1, 1]
-    apply_axis_style(ax, "E")
-    ax.plot(tp_E, yE, color=CMR_COLORS[2], lw=2.5, ls="-", label="Simulation")
-    ax.fill_between(tp_E, yE_lo, yE_hi, color=CMR_COLORS[2], alpha=0.40, linewidth=0)
-    ax.plot(tp_E, -tp_E / tau_E, color=CMR_COLORS[2], lw=2.0, ls=":", label=r"Constant $R$ approx. (eq. (**))")
+    apply_axis_style(ax, "D")
+    ax.plot(tp_D, yD, color="blueviolet", lw=2.5, ls="-", label="Simulation")
+    ax.fill_between(tp_D, yD_lo, yD_hi, color="blueviolet", alpha=0.40, linewidth=0)
+    ax.plot(tp_D, -tp_D / tau_D, color=CONST_R_COLOR, lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlabel("Time (steps)")
-    ax.set_title(rf"$\tilde{{R}}_0 = {R0_E_tilde:g}$")
-    ax.legend(frameon=False, loc="lower left")
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-
-    # F
-    ax = axes[1, 2]
-    apply_axis_style(ax, "F")
-    ax.plot(tp_F, yF, color=CMR_COLORS[3], lw=2.5, ls="-", label="Simulation")
-    ax.fill_between(tp_F, yF_lo, yF_hi, color=CMR_COLORS[3], alpha=0.40, linewidth=0)
-    ax.plot(tp_F, -tp_F / tau_F, color=CMR_COLORS[3], lw=2.0, ls=":", label=r"Constant $R$ approx. (eq. (**))")
-    ax.set_xlabel("Time (steps)")
-    ax.set_title(rf"$\tilde{{R}}_0 = {R0_F_tilde:g}$")
+    ax.set_title(rf"$\tilde{{R}}_0 = {R0_D_tilde:g}$")
     ax.legend(frameon=False, loc="lower left")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
