@@ -216,7 +216,6 @@ def make_long_df(values, time_points, value_name):
 def run_experiment():
     sigma = 0.125
     reps = 200
-    CONST_R_COLOR = "lime"
 
     # ------------------------------
     # Panel A
@@ -235,7 +234,7 @@ def run_experiment():
     # Panel B
     # ------------------------------
     n_B = 20
-    m_B = 5 * 10 ** 3
+    m_B = 8 * 10 ** 3
     R0_B_tilde = 80
     RF_B_tilde = 10
     R0_B = R0_B_tilde * sigma
@@ -359,7 +358,7 @@ def run_experiment():
     # ------------------------------
     cos_B, rad_B, pear_B, int_B = stack_results(results[start_B:end_B])
     yB, yB_lo, yB_hi, mean_cos_B, std_cos_B = summarize_log_traces(
-        cos_B, tiny=1e-2, log_offset=0.0
+        cos_B, tiny=1e-1, log_offset=0.0
     )
 
     mean_integral_B = np.nanmean(int_B, axis=0)
@@ -402,9 +401,9 @@ def run_experiment():
     # A (Constant R approx)
     ax = axes[0, 0]
     apply_axis_style(ax, "A")
-    ax.plot(tp_A, yA, color="navy", lw=2.4, label="Simulation")
-    ax.fill_between(tp_A, yA_lo, yA_hi, color="navy", alpha=0.25, linewidth=0)
-    ax.plot(tp_A, -tp_A / tau_A, color=CONST_R_COLOR, lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
+    ax.plot(tp_A, yA, color=CMR_COLORS[0], lw=2.4, label="Simulation")
+    ax.fill_between(tp_A, yA_lo, yA_hi, color=CMR_COLORS[0], alpha=0.25, linewidth=0)
+    ax.plot(tp_A, -tp_A / tau_A, color="magenta", lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlim(0, max_t_A)
     ax.set_xlabel("Time (steps)")
     ax.set_ylabel(r"$\log C(\hat r(0),\hat r(t))$")
@@ -422,7 +421,7 @@ def run_experiment():
                 fmt='o', color="slategray", markersize=4, capsize=3, label="Simulation (Pearson)")
 
     ax.plot(tp_B, log_theory_B, color="black", lw=2.3, ls=":",
-            label=r"Diffusion Approximation (**)")
+            label=r"Diffusion approx. (**)")
 
     ax.set_xlabel("Time (steps)")
 
@@ -439,9 +438,9 @@ def run_experiment():
     # C
     ax = axes[1, 0]
     apply_axis_style(ax, "C")
-    ax.plot(tp_C, yC, color="blueviolet", lw=2.5, ls="-", label="Simulation")
-    ax.fill_between(tp_C, yC_lo, yC_hi, color="blueviolet", alpha=0.40, linewidth=0)
-    ax.plot(tp_C, -tp_C / tau_C, color=CONST_R_COLOR, lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
+    ax.plot(tp_C, yC, color=CMR_COLORS[2], lw=2.5, ls="-", label="Simulation")
+    ax.fill_between(tp_C, yC_lo, yC_hi, color=CMR_COLORS[2], alpha=0.40, linewidth=0)
+    ax.plot(tp_C, -tp_C / tau_C, color="brown", lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlabel("Time (steps)")
     ax.set_ylabel(r"$\log C(\hat r(0),\hat r(t))$")
     ax.set_title(rf"$\tilde{{R}}_0 = {R0_C_tilde:g}$")
@@ -451,9 +450,9 @@ def run_experiment():
     # D
     ax = axes[1, 1]
     apply_axis_style(ax, "D")
-    ax.plot(tp_D, yD, color="blueviolet", lw=2.5, ls="-", label="Simulation")
-    ax.fill_between(tp_D, yD_lo, yD_hi, color="blueviolet", alpha=0.40, linewidth=0)
-    ax.plot(tp_D, -tp_D / tau_D, color=CONST_R_COLOR, lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
+    ax.plot(tp_D, yD, color=CMR_COLORS[2], lw=2.5, ls="-", label="Simulation")
+    ax.fill_between(tp_D, yD_lo, yD_hi, color=CMR_COLORS[2], alpha=0.40, linewidth=0)
+    ax.plot(tp_D, -tp_D / tau_D, color="brown", lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlabel("Time (steps)")
     ax.set_title(rf"$\tilde{{R}}_0 = {R0_D_tilde:g}$")
     ax.legend(frameon=False, loc="lower left")

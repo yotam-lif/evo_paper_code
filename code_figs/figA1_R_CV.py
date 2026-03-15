@@ -20,23 +20,6 @@ CMR_COLORS = sns.color_palette("CMRmap", 4)
 N_PATTERN = re.compile(r"_n(\d+)_")
 N_PERCENT_POINTS = 100
 
-
-def apply_axis_style(ax, label):
-    ax.text(
-        -0.08, 1.04, label,
-        transform=ax.transAxes,
-        fontsize=17,
-        fontweight="bold",
-        va="bottom",
-        ha="left",
-    )
-    for spine in ax.spines.values():
-        spine.set_linewidth(1.4)
-    ax.tick_params(width=1.4, length=5, which="major")
-    ax.tick_params(width=1.2, length=3, which="minor")
-    ax.grid(False)
-
-
 def find_fgm_files(data_root: Path) -> list[Path]:
     if not data_root.exists():
         return []
@@ -120,7 +103,6 @@ def main():
     fgm_cv2_by_n = load_fgm_cv2_metrics()
 
     fig, ax = plt.subplots(figsize=(6.2, 5.0))
-    apply_axis_style(ax, "A")
 
     percent_axis = np.arange(1, N_PERCENT_POINTS + 1)
     for color, (n_val, coarse) in zip(CMR_COLORS, fgm_cv2_by_n.items()):
@@ -132,6 +114,11 @@ def main():
     ax.set_xlabel("Walk progress (%)")
     ax.set_ylabel(r"$CV^2(R)$")
     ax.legend(frameon=False, loc="best")
+    ax.tick_params(width=1.4, length=5, which="major")
+    ax.tick_params(width=1.2, length=3, which="minor")
+    ax.grid(False)
+    for spine in ax.spines.values():
+        spine.set_linewidth(1.4)
 
     out_dir = "../figs_paper"
     os.makedirs(out_dir, exist_ok=True)
