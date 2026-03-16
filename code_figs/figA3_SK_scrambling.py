@@ -167,14 +167,14 @@ def make_figure(avg_cos_theta, u_corr_single, xgrid, ref_percents, out_path):
     # Panel A: averaged cos(theta(t))
     ax_theta.plot(xgrid, avg_cos_theta, lw=2.5, color=colors[0])
     ax_theta.set_xlabel('Walk completed (%)')
-    ax_theta.set_ylabel(r'$\langle \cos\theta(t) \rangle$')
+    ax_theta.set_ylabel(r'$\cos\theta(t)$')
 
     # Panel B: azimuthal memory using u-hat
     for j, rp in enumerate(ref_percents):
         ax_u.plot(xgrid, u_corr_single[j], lw=2.0, color=colors[j], label=fr'$t_\mathrm{{ref}}={rp}\%$')
 
     ax_u.set_xlabel('Walk completed (%)')
-    ax_u.set_ylabel(r'$\hat{\mathbf{u}}(t)\cdot\hat{\mathbf{u}}(t_{\mathrm{ref}})$')
+    ax_u.set_ylabel(r'$C_{\boldsymbol{\hat u}}(t_{\text{ref}}, t)$')
     ax_u.legend(frameon=False, handlelength=2.2, columnspacing=1.0, loc='lower left')
 
     plt.tight_layout()

@@ -406,7 +406,7 @@ def run_experiment():
     ax.plot(tp_A, -tp_A / tau_A, color="magenta", lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlim(0, max_t_A)
     ax.set_xlabel("Time (steps)")
-    ax.set_ylabel(r"$\log C(\hat r(0),\hat r(t))$")
+    ax.set_ylabel(r"$\log C_{\boldsymbol{\hat r}}(0, t)$")
     ax.legend(frameon=False)
 
     # B
@@ -442,7 +442,7 @@ def run_experiment():
     ax.fill_between(tp_C, yC_lo, yC_hi, color=CMR_COLORS[2], alpha=0.40, linewidth=0)
     ax.plot(tp_C, -tp_C / tau_C, color="brown", lw=2.0, ls=":", label=r"Constant $R$ approx. (*)")
     ax.set_xlabel("Time (steps)")
-    ax.set_ylabel(r"$\log C(\hat r(0),\hat r(t))$")
+    ax.set_ylabel(r"$\log C_{\boldsymbol{\hat r}}(0, t)$")
     ax.set_title(rf"$\tilde{{R}}_0 = {R0_C_tilde:g}$")
     ax.legend(frameon=False, loc="lower left")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
