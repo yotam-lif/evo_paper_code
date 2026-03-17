@@ -50,7 +50,7 @@ def load_sk_runs(n_repeats=None):
 
     runs = []
     for k in range(n_repeats):
-        entry = data[k]
+        entry = data[k+2]
         sigma_initial = np.asarray(entry["init_alpha"], dtype=int)
         J = np.asarray(entry["J"], dtype=float)
         flip_seq = np.asarray(entry["flip_seq"], dtype=int)
@@ -275,7 +275,7 @@ def _truncate_log_trace(log_mean, *arrays, threshold=-1.1):
 
 # ───────────────────────────────────── Plotting ─────────────────────────────────────
 
-def make_figure(avg_cos_theta, std_cos_theta, u_corr_single, xgrid, ref_percents, shell_panels, out_path):
+def make_figure(avg_cos_theta, std_cos_theta, u_corr_mean, u_corr_std, xgrid, ref_percents, shell_panels, out_path):
     fig, axes = plt.subplots(2, 2, figsize=(12.0, 10.0))
     fig.subplots_adjust(wspace=0.28, hspace=0.35)
 
@@ -299,10 +299,18 @@ def make_figure(avg_cos_theta, std_cos_theta, u_corr_single, xgrid, ref_percents
     # Panel B: azimuthal memory using u-hat
     apply_axis_style(ax_u, "B")
     for j, rp in enumerate(ref_percents):
-        ax_u.plot(xgrid, u_corr_single[j], lw=2.0, color=colors[j+1], label=fr'$t_\mathrm{{ref}}={rp}\%$')
+        ax_u.plot(xgrid, u_corr_mean[j], lw=2.0, color=colors[j+1], label=fr'$t_\mathrm{{ref}}={rp}\%$')
+        ax_u.fill_between(
+            xgrid,
+            np.clip(u_corr_mean[j] - u_corr_std[j], -1.0, 1.0),
+            np.clip(u_corr_mean[j] + u_corr_std[j], -1.0, 1.0),
+            color=colors[j+1],
+            alpha=0.22,
+            linewidth=0,
+        )
 
     ax_u.set_xlabel('Walk completed (%)')
-    ax_u.set_ylabel(r'$C_{\boldsymbol{\hat u}}(t_{\text{ref}}, t)$')
+    ax_u.set_ylabel(r'$\hat{\boldsymbol{u}}(t_\mathrm{ref}) \cdot \hat{\boldsymbol{u}}(t)$')
     ax_u.legend(frameon=False, handlelength=2.2, columnspacing=1.0, loc='lower left')
 
     for ax, panel in zip(axes[1], shell_panels):
@@ -322,14 +330,14 @@ def make_figure(avg_cos_theta, std_cos_theta, u_corr_single, xgrid, ref_percents
             color="black",
             lw=2.0,
             ls=":",
-            label=r"Theory (*)",
+            label=r"Theory (***)",
         )
         ax.set_xlabel("Time (steps)")
         ax.set_title(panel["title"])
         ax.legend(frameon=False, loc="lower left")
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    axes[1, 0].set_ylabel(r'$\log C_{\boldsymbol{\hat u}}(0, t)$')
+    axes[1, 0].set_ylabel(r'$\log (\hat{\boldsymbol{u}}(t_\mathrm{ref}) \cdot \hat{\boldsymbol{u}}(t))$')
 
     fig.savefig(out_path, format='pdf', bbox_inches='tight')
     print(f"Saved figure to {out_path}")
@@ -347,13 +355,13 @@ def main(n_repeats=20):
     # Common percent grid for averaging
     xgrid = np.linspace(0.0, 100.0, 1001)
     n_dim = runs[0][0].size
-    target_thetas = np.array([np.pi / 4.0, np.pi / 40.0], dtype=float)
+    target_thetas = np.array([np.pi / 4.0, np.pi / 45.0], dtype=float)
     target_radii = np.sqrt(n_dim) * np.sin(target_thetas)
 
     cos_series = []
     shell_traces = [[] for _ in target_radii]
     shell_ref_radii = [[] for _ in target_radii]
-    u_corr_single = None  # Panel B uses the first run, like the current figA3 panel.
+    u_corr_series = []
 
     for k, (sigma0, J, flip_seq) in enumerate(runs):
         frac, theta, corr, shell_corr, ref_radii = analyze_run_time_series(
@@ -368,8 +376,7 @@ def main(n_repeats=20):
 
         corr_interp = np.vstack([_interp_to_grid(frac, corr[j], xgrid) for j in range(len(ref_percents))])
 
-        if k == 0:
-            u_corr_single = corr_interp
+        u_corr_series.append(corr_interp)
 
         for m in range(len(target_radii)):
             valid_idx = np.flatnonzero(np.isfinite(shell_corr[m]))
@@ -379,10 +386,15 @@ def main(n_repeats=20):
 
     cos_stack = np.vstack(cos_series)
     avg_cos_theta, std_cos_theta, _ = _finite_mean_std(cos_stack)
+    u_corr_stack = np.stack(u_corr_series, axis=0)
+    u_corr_mean = np.full_like(u_corr_stack[0], np.nan)
+    u_corr_std = np.full_like(u_corr_stack[0], np.nan)
+    for j in range(len(ref_percents)):
+        u_corr_mean[j], u_corr_std[j], _ = _finite_mean_std(u_corr_stack[:, j, :])
 
     shell_titles = [
         r'$\theta_0 = \pi/4$',
-        r'$\theta_0 = \pi/40$',
+        r'$\theta_0 = \pi/45$',
     ]
     shell_labels = ["C", "D"]
     shell_colors = ["m", "m"]
@@ -398,7 +410,7 @@ def main(n_repeats=20):
             log_lower,
             log_upper,
             np.arange(shell_stack.shape[1]),
-            threshold=-1.1,
+            threshold=-1.0,
         )
         mean_ref_radius = float(np.nanmean(shell_ref_radii[m]))
         if not np.isfinite(mean_ref_radius) or mean_ref_radius <= 0.0:
@@ -419,10 +431,10 @@ def main(n_repeats=20):
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "figA3_SK_scrambling.pdf")
 
-    if u_corr_single is None:
-        raise RuntimeError('u_corr_single was not set; no runs loaded?')
+    if not u_corr_series:
+        raise RuntimeError('No percent-aligned u-hat correlations were collected.')
 
-    make_figure(avg_cos_theta, std_cos_theta, u_corr_single, xgrid, ref_percents, shell_panels, out_path)
+    make_figure(avg_cos_theta, std_cos_theta, u_corr_mean, u_corr_std, xgrid, ref_percents, shell_panels, out_path)
 
 if __name__ == "__main__":
     main()
