@@ -90,8 +90,8 @@ def fgm_panel(ax, reps, percents=(25, 50, 75, 100)):
         )
 
     ax.set_xlabel(r"Fitness effect $(\Delta)$")
+    ax.set_ylabel(r"$P(\Delta, t)$")
     ax.legend(loc="upper left", frameon=False)
-
 
 def sk_panel(ax, data, num_points=5):
     num_repeats = min(len(data), NUM_REPS_EVOL)
@@ -185,8 +185,8 @@ def main():
     print("Loading NK Data...")
     nk_data = load_nk_data()
 
-    fig, axes = plt.subplots(3, 1, figsize=(7, 15))
-    fig.subplots_adjust(hspace=0.4)
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
+    fig.subplots_adjust(wspace=0.2)
 
     fgm_panel(axes[0], fgm_reps)
     sk_panel(axes[1], sk_data)
