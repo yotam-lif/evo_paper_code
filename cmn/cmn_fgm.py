@@ -108,7 +108,7 @@ class Fisher:
             probs = bdfe / len(bdfe)
         return int(self.rng.choice(b_ind, p=probs))
 
-    def relax(self, max_steps=1000):
+    def relax(self, max_steps=10 ** 4):
         """
         Perform an adaptive walk using SSWM.
         Returns list of chosen mutation indices, r history and dfe history.
