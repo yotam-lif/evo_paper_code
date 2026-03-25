@@ -16,10 +16,10 @@ from cmn.cmn_sk import compute_dfe
 FGM_N = 8
 FGM_SIGMA = 0.05
 FGM_M = 8 * 10 ** 3
-FGM_RANDOM_STATE = 10
+FGM_RANDOM_STATE = 1
 FGM_T1 = 0.75
 FGM_T2 = 0.85
-FGM_XLIM = 0.15
+FGM_XLIM = 0.125
 
 # SK parameters
 SK_FILE = "N4000_rho100_beta100_repeats50.pkl"
@@ -100,34 +100,34 @@ ind2 = int(FGM_T2 * (len(dfes) - 1))
 fgm_dfe1 = dfes[ind1]
 fgm_dfe2 = dfes[ind2]
 
-# SK data
-res_directory = os.path.join(os.path.dirname(__file__), "..", "data", "SK")
-data_file_sk = os.path.join(res_directory, SK_FILE)
-with open(data_file_sk, "rb") as f:
-    data_sk = pickle.load(f)
-data_entry = data_sk[SK_ENTRY]
-alpha_initial = data_entry["init_alpha"]
-h = data_entry["h"]
-J = data_entry["J"]
-flip_seq = data_entry["flip_seq"]
-ind1 = int(SK_T1 * (len(flip_seq) - 1))
-ind2 = int(SK_T2 * (len(flip_seq) - 1))
-sig1 = compute_sigma_from_hist(alpha_initial, flip_seq, t=ind1)
-sig2 = compute_sigma_from_hist(alpha_initial, flip_seq, t=ind2)
-sk_dfe1 = compute_dfe(sig1, h, J)
-sk_dfe2 = compute_dfe(sig2, h, J)
-
-# NK data
-res_directory = os.path.join(os.path.dirname(__file__), "..", "data", "NK")
-data_file_nk = os.path.join(res_directory, NK_FILE)
-with open(data_file_nk, "rb") as f:
-    data_nk = pickle.load(f)
-data_entry = data_nk[NK_ENTRY]
-flip_seq = data_entry["flip_seq"]
-ind1 = int(NK_T1 * (len(flip_seq) - 1))
-ind2 = int(NK_T2 * (len(flip_seq) - 1))
-nk_dfe1 = data_entry["dfes"][ind1]
-nk_dfe2 = data_entry["dfes"][ind2]
+# # SK data
+# res_directory = os.path.join(os.path.dirname(__file__), "..", "data", "SK")
+# data_file_sk = os.path.join(res_directory, SK_FILE)
+# with open(data_file_sk, "rb") as f:
+#     data_sk = pickle.load(f)
+# data_entry = data_sk[SK_ENTRY]
+# alpha_initial = data_entry["init_alpha"]
+# h = data_entry["h"]
+# J = data_entry["J"]
+# flip_seq = data_entry["flip_seq"]
+# ind1 = int(SK_T1 * (len(flip_seq) - 1))
+# ind2 = int(SK_T2 * (len(flip_seq) - 1))
+# sig1 = compute_sigma_from_hist(alpha_initial, flip_seq, t=ind1)
+# sig2 = compute_sigma_from_hist(alpha_initial, flip_seq, t=ind2)
+# sk_dfe1 = compute_dfe(sig1, h, J)
+# sk_dfe2 = compute_dfe(sig2, h, J)
+#
+# # NK data
+# res_directory = os.path.join(os.path.dirname(__file__), "..", "data", "NK")
+# data_file_nk = os.path.join(res_directory, NK_FILE)
+# with open(data_file_nk, "rb") as f:
+#     data_nk = pickle.load(f)
+# data_entry = data_nk[NK_ENTRY]
+# flip_seq = data_entry["flip_seq"]
+# ind1 = int(NK_T1 * (len(flip_seq) - 1))
+# ind2 = int(NK_T2 * (len(flip_seq) - 1))
+# nk_dfe1 = data_entry["dfes"][ind1]
+# nk_dfe2 = data_entry["dfes"][ind2]
 
 # FGM Plots
 create_segben_sim(
@@ -138,23 +138,23 @@ create_segben_sim(
 )
 create_overlapping_dfes_sim(axB, axC, fgm_dfe1, fgm_dfe2, xlim=FGM_XLIM)
 
-# SK Plots
-create_segben_sim(
-    axD,
-    sk_dfe1,
-    sk_dfe2,
-    labels=(rf"$t_1 = {int(SK_T1 * 100)}\%$", rf"$t_2 = {int(SK_T2 * 100)}\%$"),
-)
-create_overlapping_dfes_sim(axE, axF, sk_dfe1, sk_dfe2, xlim=SK_XLIM)
+# # SK Plots
+# create_segben_sim(
+#     axD,
+#     sk_dfe1,
+#     sk_dfe2,
+#     labels=(rf"$t_1 = {int(SK_T1 * 100)}\%$", rf"$t_2 = {int(SK_T2 * 100)}\%$"),
+# )
+# create_overlapping_dfes_sim(axE, axF, sk_dfe1, sk_dfe2, xlim=SK_XLIM)
 
-# NK Plots
-create_segben_sim(
-    axG,
-    nk_dfe1,
-    nk_dfe2,
-    labels=(rf"$t_1 = {int(NK_T1 * 100)}\%$", rf"$t_2 = {int(NK_T2 * 100)}\%$"),
-)
-create_overlapping_dfes_sim(axH, axI, nk_dfe1, nk_dfe2, xlim=NK_XLIM)
+# # NK Plots
+# create_segben_sim(
+#     axG,
+#     nk_dfe1,
+#     nk_dfe2,
+#     labels=(rf"$t_1 = {int(NK_T1 * 100)}\%$", rf"$t_2 = {int(NK_T2 * 100)}\%$"),
+# )
+# create_overlapping_dfes_sim(axH, axI, nk_dfe1, nk_dfe2, xlim=NK_XLIM)
 
 # Save the figure
 os.makedirs(OUTPUT_DIR, exist_ok=True)

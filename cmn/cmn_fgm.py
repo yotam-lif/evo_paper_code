@@ -125,6 +125,6 @@ class Fisher:
             choice = self.sswm_choice(bdfe, b_ind)
             flips.append(choice)
             self.r += self.deltas[choice]
-            self.deltas[choice] = -1 * self.deltas[choice]
+            # self.deltas[choice] = -1 * self.deltas[choice]
             traj.append(self.r.copy())
         return flips, traj, dfes
