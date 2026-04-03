@@ -506,6 +506,7 @@ def run_experiment(subset_metric=DEFAULT_SUBSET_DISTANCE_METRIC):
     ax.set_xlim(0, max_t_A)
     ax.set_xlabel("Time (steps)")
     ax.set_ylabel(r"$\log$ metric")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax.legend(frameon=False)
 
     # B
@@ -541,6 +542,7 @@ def run_experiment(subset_metric=DEFAULT_SUBSET_DISTANCE_METRIC):
             label=r"Theory")
 
     ax.set_xlabel("Time (steps)")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     # Force the diffusion equation label to the bottom of the legend
     handles, labels = ax.get_legend_handles_labels()
