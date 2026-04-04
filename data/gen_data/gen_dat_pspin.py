@@ -1,4 +1,3 @@
-import argparse
 import os
 import pickle
 import sys
@@ -13,6 +12,15 @@ if str(ROOT) not in sys.path:
 
 from cmn import cmn
 from cmn import cmn_pspin
+
+
+# Script parameters
+N = 8
+P = 3
+N_REPEATS = 2
+OUTPUT_DIR = "../PSPIN"
+SEED = 123
+MAX_WORKERS = 1
 
 
 def generate_single_data_pspin(N: int, P: int, seed: int | None = None) -> dict:
@@ -112,49 +120,11 @@ def generate_data_pspin(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate mixed p-spin model simulation data (SSWM adaptive walks)."
-    )
-    parser.add_argument("--N", type=int, required=True, help="Number of spins")
-    parser.add_argument(
-        "--P",
-        "--p",
-        dest="P",
-        type=int,
-        required=True,
-        help="Maximum interaction order in the mixed p-spin model",
-    )
-    parser.add_argument(
-        "--n_repeats",
-        type=int,
-        required=True,
-        help="Number of independent simulations to generate",
-    )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        required=True,
-        help="Directory to save the output pickle file",
-    )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Optional seed for reproducible data generation",
-    )
-    parser.add_argument(
-        "--max_workers",
-        type=int,
-        default=None,
-        help="Optional number of worker processes",
-    )
-
-    args = parser.parse_args()
     generate_data_pspin(
-        args.N,
-        args.P,
-        args.n_repeats,
-        args.output_dir,
-        seed=args.seed,
-        max_workers=args.max_workers,
+        N,
+        P,
+        N_REPEATS,
+        OUTPUT_DIR,
+        seed=SEED,
+        max_workers=MAX_WORKERS,
     )
