@@ -15,7 +15,7 @@ from cmn import cmn_pspin
 
 
 # Script parameters
-N = 1000
+N = 400
 P = 3
 N_REPEATS = 10
 OUTPUT_DIR = "../PSPIN"
