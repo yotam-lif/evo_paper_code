@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#BSUB -q short
+#BSUB -q long
 #BSUB -J pspin
-#BSUB -n 1
-#BSUB -R "span[hosts=1] rusage[mem=100]"
-#BSUB -M 100
+#BSUB -n 10
+#BSUB -R "span[hosts=1] rusage[mem=3000]"
+#BSUB -M 3000
 #BSUB -o pspin.%J.out
 #BSUB -e pspin.%J.err
 
@@ -18,4 +18,4 @@ module load miniconda/24.9.2_environmentally
 conda activate my_env
 
 # Run the Python script
-python gen_dat_pspin.py --N 40 --P 1 --n_repeats 2
+python gen_dat_pspin.py --N 400 --P 3 --n_repeats 10
