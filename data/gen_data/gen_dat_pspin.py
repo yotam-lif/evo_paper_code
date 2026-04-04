@@ -15,12 +15,12 @@ from cmn import cmn_pspin
 
 
 # Script parameters
-N = 8
+N = 1000
 P = 3
-N_REPEATS = 2
+N_REPEATS = 10
 OUTPUT_DIR = "../PSPIN"
 SEED = 123
-MAX_WORKERS = 1
+MAX_WORKERS = 10
 
 
 def generate_single_data_pspin(N: int, P: int, seed: int | None = None) -> dict:
