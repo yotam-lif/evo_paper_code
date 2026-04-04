@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#BSUB -q short
+#BSUB -J pspin
+#BSUB -n 1
+#BSUB -R "span[hosts=1] rusage[mem=100]"
+#BSUB -M 100
+#BSUB -o pspin.%J.out
+#BSUB -e pspin.%J.err
+
 # Load Miniconda module
 module load miniconda/24.9.2_environmentally
 
