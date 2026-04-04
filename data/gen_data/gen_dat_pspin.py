@@ -1,3 +1,4 @@
+import argparse
 import os
 import pickle
 import sys
@@ -7,20 +8,13 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "PSPIN"))
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from cmn import cmn
 from cmn import cmn_pspin
-
-
-# Script parameters
-N = 400
-P = 3
-N_REPEATS = 10
-OUTPUT_DIR = "../PSPIN"
-SEED = 123
-MAX_WORKERS = 10
 
 
 def generate_single_data_pspin(N: int, P: int, seed: int | None = None) -> dict:
@@ -63,7 +57,7 @@ def generate_data_pspin(
     P: int,
     n_repeats: int,
     output_dir: str,
-    seed: int | None = None,
+    seed: int | None = 1,
     max_workers: int | None = None,
 ) -> None:
     """
@@ -84,6 +78,9 @@ def generate_data_pspin(
     max_workers : int, optional
         Number of worker processes for parallel generation.
     """
+    if max_workers is None:
+        max_workers = n_repeats
+
     parent_rng = np.random.default_rng(seed)
     repeat_seeds = parent_rng.integers(0, 2**32, size=n_repeats, dtype=np.uint32)
 
@@ -120,11 +117,49 @@ def generate_data_pspin(
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Generate mixed p-spin model simulation data (SSWM adaptive walks)."
+    )
+    parser.add_argument("--N", type=int, required=True, help="Number of spins")
+    parser.add_argument(
+        "--P",
+        "--p",
+        dest="P",
+        type=int,
+        required=True,
+        help="Maximum interaction order in the mixed p-spin model",
+    )
+    parser.add_argument(
+        "--n_repeats",
+        type=int,
+        required=True,
+        help="Number of independent simulations to generate",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default=DEFAULT_OUTPUT_DIR,
+        help="Output directory. Default is the sibling PSPIN directory next to this script.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=1,
+        help="Seed for reproducible data generation. Default is 1.",
+    )
+    parser.add_argument(
+        "--max_workers",
+        type=int,
+        default=None,
+        help="Number of worker processes. Default is n_repeats.",
+    )
+
+    args = parser.parse_args()
     generate_data_pspin(
-        N,
-        P,
-        N_REPEATS,
-        OUTPUT_DIR,
-        seed=SEED,
-        max_workers=MAX_WORKERS,
+        args.N,
+        args.P,
+        args.n_repeats,
+        args.output_dir,
+        seed=args.seed,
+        max_workers=args.max_workers,
     )
