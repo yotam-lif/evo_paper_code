@@ -17,7 +17,12 @@ from cmn import cmn
 from cmn import cmn_pspin
 
 
-def generate_single_data_pspin(N: int, P: int, seed: int | None = None) -> dict:
+def generate_single_data_pspin(
+    N: int,
+    P: int,
+    seed: int | None = None,
+    pure: bool = False,
+) -> dict:
     """
     Generate a single mixed p-spin simulation dataset.
 
@@ -29,6 +34,9 @@ def generate_single_data_pspin(N: int, P: int, seed: int | None = None) -> dict:
         Maximum interaction order in the mixed p-spin model.
     seed : int, optional
         Random seed for reproducibility.
+    pure : bool, optional
+        If True, generate a pure P-spin model. Default is False, which
+        generates the mixed model with orders 1 through P.
 
     Returns
     -------
@@ -42,7 +50,7 @@ def generate_single_data_pspin(N: int, P: int, seed: int | None = None) -> dict:
         np.random.seed(seed)
 
     init_sigma = cmn.init_sigma(N).astype(np.int8, copy=False)
-    J = cmn_pspin.init_J(N, P, random_state=seed)
+    J = cmn_pspin.init_J(N, P, random_state=seed, pure=pure)
     flip_seq = cmn_pspin.relax_pspin(init_sigma, J, sswm=True)
 
     return {
@@ -59,6 +67,7 @@ def generate_data_pspin(
     output_dir: str,
     seed: int | None = 1,
     max_workers: int | None = None,
+    pure: bool = False,
 ) -> None:
     """
     Generate multiple mixed p-spin datasets in parallel and save them to a pickle file.
@@ -77,6 +86,9 @@ def generate_data_pspin(
         Seed used to generate independent worker seeds.
     max_workers : int, optional
         Number of worker processes for parallel generation.
+    pure : bool, optional
+        If True, generate a pure P-spin model. Default is False, which
+        generates the mixed model with orders 1 through P.
     """
     if max_workers is None:
         max_workers = n_repeats
@@ -86,7 +98,7 @@ def generate_data_pspin(
 
     if max_workers == 1:
         data = [
-            generate_single_data_pspin(N, P, int(repeat_seed))
+            generate_single_data_pspin(N, P, int(repeat_seed), pure=pure)
             for repeat_seed in repeat_seeds
         ]
     else:
@@ -94,20 +106,21 @@ def generate_data_pspin(
             data = []
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
                 futures = [
-                    executor.submit(generate_single_data_pspin, N, P, int(repeat_seed))
+                    executor.submit(generate_single_data_pspin, N, P, int(repeat_seed), pure)
                     for repeat_seed in repeat_seeds
                 ]
                 for future in futures:
                     data.append(future.result())
         except PermissionError:
             data = [
-                generate_single_data_pspin(N, P, int(repeat_seed))
+                generate_single_data_pspin(N, P, int(repeat_seed), pure=pure)
                 for repeat_seed in repeat_seeds
             ]
 
     os.makedirs(output_dir, exist_ok=True)
 
-    filename = f"N{N}_P{P}_repeats{n_repeats}.pkl"
+    model_label = "pure" if pure else "mixed"
+    filename = f"N{N}_P{P}_{model_label}_repeats{n_repeats}.pkl"
     output_file = os.path.join(output_dir, filename)
 
     with open(output_file, "wb") as handle:
@@ -153,6 +166,11 @@ if __name__ == "__main__":
         default=None,
         help="Number of worker processes. Default is n_repeats.",
     )
+    parser.add_argument(
+        "--pure",
+        action="store_true",
+        help="If set, generate a pure P-spin model instead of the default mixed model.",
+    )
 
     args = parser.parse_args()
     generate_data_pspin(
@@ -162,4 +180,5 @@ if __name__ == "__main__":
         args.output_dir,
         seed=args.seed,
         max_workers=args.max_workers,
+        pure=args.pure,
     )

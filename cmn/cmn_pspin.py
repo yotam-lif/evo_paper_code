@@ -187,18 +187,23 @@ def init_tensor(N, p, random_state=None):
     return init_p_tensor(N, p, random_state=random_state)
 
 
-def init_J(N, P, random_state=None):
+def init_J(N, P, random_state=None, pure=False):
     """
-    Initialize the mixed p-spin model for orders p = 1, ..., P.
+    Initialize a mixed or pure p-spin model.
 
     Parameters
     ----------
     N : int
         The number of spins.
     P : int
-        The maximum interaction order.
+        The maximum interaction order. If ``pure`` is False, sectors
+        p = 1, ..., P are included. If ``pure`` is True, only the p = P
+        sector is included.
     random_state : int or numpy.random.Generator, optional
         Seed or generator for reproducibility.
+    pure : bool, optional
+        If True, build a pure P-spin model. Default is False, which builds
+        the mixed model with orders 1 through P.
 
     Returns
     -------
@@ -212,8 +217,9 @@ def init_J(N, P, random_state=None):
 
     rng = np.random.default_rng(random_state)
     P = int(P)
-    sectors = [init_p_tensor(N, p, random_state=rng) for p in range(1, P + 1)]
-    return {"N": N, "P": P, "sectors": sectors}
+    sector_orders = [P] if pure else list(range(1, P + 1))
+    sectors = [init_p_tensor(N, p, random_state=rng) for p in sector_orders]
+    return {"N": N, "P": P, "pure": bool(pure), "sectors": sectors}
 
 
 def compute_lfs(sigma, J):
