@@ -325,7 +325,7 @@ def main():
     pspin_final_panel(axes[1, 1], pspin_data)
     nk_final_panel(axes[1, 2], nk_data_arr, nk_k_values)
 
-    for ax, title in zip(axes[0], ["FGM", "Generalized SK", "NK"]):
+    for ax, title in zip(axes[0], ["FGM", "SK", "NK"]):
         ax.set_title(title, fontsize=18, pad=10)
 
     panel_labels = ["A", "B", "C", "D", "E", "F"]
