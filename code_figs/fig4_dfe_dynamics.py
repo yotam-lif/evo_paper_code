@@ -315,7 +315,7 @@ def main():
     nk_data_arr, nk_single_k_data, nk_k_values = load_nk_data()
 
     fig, axes = plt.subplots(2, 3, figsize=(18, 11))
-    fig.subplots_adjust(hspace=0.34, wspace=0.34)
+    fig.subplots_adjust(hspace=0.34, wspace=0.25)
 
     fgm_evolution_panel(axes[0, 0], fgm_reps)
     pspin_evolution_panel(axes[0, 1], pspin_data[2])
