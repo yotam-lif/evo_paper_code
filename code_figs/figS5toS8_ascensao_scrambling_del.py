@@ -6,7 +6,6 @@ from matplotlib.patches import Rectangle
 import matplotlib as mpl
 import seaborn as sns
 from matplotlib.ticker import ScalarFormatter
-from scipy.stats import ks_2samp
 
 
 # --- Auto-added output directory for paper figures ---
@@ -117,9 +116,6 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     prop_ddfe_anc = dfe_evo[ddfe_anc_inds]
     prop_ddfe_evo = dfe_anc[ddfe_evo_inds]
 
-    ks_evo_vs_prop = ks_2samp(dfe_evo, prop_ddfe_anc)
-    ks_anc_vs_prop = ks_2samp(dfe_anc, prop_ddfe_evo)
-
     # Left Panel - Forward propagate
     counts, bin_edges, _ = thresholded_histogram(data=prop_ddfe_anc, threshold=3, final_bins=20)
     anc_counts, anc_bin_edges, _ = thresholded_histogram(data=ddfe_anc, threshold=3, final_bins=20)
@@ -176,13 +172,6 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     )
     ax_left.legend(frameon=False)
     ax_left.set_xlabel(r'Fitness effect $(\Delta)$')
-    ax_left.text(
-        0.05, 0.95,
-        fr'$p_{{KS}} = {ks_evo_vs_prop.pvalue:.2g}$',
-        transform=ax_left.transAxes,
-        va="top",
-        fontsize=12
-    )
 
     # Right Panel
     counts2, bin_edges2, _ = thresholded_histogram(data=ddfe_evo, threshold=2, final_bins=20)
@@ -244,13 +233,6 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
 
     ax_right.legend(frameon=False)
     ax_right.set_xlabel(r'Fitness effect $(\Delta)$')
-    ax_right.text(
-        0.05, 0.95,
-        fr'$p_{{KS}} = {ks_anc_vs_prop.pvalue:.2g}$',
-        transform=ax_right.transAxes,
-        va="top",
-        fontsize=12
-    )
 
     # Adjust spines and tick positions for a cleaner look
     for ax in [ax_left, ax_right]:

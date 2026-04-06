@@ -6,7 +6,6 @@ from matplotlib.patches import Rectangle
 import matplotlib as mpl
 import pandas as pd
 import seaborn as sns
-from scipy.stats import ks_2samp
 from matplotlib.ticker import ScalarFormatter
 
 # --- Auto-added output directory for paper figures ---
@@ -111,9 +110,6 @@ def create_overlapping_dfes_del(ax_left, ax_right, dfe_anc, dfe_evo, label_anc="
     prop_ddfe_anc = dfe_evo[ddfe_anc_inds]
     prop_ddfe_evo = dfe_anc[ddfe_evo_inds]
 
-    ks_evo = ks_2samp(dfe_evo, prop_ddfe_anc)
-    ks_anc = ks_2samp(dfe_anc, prop_ddfe_evo)
-
     # --- Left Panel (Forward Time) ---
     counts, bin_edges, _ = thresholded_histogram(data=prop_ddfe_anc, threshold=2, final_bins=35)
     anc_counts, anc_bin_edges, _ = thresholded_histogram(data=ddfe_anc, threshold=2, final_bins=35)
@@ -142,9 +138,6 @@ def create_overlapping_dfes_del(ax_left, ax_right, dfe_anc, dfe_evo, label_anc="
     ax_left.legend(frameon=False)
     ax_left.set_xlabel(r'Fitness effect $(\Delta)$')
 
-    # Added KS Test Text
-    ax_left.text(0.05, 0.95, fr'$p_{{KS}} = {ks_evo.pvalue:.2g}$', transform=ax_left.transAxes, va="top", fontsize=12)
-
     # --- Right Panel (Backward Time) ---
     counts2, bin_edges2, _ = thresholded_histogram(data=ddfe_evo, threshold=2, final_bins=40)
     anc2_counts, anc2_bin_edges, _ = thresholded_histogram(data=prop_ddfe_evo, threshold=2, final_bins=40)
@@ -172,9 +165,6 @@ def create_overlapping_dfes_del(ax_left, ax_right, dfe_anc, dfe_evo, label_anc="
 
     ax_right.legend(frameon=False)
     ax_right.set_xlabel(r'Fitness effect $(\Delta)$')
-
-    # Added KS Test Text
-    ax_right.text(0.05, 0.95, fr'$p_{{KS}} = {ks_anc.pvalue:.2g}$', transform=ax_right.transAxes, va="top", fontsize=12)
 
     for ax in [ax_left, ax_right]:
         ax.spines['top'].set_visible(False)
