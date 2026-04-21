@@ -9,9 +9,7 @@ SPIN_DTYPE = np.int8
 
 
 def _site_index_dtype(N):
-    """
-    Pick the smallest unsigned integer dtype that can store site indices.
-    """
+    """Pick the smallest unsigned integer dtype that can store spin-site indices."""
     if N - 1 <= np.iinfo(np.uint16).max:
         return np.uint16
     if N - 1 <= np.iinfo(np.uint32).max:
@@ -19,131 +17,115 @@ def _site_index_dtype(N):
     return np.uint64
 
 
-def _term_row_dtype(num_terms):
-    """
-    Pick a term-row index dtype for lookup tables.
-    """
-    if num_terms <= np.iinfo(np.int32).max:
+def _interaction_index_dtype(num_interactions):
+    """Pick an integer dtype that can index into the interaction table."""
+    if num_interactions <= np.iinfo(np.int32).max:
         return np.int32
     return np.int64
 
 
 def _as_spin_array(sigma, copy=False):
-    """
-    Store spins as +/-1 int8 values.
-    """
+    """Cast to +/-1 int8 spin array."""
     if copy:
         return np.array(sigma, dtype=SPIN_DTYPE, copy=True)
     return np.asarray(sigma, dtype=SPIN_DTYPE)
 
 
-def _build_site_columns(N, p):
+# ---------------------------------------------------------------------------
+# Building the interaction table
+# ---------------------------------------------------------------------------
+
+def _build_spin_indices(N, p):
     """
-    Build the distinct tuples i_1 < ... < i_p and store them column-wise.
+    Enumerate all C(N, p) distinct p-body interactions and store them
+    column-wise: a tuple of p arrays, where array k holds the k-th spin
+    index of every interaction (i_1 < i_2 < ... < i_p).
     """
     site_dtype = _site_index_dtype(N)
-    index_tuples = np.array(list(combinations(range(N), p)), dtype=site_dtype)
-    return tuple(np.ascontiguousarray(index_tuples[:, position]) for position in range(p))
+    tuples = np.array(list(combinations(range(N), p)), dtype=site_dtype)
+    return tuple(np.ascontiguousarray(tuples[:, k]) for k in range(p))
 
 
-def _build_site_to_term_rows(N, site_columns):
+def _build_site_interaction_map(N, spin_indices):
     """
-    For each site, list the stored interaction terms that contain it.
+    For each spin site i, list the interactions that contain it.
+
+    Returns a length-N list; element i is an array of interaction indices
+    (rows into the spin_indices table) where site i appears.
     """
-    num_terms = site_columns[0].shape[0]
-    row_dtype = _term_row_dtype(num_terms)
-    site_to_term_rows = [[] for _ in range(N)]
+    num_interactions = spin_indices[0].shape[0]
+    idx_dtype = _interaction_index_dtype(num_interactions)
+    site_map = [[] for _ in range(N)]
 
-    for site_indices in site_columns:
-        for term_idx, site in enumerate(site_indices):
-            site_to_term_rows[int(site)].append(term_idx)
+    for column in spin_indices:
+        for row, site in enumerate(column):
+            site_map[int(site)].append(row)
 
-    return [np.array(term_rows, dtype=row_dtype) for term_rows in site_to_term_rows]
+    return [np.array(rows, dtype=idx_dtype) for rows in site_map]
 
 
-def _sum_by_site(site_indices, weights, N):
+# ---------------------------------------------------------------------------
+# Core per-interaction computations
+# ---------------------------------------------------------------------------
+
+def _compute_spin_products(sigma, sector, interaction_idx=None):
     """
-    Aggregate weights by site index using a histogram instead of scatter-add.
+    Compute the spin product  σ_{i_1} * σ_{i_2} * ... * σ_{i_p}  for each
+    interaction in one sector.
+
+    If *interaction_idx* is given, only that subset of interactions is evaluated.
     """
-    summed = np.bincount(site_indices, weights=weights, minlength=N)
+    spin_indices = sector["spin_indices"]
+
+    if interaction_idx is None:
+        cols = [sigma[c] for c in spin_indices]
+    else:
+        cols = [sigma[c[interaction_idx]] for c in spin_indices]
+
+    product = cols[0].copy()
+    for c in cols[1:]:
+        product *= c
+    return product.astype(SPIN_DTYPE, copy=False)
+
+
+def _scatter_to_sites(per_site, sector, contributions, interaction_idx=None):
+    """
+    Distribute a per-interaction quantity to every spin site participating
+    in that interaction, accumulating into *per_site*.
+
+    For example, if interaction (i, j, k) has contribution c, then
+    per_site[i], per_site[j], and per_site[k] each receive +c.
+    """
+    N = per_site.shape[0]
+    for sites in sector["spin_indices"]:
+        if interaction_idx is not None:
+            sites = sites[interaction_idx]
+        per_site += _sum_by_site(sites, contributions, N)
+
+
+def _sum_by_site(sites, weights, N):
+    """Aggregate weights by site index (histogram-based scatter-add)."""
+    summed = np.bincount(sites, weights=weights, minlength=N)
     return summed.astype(FLOAT_DTYPE, copy=False)
 
 
-def _compute_term_products(sigma, sector, term_rows=None):
-    """
-    Compute sigma_{i_1} ... sigma_{i_p} for one sector.
-    """
-    site_columns = sector["site_columns"]
-    order = sector["order"]
-
-    if term_rows is None:
-        col0 = site_columns[0]
-        if order == 1:
-            return sigma[col0]
-        col1 = site_columns[1]
-        if order == 2:
-            return (sigma[col0] * sigma[col1]).astype(SPIN_DTYPE, copy=False)
-        col2 = site_columns[2]
-        if order == 3:
-            return (sigma[col0] * sigma[col1] * sigma[col2]).astype(SPIN_DTYPE, copy=False)
-        col3 = site_columns[3]
-        if order == 4:
-            return (
-                sigma[col0] * sigma[col1] * sigma[col2] * sigma[col3]
-            ).astype(SPIN_DTYPE, copy=False)
-    else:
-        col0 = site_columns[0][term_rows]
-        if order == 1:
-            return sigma[col0]
-        col1 = site_columns[1][term_rows]
-        if order == 2:
-            return (sigma[col0] * sigma[col1]).astype(SPIN_DTYPE, copy=False)
-        col2 = site_columns[2][term_rows]
-        if order == 3:
-            return (sigma[col0] * sigma[col1] * sigma[col2]).astype(SPIN_DTYPE, copy=False)
-        col3 = site_columns[3][term_rows]
-        if order == 4:
-            return (
-                sigma[col0] * sigma[col1] * sigma[col2] * sigma[col3]
-            ).astype(SPIN_DTYPE, copy=False)
-
-    term_products = np.ones(
-        site_columns[0].shape[0] if term_rows is None else term_rows.shape[0],
-        dtype=SPIN_DTYPE,
-    )
-    for site_indices in site_columns:
-        if term_rows is None:
-            term_products *= sigma[site_indices]
-        else:
-            term_products *= sigma[site_indices[term_rows]]
-    return term_products
-
-
-def _accumulate_term_values(site_values, sector, term_values, term_rows=None):
-    """
-    Add one scalar value per stored interaction term to every site in that term.
-    """
-    N = site_values.shape[0]
-    for site_indices in sector["site_columns"]:
-        if term_rows is not None:
-            site_indices = site_indices[term_rows]
-        site_values += _sum_by_site(site_indices, term_values, N)
-
+# ---------------------------------------------------------------------------
+# Model initialization
+# ---------------------------------------------------------------------------
 
 def init_p_tensor(N, p, random_state=None):
     """
-    Initialize one p-spin sector in sparse form.
+    Initialize one p-body interaction sector.
 
-    Instead of storing a full symmetric rank-p tensor, we store only the
-    distinct tuples i_1 < ... < i_p and their couplings. This is equivalent to
-    the model definition and is much easier to work with numerically.
+    Draws C(N, p) Gaussian couplings J_{i_1...i_p} with variance
+    p! / N^{p-1}, stored sparsely alongside the spin-index tuples.
 
     Parameters
     ----------
     N : int
-        The number of spins.
+        Number of spins.
     p : int
-        The interaction order.
+        Interaction order (body number).
     random_state : int or numpy.random.Generator, optional
         Seed or generator for reproducibility.
 
@@ -151,10 +133,10 @@ def init_p_tensor(N, p, random_state=None):
     -------
     dict
         A sector with keys:
-        - "order": the interaction order p
-        - "site_columns": tuple of p arrays, one array per position in i_1 < ... < i_p
-        - "couplings": Gaussian couplings for those tuples
-        - "site_to_term_rows": for each site, the rows of the sector that contain it
+        - "order": p
+        - "spin_indices": tuple of p arrays (the interaction table)
+        - "couplings": the random coupling J_{i_1...i_p} for each interaction
+        - "site_to_interactions": for each site, which interactions contain it
     """
     if int(p) != p or p < 1:
         raise ValueError("p must be a positive integer.")
@@ -164,26 +146,24 @@ def init_p_tensor(N, p, random_state=None):
     rng = np.random.default_rng(random_state)
     p = int(p)
 
-    site_columns = _build_site_columns(N, p)
+    spin_indices = _build_spin_indices(N, p)
     variance = math.factorial(p) / (N ** (p - 1))
     couplings = rng.normal(
         loc=FLOAT_DTYPE(0.0),
         scale=FLOAT_DTYPE(np.sqrt(variance)),
-        size=site_columns[0].shape[0],
+        size=spin_indices[0].shape[0],
     ).astype(FLOAT_DTYPE)
 
     return {
         "order": p,
-        "site_columns": site_columns,
+        "spin_indices": spin_indices,
         "couplings": couplings,
-        "site_to_term_rows": _build_site_to_term_rows(N, site_columns),
+        "site_to_interactions": _build_site_interaction_map(N, spin_indices),
     }
 
 
 def init_tensor(N, p, random_state=None):
-    """
-    Alias for ``init_p_tensor``.
-    """
+    """Alias for ``init_p_tensor``."""
     return init_p_tensor(N, p, random_state=random_state)
 
 
@@ -191,24 +171,28 @@ def init_J(N, P, random_state=None, pure=False):
     """
     Initialize a mixed or pure p-spin model.
 
+    The Hamiltonian is:
+
+        H(σ) = Σ_p  Σ_{i_1<...<i_p}  J_{i_1...i_p}  σ_{i_1} ... σ_{i_p}
+
+    where the sum over p runs from 1 to P (mixed) or includes only p = P (pure).
+
     Parameters
     ----------
     N : int
-        The number of spins.
+        Number of spins.
     P : int
-        The maximum interaction order. If ``pure`` is False, sectors
-        p = 1, ..., P are included. If ``pure`` is True, only the p = P
-        sector is included.
+        Maximum interaction order.
     random_state : int or numpy.random.Generator, optional
         Seed or generator for reproducibility.
     pure : bool, optional
-        If True, build a pure P-spin model. Default is False, which builds
-        the mixed model with orders 1 through P.
+        If True, keep only the P-body sector (pure P-spin model).
+        Default is False (mixed model with orders 1 through P).
 
     Returns
     -------
     dict
-        Model data containing all p-spin sectors.
+        Model with keys "N", "P", "pure", and "sectors".
     """
     if int(P) != P or P < 1:
         raise ValueError("P must be a positive integer.")
@@ -217,72 +201,107 @@ def init_J(N, P, random_state=None, pure=False):
 
     rng = np.random.default_rng(random_state)
     P = int(P)
-    sector_orders = [P] if pure else list(range(1, P + 1))
-    sectors = [init_p_tensor(N, p, random_state=rng) for p in sector_orders]
+    orders = [P] if pure else list(range(1, P + 1))
+    sectors = [init_p_tensor(N, p, random_state=rng) for p in orders]
     return {"N": N, "P": P, "pure": bool(pure), "sectors": sectors}
 
 
+# ---------------------------------------------------------------------------
+# Observables
+# ---------------------------------------------------------------------------
+
 def compute_lfs(sigma, J):
     """
-    Calculate the local fields for the mixed p-spin model.
+    Compute the local field at every site.
 
-    The local field at site i is the sum of all interaction terms containing i,
-    with sigma_i removed from the product.
+    The local field h_i = ∂H/∂σ_i, i.e. the sum of all interaction terms
+    that contain site i, with σ_i factored out (using σ_i^2 = 1).
     """
     sigma = _as_spin_array(sigma)
     local_fields = np.zeros(J["N"], dtype=FLOAT_DTYPE)
 
     for sector in J["sectors"]:
-        term_products = _compute_term_products(sigma, sector)
-        base_term_values = sector["couplings"] * term_products
+        spin_products = _compute_spin_products(sigma, sector)
+        weighted_products = sector["couplings"] * spin_products  # J * σ_{i1}...σ_{ip}
 
-        for site_indices in sector["site_columns"]:
-            other_spin_products = base_term_values * sigma[site_indices]
-            local_fields += _sum_by_site(site_indices, other_spin_products, J["N"])
+        for sites in sector["spin_indices"]:
+            # Multiply by σ_site to cancel it from the product (σ^2 = 1),
+            # leaving J times the product of the *other* spins.
+            field_contributions = weighted_products * sigma[sites]
+            local_fields += _sum_by_site(sites, field_contributions, J["N"])
 
     return local_fields
 
 
+def compute_fit_slow(sigma, J, f_off=0.0):
+    """
+    Compute the fitness (Hamiltonian value) of configuration σ.
+
+        fitness = Σ_interactions  J_{i1...ip} σ_{i1} ... σ_{ip}  -  f_off
+    """
+    sigma = _as_spin_array(sigma)
+    fitness = FLOAT_DTYPE(0.0)
+
+    for sector in J["sectors"]:
+        spin_products = _compute_spin_products(sigma, sector)
+        fitness += np.dot(sector["couplings"], spin_products)
+
+    return float(fitness - FLOAT_DTYPE(f_off))
+
+
+def compute_fit_off(sigma_init, J):
+    """Compute the fitness offset so that fitness(sigma_init) = 1."""
+    return compute_fit_slow(sigma_init, J) - 1
+
+
+def compute_fitness_delta_mutant(sigma, J, k):
+    """
+    Compute the fitness change ΔF when spin k is flipped.
+
+    Only interactions containing site k are affected, so we restrict
+    the sum to those terms for efficiency.
+    """
+    sigma = _as_spin_array(sigma)
+    delta_f = FLOAT_DTYPE(0.0)
+
+    for sector in J["sectors"]:
+        affected = sector["site_to_interactions"][k]
+        if affected.size == 0:
+            continue
+
+        spin_products = _compute_spin_products(sigma, sector, interaction_idx=affected)
+        delta_f += np.sum(
+            -FLOAT_DTYPE(2.0) * sector["couplings"][affected] * spin_products,
+            dtype=FLOAT_DTYPE,
+        )
+
+    return float(delta_f)
+
+
+# ---------------------------------------------------------------------------
+# Distribution of fitness effects (DFE)
+# ---------------------------------------------------------------------------
+
 def compute_dfe(sigma, J):
-    """
-    Calculate the distribution of fitness effects.
-    """
+    """Compute the DFE: the fitness change ΔF_i for flipping each spin i."""
     sigma = _as_spin_array(sigma)
     return (-FLOAT_DTYPE(2.0) * sigma * compute_lfs(sigma, J)).astype(FLOAT_DTYPE, copy=False)
 
 
 def compute_bdfe(sigma, J):
-    """
-    Calculate the beneficial distribution of fitness effects.
-    """
+    """Return (beneficial DFE values, their site indices)."""
     dfe = compute_dfe(sigma, J)
-    return _compute_bdfe_from_dfe(dfe)
+    return _extract_beneficial(dfe)
 
 
-def _compute_bdfe_from_dfe(dfe):
-    """
-    Extract the beneficial fitness effects and their indices from a DFE.
-    """
-    bdfe = dfe[dfe > 0]
-    b_ind = np.flatnonzero(dfe > 0)
-    return bdfe, b_ind
-
-
-def _choose_flip_from_dfe(dfe, sswm=True):
-    """
-    Choose a beneficial flip directly from a precomputed DFE.
-    """
-    bdfe, beneficial_idx = _compute_bdfe_from_dfe(dfe)
-    if sswm:
-        flip_probabilities = bdfe / np.sum(bdfe, dtype=FLOAT_DTYPE)
-        return np.random.choice(beneficial_idx, p=flip_probabilities)
-    return np.random.choice(beneficial_idx)
+def _extract_beneficial(dfe):
+    """Extract beneficial (positive) entries and their indices from a DFE."""
+    mask = dfe > 0
+    return dfe[mask], np.flatnonzero(mask)
 
 
 def compute_normalized_bdfe(sigma, J):
-    """
-    Calculate the normalized beneficial distribution of fitness effects.
-    """
+    """Return the beneficial DFE normalized to a probability distribution."""
     bdfe, b_ind = compute_bdfe(sigma, J)
     norm = np.sum(bdfe, dtype=FLOAT_DTYPE)
     if norm > 0:
@@ -291,117 +310,97 @@ def compute_normalized_bdfe(sigma, J):
 
 
 def compute_rank(sigma, J):
-    """
-    Calculate the rank of the spin configuration.
-    """
+    """Count the number of beneficial mutations (rank of the configuration)."""
     dfe = compute_dfe(sigma, J)
     return int(np.count_nonzero(dfe > 0))
 
 
+# ---------------------------------------------------------------------------
+# Spin-flip selection
+# ---------------------------------------------------------------------------
+
+def _choose_beneficial_flip(dfe, sswm=True):
+    """
+    Choose a spin to flip from the beneficial mutations in the DFE.
+
+    If sswm=True, flip probability is proportional to ΔF (strong-selection
+    weak-mutation). Otherwise, pick uniformly among beneficial mutations.
+    """
+    bdfe, beneficial_sites = _extract_beneficial(dfe)
+    if sswm:
+        probs = bdfe / np.sum(bdfe, dtype=FLOAT_DTYPE)
+        return np.random.choice(beneficial_sites, p=probs)
+    return np.random.choice(beneficial_sites)
+
+
 def sswm_flip(sigma, J):
-    """
-    Choose a spin to flip using SSWM probabilities.
-    """
-    return _choose_flip_from_dfe(compute_dfe(sigma, J), sswm=True)
+    """Choose a spin to flip using SSWM (strong-selection weak-mutation)."""
+    return _choose_beneficial_flip(compute_dfe(sigma, J), sswm=True)
 
 
-def compute_fit_off(sigma_init, J):
-    """
-    Calculate the fitness offset for the given configuration.
-    """
-    return compute_fit_slow(sigma_init, J) - 1
-
-
-def compute_fit_slow(sigma, J, f_off=0.0):
-    """
-    Compute the fitness of the configuration sigma.
-    """
-    sigma = _as_spin_array(sigma)
-    fitness = FLOAT_DTYPE(0.0)
-
-    for sector in J["sectors"]:
-        term_products = _compute_term_products(sigma, sector)
-        fitness += np.dot(sector["couplings"], term_products)
-
-    return float(fitness - FLOAT_DTYPE(f_off))
-
-
-def compute_fitness_delta_mutant(sigma, J, k):
-    """
-    Compute the fitness change for a mutant at site k.
-    """
-    sigma = _as_spin_array(sigma)
-    delta_f = FLOAT_DTYPE(0.0)
-
-    for sector in J["sectors"]:
-        affected_term_rows = sector["site_to_term_rows"][k]
-        if affected_term_rows.size == 0:
-            continue
-
-        term_products = _compute_term_products(sigma, sector, term_rows=affected_term_rows)
-        delta_f += np.sum(
-            -FLOAT_DTYPE(2.0) * sector["couplings"][affected_term_rows] * term_products,
-            dtype=FLOAT_DTYPE,
-        )
-
-    return float(delta_f)
-
+# ---------------------------------------------------------------------------
+# Adaptive walk (relaxation)
+# ---------------------------------------------------------------------------
 
 def _initialize_relaxation_state(sigma0, J):
     """
-    Build the DFE, cached fitness, and cached term products for relaxation.
+    Set up the cached state for an adaptive walk: the current spin
+    configuration, its fitness, the full DFE, and per-sector cached
+    spin products (to allow incremental updates on each flip).
     """
     sigma = _as_spin_array(sigma0, copy=True)
     dfe = np.zeros(J["N"], dtype=FLOAT_DTYPE)
     fitness = FLOAT_DTYPE(0.0)
-    sector_states = []
+    sector_caches = []
 
     for sector in J["sectors"]:
-        term_products = _compute_term_products(sigma, sector)
-        fitness += np.dot(sector["couplings"], term_products)
-        term_dfe_contributions = -FLOAT_DTYPE(2.0) * sector["couplings"] * term_products
-        _accumulate_term_values(dfe, sector, term_dfe_contributions)
-        sector_states.append({"term_products": term_products})
+        spin_products = _compute_spin_products(sigma, sector)
+        fitness += np.dot(sector["couplings"], spin_products)
+        dfe_contributions = -FLOAT_DTYPE(2.0) * sector["couplings"] * spin_products
+        _scatter_to_sites(dfe, sector, dfe_contributions)
+        sector_caches.append({"spin_products": spin_products})
 
-    return {"sigma": sigma, "dfe": dfe, "fitness": fitness, "sector_states": sector_states}
+    return {"sigma": sigma, "dfe": dfe, "fitness": fitness, "sector_caches": sector_caches}
 
 
-def _apply_flip_to_relaxation_state(state, J, flip_idx):
+def _apply_flip(state, J, flip_site):
     """
-    Update sigma, cached fitness, cached term products, and the DFE after one flip.
-    """
-    delta_f = state["dfe"][flip_idx]
+    Flip spin at *flip_site* and incrementally update the fitness, DFE,
+    and cached spin products.
 
-    for sector, sector_state in zip(J["sectors"], state["sector_states"]):
-        affected_term_rows = sector["site_to_term_rows"][flip_idx]
-        if affected_term_rows.size == 0:
+    Only interactions containing flip_site need recomputation.
+    """
+    delta_f = state["dfe"][flip_site]
+
+    for sector, cache in zip(J["sectors"], state["sector_caches"]):
+        affected = sector["site_to_interactions"][flip_site]
+        if affected.size == 0:
             continue
 
-        old_term_products = sector_state["term_products"][affected_term_rows]
-        dfe_updates = FLOAT_DTYPE(4.0) * sector["couplings"][affected_term_rows] * old_term_products
+        old_spin_products = cache["spin_products"][affected]
+        # Flipping one spin negates all spin products containing it,
+        # which shifts the DFE by 4 * J * (old product) at each site.
+        dfe_updates = FLOAT_DTYPE(4.0) * sector["couplings"][affected] * old_spin_products
 
-        _accumulate_term_values(
-            state["dfe"],
-            sector,
-            dfe_updates,
-            term_rows=affected_term_rows,
-        )
-        sector_state["term_products"][affected_term_rows] = -old_term_products
+        _scatter_to_sites(state["dfe"], sector, dfe_updates, interaction_idx=affected)
+        cache["spin_products"][affected] = -old_spin_products
 
-    state["sigma"][flip_idx] = -state["sigma"][flip_idx]
+    state["sigma"][flip_site] = -state["sigma"][flip_site]
     state["fitness"] += delta_f
 
 
 def relax_pspin(sigma0, J, sswm=True):
     """
-    Relax the mixed p-spin model with the given interactions.
+    Run an adaptive walk until no beneficial mutations remain.
+
+    Returns the sequence of flipped sites.
     """
     flip_sequence = []
     state = _initialize_relaxation_state(sigma0, J)
 
     while np.any(state["dfe"] > 0):
-        flip_idx = _choose_flip_from_dfe(state["dfe"], sswm=sswm)
-        flip_sequence.append(int(flip_idx))
-        _apply_flip_to_relaxation_state(state, J, int(flip_idx))
+        flip_site = _choose_beneficial_flip(state["dfe"], sswm=sswm)
+        flip_sequence.append(int(flip_site))
+        _apply_flip(state, J, int(flip_site))
 
     return flip_sequence

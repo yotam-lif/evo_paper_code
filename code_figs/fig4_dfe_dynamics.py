@@ -108,9 +108,9 @@ def load_fgm_data():
 
 def load_pspin_data():
     file_paths = {
-        1: "../data/PSPIN/N400_P1_mixed_repeats10.pkl",
-        2: "../data/PSPIN/N400_P2_mixed_repeats10.pkl",
-        3: "../data/PSPIN/N400_P3_mixed_repeats10.pkl",
+        1: "../data/PSPIN/N400_P1_pure_repeats10.pkl",
+        2: "../data/PSPIN/N400_P2_pure_repeats10.pkl",
+        3: "../data/PSPIN/N400_P3_pure_repeats10.pkl",
     }
 
     pspin_data = {}
