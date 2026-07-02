@@ -50,7 +50,7 @@ CACHE_PATH = "../data/cache/figS7_sk_scrambling_cache.pkl"
 # cache key derive from it automatically, so changing it here is all that's needed.
 EMD_FILE = "../data/PSPIN/N500_P2_pure_repeats10.pkl"       # row A,B,C (p=2)
 EMD_FILE_P3 = "../data/PSPIN/N500_P3_pure_repeats10.pkl"    # row D,E,F (p=3)
-EMD_ANCHOR_FRACS = [1.0, 0.5, 0.15]
+EMD_ANCHOR_FRACS = [1.0, 0.5, 0.3]
 EMD_WINDOW = 20
 # Velocity used for the angular timescale tau = sqrt(N) sin(theta_i) / V.
 EMD_TAU_VELOCITY = 0.62

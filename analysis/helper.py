@@ -8,6 +8,84 @@ FLOAT_DTYPE = np.float32
 SPIN_DTYPE = np.int8
 
 
+# ---------------------------------------------------------------------------
+# Spin configurations and flip histories
+# ---------------------------------------------------------------------------
+
+def init_sigma(N):
+    """
+    Initialize a random spin configuration for the Sherrington-Kirkpatrick model.
+
+    Parameters
+    ----------
+    N : int
+        The number of spins.
+
+    Returns
+    -------
+    numpy.ndarray
+        The spin configuration.
+    """
+    return np.random.choice([-1, 1], N)
+
+
+def compute_sigma_from_hist(sigma_0, hist, t=None):
+    """
+    Compute sigma from the initial sigma and the flip history up to flip number 't'.
+
+    Parameters
+    ----------
+    sigma_0 : numpy.ndarray
+        The initial spin configuration.
+    hist : list of int
+        The flip history - the indices of spins flipped, in order.
+    t : int
+        The flip number up to which to compute the spin configuration. The default is None.
+
+    Returns
+    -------
+    numpy.ndarray
+        The spin configuration after t flips.
+    """
+    sigma = np.copy(sigma_0)
+    if t is None:
+        rel_hist = hist
+    else:
+        rel_hist = hist[:t]
+    for flip in rel_hist:
+        sigma[flip] *= -1
+    return sigma
+
+
+def curate_sigma_list(sigma_0, hist, ts):
+    """
+    Curate the sigma list to have num_points elements.
+
+    Parameters
+    ----------
+    sigma_0 : numpy.ndarray
+        The initial spin configuration.
+    hist : list of int
+        The flip history - the indices of spins flipped, in order.
+    ts : list of int
+        The indices of flips in 'hist' to recreate sigma at.
+
+    Returns
+    -------
+    list
+        The curated list of spin configurations.
+    """
+    sigma_list = []
+    for t in ts:
+        sigma_t = compute_sigma_from_hist(sigma_0, hist, t)
+        sigma_list.append(sigma_t)
+    return sigma_list
+
+
+# ---------------------------------------------------------------------------
+# Small dtype / casting helpers
+# ---------------------------------------------------------------------------
+
 def _site_index_dtype(N):
     """Pick the smallest unsigned integer dtype that can store spin-site indices."""
     if N - 1 <= np.iinfo(np.uint16).max:
@@ -233,36 +311,36 @@ def compute_lfs(sigma, J):
     return local_fields
 
 
-def compute_fit_slow(sigma, J, f_off=0.0):
+def compute_energy(sigma, J, h_off=0.0):
     """
-    Compute the fitness (Hamiltonian value) of configuration σ.
+    Compute the energy (Hamiltonian value) of configuration σ.
 
-        fitness = Σ_interactions  J_{i1...ip} σ_{i1} ... σ_{ip}  -  f_off
+        energy = Σ_interactions  J_{i1...ip} σ_{i1} ... σ_{ip}  -  h_off
     """
     sigma = _as_spin_array(sigma)
-    fitness = FLOAT_DTYPE(0.0)
+    energy = FLOAT_DTYPE(0.0)
 
     for sector in J["sectors"]:
         spin_products = _compute_spin_products(sigma, sector)
-        fitness += np.dot(sector["couplings"], spin_products)
+        energy += np.dot(sector["couplings"], spin_products)
 
-    return float(fitness - FLOAT_DTYPE(f_off))
-
-
-def compute_fit_off(sigma_init, J):
-    """Compute the fitness offset so that fitness(sigma_init) = 1."""
-    return compute_fit_slow(sigma_init, J) - 1
+    return float(energy - FLOAT_DTYPE(h_off))
 
 
-def compute_fitness_delta_mutant(sigma, J, k):
+def compute_energy_off(sigma_init, J):
+    """Compute the energy offset so that energy(sigma_init) = 1."""
+    return compute_energy(sigma_init, J) - 1
+
+
+def compute_energy_delta_flip(sigma, J, k):
     """
-    Compute the fitness change ΔF when spin k is flipped.
+    Compute the energy change ΔH when spin k is flipped.
 
     Only interactions containing site k are affected, so we restrict
     the sum to those terms for efficiency.
     """
     sigma = _as_spin_array(sigma)
-    delta_f = FLOAT_DTYPE(0.0)
+    delta = FLOAT_DTYPE(0.0)
 
     for sector in J["sectors"]:
         affected = sector["site_to_interactions"][k]
@@ -270,113 +348,103 @@ def compute_fitness_delta_mutant(sigma, J, k):
             continue
 
         spin_products = _compute_spin_products(sigma, sector, interaction_idx=affected)
-        delta_f += np.sum(
+        delta += np.sum(
             -FLOAT_DTYPE(2.0) * sector["couplings"][affected] * spin_products,
             dtype=FLOAT_DTYPE,
         )
 
-    return float(delta_f)
+    return float(delta)
 
-def compute_dfe(sigma, J, f_off=0.0, sel_coeff=False):
-    """Compute the DFE: the fitness change ΔF_i for flipping each spin i.
 
-    If ``sel_coeff`` is True, each absolute effect is divided by the current
-    fitness of ``sigma`` (computed with offset ``f_off``), returning selection
-    coefficients s_i = ΔF_i / F(sigma) instead of raw fitness differences. Pass
-    the offset that pins the initial fitness to 1 (see :func:`compute_fit_off`)
-    so the denominator is measured relative to an initial fitness of 1.
-    """
+def compute_flip_spectrum(sigma, J):
+    """Compute the single-flip spectrum: the energy change ΔH_i for flipping each spin i."""
     sigma = _as_spin_array(sigma)
-    dfe = (-FLOAT_DTYPE(2.0) * sigma * compute_lfs(sigma, J)).astype(FLOAT_DTYPE, copy=False)
-    if sel_coeff:
-        curr_fit = compute_fit_slow(sigma, J, f_off)
-        dfe = (dfe / FLOAT_DTYPE(curr_fit)).astype(FLOAT_DTYPE, copy=False)
-    return dfe
+    return (-FLOAT_DTYPE(2.0) * sigma * compute_lfs(sigma, J)).astype(FLOAT_DTYPE, copy=False)
 
 
-def compute_bdfe(sigma, J, f_off=0.0, sel_coeff=False):
-    """Return (beneficial DFE values, their site indices)."""
-    dfe = compute_dfe(sigma, J, f_off=f_off, sel_coeff=sel_coeff)
-    return _extract_beneficial(dfe)
+def compute_positive_spectrum(sigma, J):
+    """Return (positive single-flip effects, their site indices)."""
+    spectrum = compute_flip_spectrum(sigma, J)
+    return _extract_positive(spectrum)
 
 
-def _extract_beneficial(dfe):
-    """Extract beneficial (positive) entries and their indices from a DFE."""
-    mask = dfe > 0
-    return dfe[mask], np.flatnonzero(mask)
+def _extract_positive(spectrum):
+    """Extract positive entries and their indices from a flip spectrum."""
+    mask = spectrum > 0
+    return spectrum[mask], np.flatnonzero(mask)
 
 
-def compute_normalized_bdfe(sigma, J, f_off=0.0, sel_coeff=False):
-    """Return the beneficial DFE normalized to a probability distribution."""
-    bdfe, b_ind = compute_bdfe(sigma, J, f_off=f_off, sel_coeff=sel_coeff)
-    norm = np.sum(bdfe, dtype=FLOAT_DTYPE)
+def compute_normalized_positive_spectrum(sigma, J):
+    """Return the positive single-flip spectrum normalized to a probability distribution."""
+    positive, p_ind = compute_positive_spectrum(sigma, J)
+    norm = np.sum(positive, dtype=FLOAT_DTYPE)
     if norm > 0:
-        bdfe = bdfe / norm
-    return bdfe.astype(FLOAT_DTYPE, copy=False), b_ind
+        positive = positive / norm
+    return positive.astype(FLOAT_DTYPE, copy=False), p_ind
 
 
-def compute_rank(sigma, J):
-    """Count the number of beneficial mutations (rank of the configuration)."""
-    dfe = compute_dfe(sigma, J)
-    return int(np.count_nonzero(dfe > 0))
+def count_positive_flips(sigma, J):
+    """Count the number of flips that increase the energy."""
+    spectrum = compute_flip_spectrum(sigma, J)
+    return int(np.count_nonzero(spectrum > 0))
 
 
 # ---------------------------------------------------------------------------
 # Spin-flip selection
 # ---------------------------------------------------------------------------
 
-def _choose_beneficial_flip(dfe, sswm=True):
+def _choose_positive_flip(spectrum, weighted=True):
     """
-    Choose a spin to flip from the beneficial mutations in the DFE.
+    Choose a spin to flip from the energy-increasing flips in the spectrum.
 
-    If sswm=True, flip probability is proportional to ΔF (strong-selection
-    weak-mutation). Otherwise, pick uniformly among beneficial mutations.
+    If weighted=True, flip probability is proportional to ΔH. Otherwise,
+    pick uniformly among the energy-increasing flips.
     """
-    bdfe, beneficial_sites = _extract_beneficial(dfe)
-    if sswm:
-        probs = bdfe / np.sum(bdfe, dtype=FLOAT_DTYPE)
-        return np.random.choice(beneficial_sites, p=probs)
-    return np.random.choice(beneficial_sites)
+    positive, positive_sites = _extract_positive(spectrum)
+    if weighted:
+        probs = positive / np.sum(positive, dtype=FLOAT_DTYPE)
+        return np.random.choice(positive_sites, p=probs)
+    return np.random.choice(positive_sites)
 
 
-def sswm_flip(sigma, J):
-    """Choose a spin to flip using SSWM (strong-selection weak-mutation)."""
-    return _choose_beneficial_flip(compute_dfe(sigma, J), sswm=True)
+def weighted_flip(sigma, J):
+    """Choose a spin to flip with probability proportional to its energy gain."""
+    return _choose_positive_flip(compute_flip_spectrum(sigma, J), weighted=True)
 
 
 # ---------------------------------------------------------------------------
-# Adaptive walk (relaxation)
+# Greedy walk (relaxation)
 # ---------------------------------------------------------------------------
 
 def _initialize_relaxation_state(sigma0, J):
     """
-    Set up the cached state for an adaptive walk: the current spin
-    configuration, its fitness, the full DFE, and per-sector cached
+    Set up the cached state for a greedy walk: the current spin
+    configuration, its energy, the full flip spectrum, and per-sector cached
     spin products (to allow incremental updates on each flip).
     """
     sigma = _as_spin_array(sigma0, copy=True)
-    dfe = np.zeros(J["N"], dtype=FLOAT_DTYPE)
-    fitness = FLOAT_DTYPE(0.0)
+    spectrum = np.zeros(J["N"], dtype=FLOAT_DTYPE)
+    energy = FLOAT_DTYPE(0.0)
     sector_caches = []
 
     for sector in J["sectors"]:
         spin_products = _compute_spin_products(sigma, sector)
-        fitness += np.dot(sector["couplings"], spin_products)
-        dfe_contributions = -FLOAT_DTYPE(2.0) * sector["couplings"] * spin_products
-        _scatter_to_sites(dfe, sector, dfe_contributions)
+        energy += np.dot(sector["couplings"], spin_products)
+        spectrum_contributions = -FLOAT_DTYPE(2.0) * sector["couplings"] * spin_products
+        _scatter_to_sites(spectrum, sector, spectrum_contributions)
         sector_caches.append({"spin_products": spin_products})
 
-    return {"sigma": sigma, "dfe": dfe, "fitness": fitness, "sector_caches": sector_caches}
+    return {"sigma": sigma, "spectrum": spectrum, "energy": energy, "sector_caches": sector_caches}
 
 
 def _apply_flip(state, J, flip_site):
     """
-    Flip spin at *flip_site* and incrementally update the fitness, DFE,
-    and cached spin products.
+    Flip spin at *flip_site* and incrementally update the energy, flip
+    spectrum, and cached spin products.
 
     Only interactions containing flip_site need recomputation.
     """
-    delta_f = state["dfe"][flip_site]
+    delta = state["spectrum"][flip_site]
 
     for sector, cache in zip(J["sectors"], state["sector_caches"]):
         affected = sector["site_to_interactions"][flip_site]
@@ -385,27 +453,27 @@ def _apply_flip(state, J, flip_site):
 
         old_spin_products = cache["spin_products"][affected]
         # Flipping one spin negates all spin products containing it,
-        # which shifts the DFE by 4 * J * (old product) at each site.
-        dfe_updates = FLOAT_DTYPE(4.0) * sector["couplings"][affected] * old_spin_products
+        # which shifts the spectrum by 4 * J * (old product) at each site.
+        spectrum_updates = FLOAT_DTYPE(4.0) * sector["couplings"][affected] * old_spin_products
 
-        _scatter_to_sites(state["dfe"], sector, dfe_updates, interaction_idx=affected)
+        _scatter_to_sites(state["spectrum"], sector, spectrum_updates, interaction_idx=affected)
         cache["spin_products"][affected] = -old_spin_products
 
     state["sigma"][flip_site] = -state["sigma"][flip_site]
-    state["fitness"] += delta_f
+    state["energy"] += delta
 
 
-def relax_pspin(sigma0, J, sswm=True):
+def relax_pspin(sigma0, J, weighted=True):
     """
-    Run an adaptive walk until no beneficial mutations remain.
+    Run a greedy walk until no energy-increasing flips remain.
 
     Returns the sequence of flipped sites.
     """
     flip_sequence = []
     state = _initialize_relaxation_state(sigma0, J)
 
-    while np.any(state["dfe"] > 0):
-        flip_site = _choose_beneficial_flip(state["dfe"], sswm=sswm)
+    while np.any(state["spectrum"] > 0):
+        flip_site = _choose_positive_flip(state["spectrum"], weighted=weighted)
         flip_sequence.append(int(flip_site))
         _apply_flip(state, J, int(flip_site))
 
@@ -420,12 +488,11 @@ class PSpin:
     """
     Mixed / pure p-spin model as an object.
 
-    Bundles the fitness landscape (the interaction sectors ``J``), the current
-    spin configuration (state) and a fitness offset ``f_off`` into one object,
-    mirroring the :class:`NK` and :class:`Fisher` models. The offset is stored on
-    the model and applied on every fitness computation, so that -- once
-    :meth:`set_offset` has pinned it -- the initial configuration has fitness 1
-    and selection coefficients are measured relative to that.
+    Bundles the landscape (the interaction sectors ``J``), the current
+    spin configuration (state) and an energy offset ``h_off`` into one object.
+    The offset is stored on the model and applied on every energy computation,
+    so that -- once :meth:`set_offset` has pinned it -- the initial
+    configuration has energy 1.
 
     The landscape is kept in the same dict layout produced by :func:`init_J`
     (exposed as the read-only :attr:`J` view), so every module-level function in
@@ -436,7 +503,7 @@ class PSpin:
     N, P, pure : landscape dimensions / flags (see :func:`init_J`).
     sectors : list of interaction sectors (the couplings J).
     sigma : current spin configuration (state).
-    f_off : fitness offset subtracted on every fitness computation.
+    h_off : energy offset subtracted on every energy computation.
     """
 
     def __init__(self, N, P, sigma_init=None, random_state=None, pure=False):
@@ -445,7 +512,7 @@ class PSpin:
         self.P = model["P"]
         self.pure = model["pure"]
         self.sectors = model["sectors"]
-        self.f_off = FLOAT_DTYPE(0.0)
+        self.h_off = FLOAT_DTYPE(0.0)
         if sigma_init is not None:
             self.sigma = _as_spin_array(sigma_init, copy=True)
             self.set_offset(self.sigma)
@@ -458,33 +525,33 @@ class PSpin:
         return {"N": self.N, "P": self.P, "pure": self.pure, "sectors": self.sectors}
 
     def set_offset(self, sigma_init):
-        """Store the offset so that ``compute_fitness(sigma_init) == 1``."""
-        self.f_off = FLOAT_DTYPE(compute_fit_off(sigma_init, self.J))
-        return self.f_off
+        """Store the offset so that ``compute_energy(sigma_init) == 1``."""
+        self.h_off = FLOAT_DTYPE(compute_energy_off(sigma_init, self.J))
+        return self.h_off
 
-    def compute_fitness(self, sigma):
-        """Fitness of ``sigma``, with the stored offset applied."""
-        return compute_fit_slow(sigma, self.J, self.f_off)
+    def compute_energy(self, sigma):
+        """Energy of ``sigma``, with the stored offset applied."""
+        return compute_energy(sigma, self.J, self.h_off)
 
-    def compute_dfe(self, sigma, sel_coeff=False):
-        """DFE at ``sigma``; if ``sel_coeff`` divide effects by the current fitness."""
-        return compute_dfe(sigma, self.J, f_off=self.f_off, sel_coeff=sel_coeff)
+    def compute_flip_spectrum(self, sigma):
+        """Single-flip spectrum at ``sigma``."""
+        return compute_flip_spectrum(sigma, self.J)
 
-    def compute_bdfe(self, sigma, sel_coeff=False):
-        """Beneficial DFE (values, indices) at ``sigma``."""
-        return compute_bdfe(sigma, self.J, f_off=self.f_off, sel_coeff=sel_coeff)
+    def compute_positive_spectrum(self, sigma):
+        """Positive single-flip spectrum (values, indices) at ``sigma``."""
+        return compute_positive_spectrum(sigma, self.J)
 
-    def compute_rank(self, sigma):
-        """Number of beneficial mutations at ``sigma``."""
-        return compute_rank(sigma, self.J)
+    def count_positive_flips(self, sigma):
+        """Number of energy-increasing flips at ``sigma``."""
+        return count_positive_flips(sigma, self.J)
 
-    def relax(self, sigma0=None, sswm=True):
-        """Run an SSWM adaptive walk, updating :attr:`sigma`. Returns flip sequence."""
+    def relax(self, sigma0=None, weighted=True):
+        """Run a greedy walk, updating :attr:`sigma`. Returns flip sequence."""
         if sigma0 is None:
             if self.sigma is None:
                 raise ValueError("No configuration to relax: pass sigma0 or set self.sigma.")
             sigma0 = self.sigma
-        flip_sequence = relax_pspin(sigma0, self.J, sswm=sswm)
+        flip_sequence = relax_pspin(sigma0, self.J, weighted=weighted)
         sigma = _as_spin_array(sigma0, copy=True)
         for site in flip_sequence:
             sigma[site] = -sigma[site]

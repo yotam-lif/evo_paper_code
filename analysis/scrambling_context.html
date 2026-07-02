@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrambling Context</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: #333;
+            background: #fafafa;
+        }
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 1.5em;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 0.5em;
+        }
+        p {
+            text-align: justify;
+            margin-bottom: 1.2em;
+        }
+        .math-display {
+            margin: 1.5em 0;
+            padding: 1em;
+            background: #f0f8ff;
+            border-left: 4px solid #0066cc;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Self-contained context: scrambling in landscape-ascent models</h1>
+
+<p>We study a class of high-dimensional models in which a system carries an internal configuration and is assigned a scalar energy by that configuration, and in which the configuration performs a stochastic ascent that increases the energy step by step until it can increase it no further. At each configuration there is a fixed menu of elementary moves the system may make, and each move changes the energy by some amount; the central object of interest is the <em>spectrum of energy changes</em>, i.e. the collection of the energy increments $\Delta_i$ produced by all the available elementary moves at the current configuration. This spectrum is a purely local property of the landscape: it changes as the configuration moves, because both the current configuration and the local shape of the landscape change. The phenomenon we want to understand, which we call <em>scrambling</em>, is a rapid loss of memory of these energy changes along the ascent. Concretely, take at some reference configuration the subset of moves that raise the energy (equivalently, one could take the subset that lowers it), and then re-evaluate those very same moves at a later configuration reached by the ascent. After surprisingly few accepted steps, the sub-distribution of energy changes carried by that specially chosen subset becomes statistically indistinguishable from the full spectrum of energy changes at the later configuration; equivalently, the move-by-move correlation between the energy changes measured at the two configurations decays to essentially zero. The effect is symmetric in the direction of the walk (a subset defined "in the future" is equally scrambled when read out "in the past"), and it holds whether the reference subset is the energy-raising moves or the energy-lowering moves. So although the fate of any individual move is quickly randomized and effectively unpredictable, the ensemble behaves in a completely predictable way: any distinguished subset relaxes to the ambient spectrum. Our goal below is first to lay out a fully solved reference model in which scrambling can be decomposed and its timescale computed analytically, and then to set up an unsolved problem in a second, discrete model where the reference picture only partially applies.</p>
+
+<p>The reference model, which we will call Model X, has a continuous configuration space. A configuration is a point $\boldsymbol r \in \mathbb{R}^n$ in an $n$-dimensional space, and the energy is an isotropic Gaussian bump with a single global maximum at the origin,</p>
+
+<div class="math-display">$$E(\boldsymbol r) = \exp\!\left(-\tfrac{1}{2}\lVert \boldsymbol r\rVert^2\right),$$</div>
+
+<p>so that the energy is $1$ at the maximum and decays monotonically to $0$ as $\lVert\boldsymbol r\rVert \to \infty$. The single scalar that controls the energy is thus the distance $R \coloneqq \lVert \boldsymbol r\rVert$ from the maximum, together with the orientation $\hat{\boldsymbol r} \coloneqq \boldsymbol r / R$. Elementary moves are modeled as a fixed pool of $m$ random displacement vectors $\{\boldsymbol \delta^i\}_{i=1}^m$, each with independent Gaussian entries of mean zero and variance $\sigma^2$, so that the squared length of a move is $\chi^2$-distributed with $n$ degrees of freedom and its typical length is $\sigma\sqrt{n}$. This pool is drawn once at the start and then held fixed for the entire ascent: the same $m$ moves are available (with configuration-dependent energy changes) at every step. A move takes the configuration additively, $\boldsymbol r \mapsto \boldsymbol r + \boldsymbol \delta^i$, and its energy change is</p>
+
+<div class="math-display">$$\Delta_i \coloneqq E(\boldsymbol r + \boldsymbol\delta^i) - E(\boldsymbol r) = \exp\!\left(-\tfrac12\lVert \boldsymbol r + \boldsymbol\delta^i\rVert^2\right) - \exp\!\left(-\tfrac12\lVert \boldsymbol r\rVert^2\right).$$</div>
+
+<p>Because only $m$ moves are ever available and they are frozen, the reachable part of the landscape is effectively discrete, with up to $2^m$ accessible configurations; the smooth Gaussian bump hides an effectively combinatorial structure underneath. It is worth stressing that $\Delta_i$ changes along the walk purely through the changing displacement $\boldsymbol r$, since the move vectors themselves are fixed.</p>
+
+<p>The dynamics common to all models we consider is a greedy stochastic ascent. We work in a regime in which the system essentially never accepts an energy-lowering move, and in which a single move is either accepted (and then the configuration jumps) or the next candidate is considered, one at a time. Among the energy-raising moves the acceptance probability is taken proportional to the energy gain itself, i.e. move $i$ is accepted with probability proportional to $\Delta_i$ when $\Delta_i > 0$ and with probability zero otherwise (one may equally use the relative gain $\Delta_i / E$, which merely rescales by the current energy and does not affect any of the results below). The ascent terminates at a <em>local energy maximum</em>, a configuration at which no available move raises the energy. Throughout, time $t$ is measured simply as the number of accepted moves — the relative progress of the ascent — and not in any physical unit; this coarse-grained clock is all that the scrambling results depend on.</p>
+
+<p>Scrambling is defined operationally as follows. Fix the pool of moves. At a reference time (say $t=0$) select the subset of moves that raise the energy there, $M = \{i : \Delta_i(\boldsymbol r(0)) > 0\}$. Then follow the ascent and, at each later configuration $\boldsymbol r(t)$, read off the energy changes $\{\Delta_i(\boldsymbol r(t))\}_{i \in M}$ of exactly those same moves and compare their distribution to the full spectrum $\{\Delta_i(\boldsymbol r(t))\}_{i=1}^m$ over all moves. Two complementary measures are used. One is the distance between the sub-distribution and the full distribution (in practice an earth-mover / Wasserstein distance between the two sets of energy changes, normalized to $1$ at the reference time), which decays toward zero as the subset forgets that it was special. The other is the move-by-move Pearson correlation of the energy changes between the reference configuration and the later one, computed across the whole pool,</p>
+
+<div class="math-display">$$\rho(0,t) = \operatorname{Corr}_i\!\big(\Delta_i(\boldsymbol r(0)),\,\Delta_i(\boldsymbol r(t))\big),$$</div>
+
+<p>which likewise decays from $1$ toward $0$. These two views are closely related but not identical; both define, through their characteristic decay, a <em>scrambling timescale</em> in units of accepted moves. In Model X this timescale can be computed analytically, and the computation reveals that scrambling is driven by two independent geometric mechanisms, a radial one and an angular one.</p>
+
+<p>The radial mechanism is most transparent in the far field, where the distance to the maximum is large compared with the move scale, $R \gg \lVert\boldsymbol\delta\rVert$. Decompose a move into its radial component $\delta_\parallel \coloneqq \boldsymbol\delta\cdot\hat{\boldsymbol r} \sim \mathcal N(0,\sigma^2)$ along $\hat{\boldsymbol r}$ and its tangential remainder. Expanding the energy change to leading order,</p>
+
+<div class="math-display">$$\Delta = E(\boldsymbol r)\Big[\exp\!\big(-R\,\delta_\parallel - \tfrac12\lVert\boldsymbol\delta\rVert^2\big) - 1\Big] \;\approx\; -\,E(\boldsymbol r)\,R\,\delta_\parallel,$$</div>
+
+<p>so in the far field the energy change of every move is proportional to its radial projection through one common prefactor $R\,E(\boldsymbol r)$ that is the same for all moves. Two consequences follow. First, the <em>ordering</em> of moves far from the maximum is dictated entirely by orientation: a move raises the energy precisely when it points inward ($\delta_\parallel < 0$), and the strongest energy-raisers are the most inward-pointing ones. Second, exactly at the maximum ($R \to 0$) the linear term vanishes and the energy change reduces to $\Delta = E(0)\big(e^{-\lVert\boldsymbol\delta\rVert^2/2}-1\big)$, which depends only on the <em>magnitude</em> $\lVert\boldsymbol\delta\rVert^2$ of the move (all moves are then energy-lowering, and the spectrum tends to a shifted $\chi^2$ form). For Gaussian moves the magnitude and the orientation are statistically independent, so the quantity that orders moves far from the maximum (a signed projection onto $\hat{\boldsymbol r}$) is independent of the quantity that orders them at the maximum (the length). As the ascent carries the configuration inward, the ordering therefore rotates from being magnitude-blind and orientation-controlled to being orientation-blind and magnitude-controlled, and the correlation between early and late energy changes is destroyed. This is <em>radial scrambling</em>: convergence toward the maximum, by itself, decorrelates the spectrum.</p>
+
+<p>To get its timescale, note that in the far field the change in radius produced by an accepted move is, to leading order, just its radial component $\delta_\parallel$ (tangential parts change the radius only at second order). Since accepted moves are weighted by their energy gain and the gain is $\propto -\delta_\parallel$, the accepted radial steps are drawn from a tilted half-Gaussian $p_{\text{acc}}(\delta_\parallel)\propto(-\delta_\parallel)\,\phi_\sigma(\delta_\parallel)\mathbf 1_{\delta_\parallel<0}$, whose mean is</p>
+
+<div class="math-display">$$\mathbb E_{\text{acc}}[\delta_\parallel] = -\,\sigma\sqrt{\tfrac{\pi}{2}}.$$</div>
+
+<p>Writing the non-dimensional radius $\tilde R \coloneqq R/\sigma$ and measuring time in accepted moves, the radius obeys</p>
+
+<div class="math-display">$$\frac{d\tilde R}{dt} \approx -\sqrt{\tfrac{\pi}{2}}, \qquad\Longrightarrow\qquad \tilde R(t) = \tilde R(0)\Big(1 - \sqrt{\tfrac{\pi}{2}}\,\tfrac{t}{\tilde R(0)}\Big),$$</div>
+
+<p>so in Model X the distance to the maximum decreases <em>linearly</em> at the constant rate $\sqrt{\pi/2}$, and the radial scrambling timescale is</p>
+
+<div class="math-display">$$\tau_{\text{rs}} = \sqrt{\tfrac{2}{\pi}}\,\tilde R(0).$$</div>
+
+<p>This linear-in-$t$ radius, driven by a constant mean inward drift, is a defining feature of Model X and will be the crux of the comparison later. The far-field description breaks down when the radius falls to the move scale, $\tilde R \sim \sqrt{n} \eqqcolon \tilde R_b$, where the tangential parts of moves can no longer be neglected.</p>
+
+<p>The angular mechanism operates on the orientation $\hat{\boldsymbol r}$. Even at fixed distance to the maximum, the energy changes depend on the orientation through the direction of the common radial axis, so if $\hat{\boldsymbol r}$ rotates enough that the new radial axis is roughly orthogonal to the old one, the ordering of moves is reshuffled and the spectrum decorrelates. The accepted moves have tangential components that push $\hat{\boldsymbol r}$ around, and to good approximation the orientation undergoes isotropic diffusion on the sphere of radius $R$ with diffusion constant $D=\sigma^2/2$. The unit orientation then obeys a diffusion-on-a-sphere equation whose mean relaxes as</p>
+
+<div class="math-display">$$\mathbb E[\hat{\boldsymbol r}(t)\mid \hat{\boldsymbol r}(0)] = \hat{\boldsymbol r}(0)\, \exp\!\Big(-\tfrac{n-1}{2}\!\int_0^t \frac{dt'}{\tilde R(t')^2}\Big),$$</div>
+
+<p>giving the angular autocorrelation $C_{\hat{\boldsymbol r}}(0,t)=\exp\!\big(-\tfrac{n-1}{2}\int_0^t dt'/\tilde R(t')^2\big)$. At approximately constant radius this yields the angular timescale</p>
+
+<div class="math-display">$$\tau_{\text{as}} = \frac{2\,\tilde R(0)^2}{n-1},$$</div>
+
+<p>which is short at high dimension and near the maximum (small $R$) and long far from it. Only the angular mechanism can produce scrambling that runs backward in time as well as forward, since diffusion of the orientation is symmetric under time reversal whereas the radial drift is not.</p>
+
+<p>The two mechanisms cross over at a critical radius. Comparing $\tau_{\text{rs}}$ and $\tau_{\text{as}}$ gives</p>
+
+<div class="math-display">$$\tilde R_c = \frac{n-1}{\sqrt{2\pi}},$$</div>
+
+<p>with $\tilde R \gg \tilde R_c$ (far field) dominated by radial scrambling and $\tilde R \ll \tilde R_c$ (near field) dominated by angular scrambling. Because the mechanisms are independent, the overall rate is additive,</p>
+
+<div class="math-display">$$\tau_s^{-1} = \tau_{\text{rs}}^{-1} + \tau_{\text{as}}^{-1}.$$</div>
+
+<p>The move-by-move Pearson correlation can be written in closed form. With $\cos\theta \coloneqq \hat{\boldsymbol r}(0)\cdot\hat{\boldsymbol r}(t)$ the angle swept between the two orientations,</p>
+
+<div class="math-display">$$\rho(0,t) = \frac{\tilde R(0)\,\tilde R(t)\cos\theta + n/2}{\sqrt{\big(\tilde R(0)^2+n/2\big)\big(\tilde R(t)^2+n/2\big)}},$$</div>
+
+<p>which in the far field reduces to $\rho \approx \cos\theta = C_{\hat{\boldsymbol r}}(0,t)$, so the correlation decays on the angular timescale; substituting the linear radial law into the angular autocorrelation gives an explicit closed form whose characteristic decay time is exactly the combined $\tau_s$ above. Two limiting statements frame all of this and will be important for the discrete model. If the landscape were additive — energy a sum of independent single-coordinate contributions with no interaction between coordinates — there would be no scrambling at all (the timescale diverges), because the energy change of a move that is not itself taken never changes. If, at the opposite extreme, the landscape were fully random — energies of distinct configurations independent — scrambling would be complete in a single step. Scrambling is thus fundamentally an <em>interaction</em> effect, living between these two extremes, and its speed measures how strongly a move's energy change is coupled to the rest of the configuration.</p>
+
+<p>We now turn to a second, genuinely discrete model in which we would like the same picture to hold, the $p$-spin model from spin-glass physics. A configuration is a string of $N$ binary coordinates $\boldsymbol\sigma = (\sigma_1,\dots,\sigma_N)$ with each $\sigma_i = \pm 1$, an elementary move is a single-coordinate flip $\sigma_i \mapsto -\sigma_i$, and the energy is a homogeneous degree-$p$ form built from fully symmetric Gaussian couplings,</p>
+
+<div class="math-display">$$E(\boldsymbol\sigma) = \sum_{i_1 < \dots < i_p} J_{i_1\dots i_p}\,\sigma_{i_1}\cdots\sigma_{i_p}, \qquad \operatorname{Var}(J_{i_1\dots i_p}) = \frac{p!}{2N^{p-1}}.$$</div>
+
+<p>The energy change of flipping coordinate $i$ is $\Delta_i = -2\sigma_i\sum_{i_2<\dots<i_p} J_{i,i_2,\dots,i_p}\,\sigma_{i_2}\cdots\sigma_{i_p}$. The single parameter $p$ tunes the interaction order and hence the ruggedness of the landscape: $p=1$ is the additive (non-interacting) limit with a single maximum and no scrambling; $p=2$ is the Sherrington–Kirkpatrick model, a quadratic form built from a Gaussian symmetric matrix; and $p\to\infty$ is the fully random limit in which all configuration energies are independent Gaussians and scrambling is complete in one step. The same greedy stochastic ascent is run on this energy to a local maximum $\boldsymbol\sigma_f$, and scrambling is measured exactly as in Model X — pick the subset of coordinate-flips that raise the energy at a reference configuration, follow the walk, and watch that subset's spectrum of energy changes relax to the full spectrum (again via a normalized earth-mover distance) or watch the flip-by-flip Pearson correlation decay. We focus on $p=2$ and $p=3$.</p>
+
+<p>A natural coordinate playing the role of the radius is the Hamming distance $d_H$ from the terminal local maximum $\boldsymbol\sigma_f$, or equivalently the overlap $q(\boldsymbol\sigma,\boldsymbol\sigma_f) = \tfrac1N\sum_i\sigma_i(\sigma_f)_i = 1 - 2d_H/N$. Two facts about scrambling in this model are already established. First, at the level of the flip-by-flip correlation, a direct disorder average gives a landscape covariance kernel $\xi(q) = q^p/2$, and the correlation of the energy change of an unflipped coordinate between two configurations of overlap $q$ is</p>
+
+<div class="math-display">$$\operatorname{Corr}\!\big(\Delta_i(0),\Delta_i(t)\big) \approx q(t)^{\,p-1}.$$</div>
+
+<p>For an early-time neutral flip process the overlap decays as $q(t)\approx 1 - 2t/N$, and the initial logarithmic-decay rate then yields the scrambling timescale</p>
+
+<div class="math-display">$$\tau = \frac{N\,\xi'(1)}{2\,\xi''(1)} = \frac{N}{2(p-1)}.$$</div>
+
+<p>This diverges in the additive limit $p=1$ (no scrambling), vanishes as $p\to\infty$ (single-step scrambling), and for a mixed model containing all interaction orders up to $P$ becomes $\tau_{\text{mixed}} = 3N/4(P-1)$, dominated by the highest order present. Numerically, this timescale is found to describe the observed scrambling well at <em>early</em> times for both $p=2$ and $p=3$ (as the walk approaches the terminal maximum the empirical decay rate settles onto essentially this value, more precisely drifting toward $\approx N/2p$).</p>
+
+<p>Second, there is a geometric picture that mirrors Model X. For $p=2$ one can diagonalize the coupling matrix $J = V\Lambda V^\top$ and define continuous coordinates $r_k = \sum_i v_{ki}\sigma_i$, so that $E = \tfrac12\,\boldsymbol r^\top\Lambda\boldsymbol r$ is a quadratic saddle. In these coordinates the configurations are constrained to a sphere, $\lVert\boldsymbol r\rVert^2 = N$, each single flip is an additive displacement $\delta^i_k = -2v_{ki}\sigma_i$ of squared length $\lVert\boldsymbol\delta^i\rVert^2 = 4$ (independent of $N$), each accepted flip is a small step subtending angle $\cos\alpha = 1 - 2/N$ on the sphere, and the flips are isotropic in second moment ($\tfrac1N\sum_i\boldsymbol\delta^i(\boldsymbol\delta^i)^\top = \tfrac4N I$), so many small flips generate diffusion on the sphere with effective diffusion constant $D = 2/N$ in units of accepted moves. Around the terminal maximum one sets up intrinsic coordinates</p>
+
+<div class="math-display">$$\boldsymbol r(\theta,\hat{\boldsymbol u}) = \sqrt N\big(\cos\theta\,\hat{\boldsymbol r}_f + \sin\theta\,\hat{\boldsymbol u}\big), \qquad \hat{\boldsymbol u}\cdot\hat{\boldsymbol r}_f = 0,$$</div>
+
+<p>where $\theta$ is the geodesic distance from the terminal maximum and $\hat{\boldsymbol u}$ (which plays the role of the orientation $\hat{\boldsymbol r}$ in Model X) is an angular direction in the tangent space. The geodesic angle is fixed exactly by the Hamming distance, $\cos\theta = 1 - 2d_H/N = q$, and the distance from the terminal maximum measured within the shell is</p>
+
+<div class="math-display">$$R = \sqrt N\,\sin\theta.$$</div>
+
+<p>Restricting the energy to the sphere and expanding, the energy change of a flip decomposes into a peak term plus two transients,</p>
+
+<div class="math-display">$$\Delta_i(\theta,\hat{\boldsymbol u}) = \Delta_{i,0} + (\cos\theta - 1)\,\boldsymbol r_f^\top\Lambda\boldsymbol\delta^i + R\,\hat{\boldsymbol u}^\top\Lambda\boldsymbol\delta^i,$$</div>
+
+<p>where $\Delta_{i,0}\le 0$ is the energy change at the terminal maximum, the middle term is a <em>radial</em> transient that vanishes as $\theta\to0$, and the last term is an <em>angular</em> transient that vanishes as $R\to0$ and reshuffles effects at fixed $\theta$. This is a direct discrete analog of the radial-plus-angular decomposition of Model X. A neutral shell-mixing / diffusion argument on the constant-$\theta$ shell gives an angular timescale</p>
+
+<div class="math-display">$$\tau \approx \frac{R^2}{2}$$</div>
+
+<p>in units of accepted moves. Although the exact diagonalization is special to $p=2$, the decomposition itself is general: restricting any homogeneous degree-$p$ energy to the sphere and expanding in the intrinsic coordinates (via the binomial theorem applied to the symmetric $p$-linear polarization $B$ of the energy) gives</p>
+
+<div class="math-display">$$E(\theta,\hat{\boldsymbol u}) = N^{p/2}\sum_{j=0}^{p}\binom{p}{j}\cos^{p-j}\!\theta\,\sin^{j}\!\theta\; B\big(\hat{\boldsymbol r}_f^{\,\otimes(p-j)},\,\hat{\boldsymbol u}^{\,\otimes j}\big),$$</div>
+
+<p>which has $p+1$ terms: the $j=0$ term is the peak term surviving at $\theta=0$, and every $j\ge1$ term is a transient that vanishes as $\theta,R\to0$ (radial) while its $\hat{\boldsymbol u}$-dependence reshuffles effects at fixed $\theta$ (angular). So the radial/angular <em>mechanism</em> survives to all $p$ (only the closed algebra is $p=2$-specific), and this is the structural reason to expect a Model-X-like radial scrambling picture at general $p$.</p>
+
+<p>Here is the problem. The late-time behavior matches $\tau = R^2/2$ for both $p=2$ and $p=3$, but at <em>earlier</em> times the radial-scrambling picture inherited from Model X does not reproduce the data. One might first guess this is because Model X reduces its radius monotonically whereas the discrete walk sometimes increases its distance to the eventual terminal maximum; but the radial dynamics are in fact quite linear on average up to fairly late times. Empirically, over the first roughly 60–70% of the walk the Hamming distance to the terminal maximum drifts down linearly,</p>
+
+<div class="math-display">$$d_H(t) \approx d_H(0) - v\,t, \qquad v \approx 0.62$$</div>
+
+<p>(in coordinate-flips accepted, with $v$ measured in Hamming units per accepted move), which looks like the exact analog of Model X's constant inward radial drift. The naive expectation is that this linear inward drift should produce Model-X radial scrambling with the scrambling slope set by $v$. It does not: the measured early-time decay slope of the subset-to-full distance (and of the correlation) is not $v$, unlike Model X where the radial-scrambling slope is exactly the radial drift rate. Several facts sharpen the puzzle and are the natural starting points for the analysis. Because $\cos\theta = 1 - 2d_H/N$ is linear in $d_H$, the quantity that drifts linearly in $t$ is $\cos\theta$ (equivalently $q$, equivalently $d_H$), <em>not</em> the shell radius $R$: from $R^2 = N\sin^2\theta = 4\,d_H(N-d_H)/N$ one gets a downward parabola in $t$, so near the terminal maximum $R^2(t)\approx R^2(0) - 4vt$ and hence $R(t)\approx\sqrt{R^2(0)-4vt}$ collapses like a square root (the inward radial rate $\dot R \approx -2v/R$ diverges into the maximum), while far from the maximum (near the equator, $R\to\sqrt N$, $\theta\to\pi/2$) there is a turning point where $\dot R\to0$ and radial motion stalls. This is the opposite of Model X, where $R$ itself decreases linearly at constant rate. Correspondingly the integrated time-to-maximum is $\tau_{\text{rs}} = d_H(0)/v = R^2(0)/4v$, which is <em>quadratic</em> in the initial radius rather than linear, and the local radial timescale $\tau_{\text{rs}}(R) = \sqrt N\,R^2/\big(2v\sqrt{N-R^2}\big)$ diverges like $(N-R^2)^{-1/2}$ far from the maximum. A further empirical contrast is that the width of the energy-change spectrum stays roughly constant along the walk in the $p$-spin model, with no counterpart of the Model-X far-field rescaling in which every energy change is multiplied by the common shrinking prefactor $R\,E(\boldsymbol r)$; so whatever drives the early decay here is not simply the geometric shrinking of a common radial prefactor.</p>
+
+<p>The goal is a comprehensive analysis, with both numerics and analytical expressions, of what actually governs the early-time (far-from-maximum) scrambling in the $p$-spin model and why the naive transfer of the Model-X radial picture — in particular the expectation that the scrambling slope equals the linear inward drift rate $v$ — fails, even though the inward drift is genuinely linear. A satisfactory account should identify the correct early-time decay law and its slope in terms of the model's parameters and the observable coordinates ($N$, $p$, the overlap $q$ or Hamming distance $d_H$, the shell radius $R$, and the drift $v\approx0.62$), reconcile it with the known late-time timescale, clarify what the correct discrete analog of "radial scrambling" is here and how the linear drift of $d_H$ (versus the nonlinear, parabolic behavior of the shell radius $R$) enters it, and do all of this consistently for both $p=2$ and $p=3$.</p>
+
+</body>
+</html>

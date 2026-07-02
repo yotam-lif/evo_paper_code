@@ -194,18 +194,11 @@ def load_fgm_reps():
 
 
 def load_pspin_data():
-    file_paths = {
-        1: "../data/PSPIN/N400_P1_pure_repeats10.pkl",
-        2: "../data/PSPIN/N400_P2_pure_repeats10.pkl",
-        3: "../data/PSPIN/N400_P3_pure_repeats10.pkl",
-    }
-    pspin_data = {}
-    for order, path in file_paths.items():
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"PSPIN data file not found: {path}")
-        with open(path, "rb") as f:
-            pspin_data[order] = pickle.load(f)
-    return pspin_data
+    path = "../data/PSPIN/N1500_P2_pure_repeats10.pkl"
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"PSPIN data file not found: {path}")
+    with open(path, "rb") as f:
+        return pickle.load(f)
 
 
 def load_nk_single_k():
@@ -249,17 +242,20 @@ def main():
     nk_data = load_nk_single_k()
 
     fgm_datasets = extract_fgm_ridge_data(fgm_reps)
-    pspin_datasets = extract_pspin_ridge_data(pspin_data[2])
+    pspin_datasets = extract_pspin_ridge_data(pspin_data)
     nk_datasets = extract_nk_ridge_data(nk_data)
 
-    fig = plt.figure(figsize=(24, 7))
+    fig = plt.figure(figsize=(16, 14))
     # left margin gives the FGM panel's 3d content room to overflow its cell
     # without being clipped at the canvas edge (the tight crop can only recover
     # pixels that were actually drawn on-canvas).
-    fig.subplots_adjust(wspace=0.30, left=0.06, right=0.82)
-    ax1 = fig.add_subplot(1, 3, 1, projection="3d")
-    ax2 = fig.add_subplot(1, 3, 2, projection="3d")
-    ax3 = fig.add_subplot(1, 3, 3, projection="3d")
+    # 2 panels on the top row, 1 centred on the bottom row: a 2x4 grid where
+    # the top panels each span 2 columns and the bottom panel spans the middle
+    # 2 columns (cols 1-2), leaving it horizontally centred.
+    gs = fig.add_gridspec(2, 4, hspace=0.30, wspace=0.30, left=0.04, right=0.90)
+    ax1 = fig.add_subplot(gs[0, 0:2], projection="3d")
+    ax2 = fig.add_subplot(gs[0, 2:4], projection="3d")
+    ax3 = fig.add_subplot(gs[1, 1:3], projection="3d")
 
     waterfall_plot_panel(ax1, fgm_datasets, CMR_COLORS, PERCENTS,
                          title="FGM", xlim=(-0.06, 0.04))

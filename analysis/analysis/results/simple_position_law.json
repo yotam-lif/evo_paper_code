@@ -1,0 +1,166 @@
+{
+ "shared_fit": {
+  "a": 0.5000123854093294,
+  "b": 0.5868987201532925,
+  "rmse_abs": 0.004359865598146909,
+  "rmse_rel": 0.04301288190495861
+ },
+ "models": {
+  "N1000_P2": {
+   "N": 1000,
+   "p": 2,
+   "tau_max": 500.01238540932934,
+   "d_star": 586.8987201532925,
+   "lambda": 6,
+   "rho_memory_length": 166.66666666666666,
+   "tangent_tau_max": 333.3333333333333,
+   "near_basin_v_rem": 0.853343906374732,
+   "near_basin_half_slope": 0.7587825116707281,
+   "endpoint_matched_half_tau_max": 250.0,
+   "endpoint_matched_half_d_star": 329.4751739197792,
+   "curve_tests": [
+    {
+     "name": "free midrange fit",
+     "tau_max": 500.01238540932934,
+     "d_star": 586.8987201532925,
+     "d_star_over_N": 0.5868987201532925,
+     "rms_relative_error_vs_detailed_curve": 0.03751687143290537,
+     "max_relative_error_vs_detailed_curve": 0.07211280944016091,
+     "measured_ratio_min": 0.8539664502448283,
+     "measured_ratio_max": 1.1422756298176497
+    },
+    {
+     "name": "rho-memory tangent",
+     "tau_max": 333.3333333333333,
+     "d_star": 166.66666666666666,
+     "d_star_over_N": 0.16666666666666666,
+     "rms_relative_error_vs_detailed_curve": 0.8898563057288442,
+     "max_relative_error_vs_detailed_curve": 1.3233490308771876,
+     "measured_ratio_min": 0.46737850935876235,
+     "measured_ratio_max": 0.7739031362350101
+    },
+    {
+     "name": "endpoint half-time",
+     "tau_max": 250.0,
+     "d_star": 329.4751739197792,
+     "d_star_over_N": 0.3294751739197792,
+     "rms_relative_error_vs_detailed_curve": 0.2006655596371371,
+     "max_relative_error_vs_detailed_curve": 0.30760610005241695,
+     "measured_ratio_min": 1.1280571152254857,
+     "measured_ratio_max": 1.4458298119245234
+    }
+   ],
+   "rms_relative_error_vs_detailed_curve": 0.03751687143290535,
+   "max_relative_error_vs_detailed_curve": 0.07211280944016063,
+   "measured_ratio_min": 0.8539664502448283,
+   "measured_ratio_max": 1.1422756298176497,
+   "measured_points": [
+    {
+     "dN": 0.06233333333333334,
+     "measured_t_half": 48.6109619449631,
+     "simple_t_half": 50.382449833482106,
+     "measured_over_simple": 0.9648391871698596
+    },
+    {
+     "dN": 0.12,
+     "measured_t_half": 95.2361967080068,
+     "simple_t_half": 92.46048420999051,
+     "measured_over_simple": 1.0300205273824032
+    },
+    {
+     "dN": 0.195,
+     "measured_t_half": 161.46213027515367,
+     "simple_t_half": 141.3512869051834,
+     "measured_over_simple": 1.1422756298176497
+    },
+    {
+     "dN": 0.31,
+     "measured_t_half": 217.8091997890878,
+     "simple_t_half": 205.17242402873887,
+     "measured_over_simple": 1.0615910048349328
+    },
+    {
+     "dN": 0.39108333333333334,
+     "measured_t_half": 207.69970135479818,
+     "simple_t_half": 243.2176361205427,
+     "measured_over_simple": 0.8539664502448283
+    }
+   ]
+  },
+  "N300_P3": {
+   "N": 300,
+   "p": 3,
+   "tau_max": 150.0037156227988,
+   "d_star": 176.06961604598774,
+   "lambda": 8,
+   "rho_memory_length": 37.5,
+   "tangent_tau_max": 75.0,
+   "near_basin_v_rem": 0.9262196083033342,
+   "near_basin_half_slope": 0.7525437390319072,
+   "endpoint_matched_half_tau_max": 75.0,
+   "endpoint_matched_half_d_star": 99.66198123777104,
+   "curve_tests": [
+    {
+     "name": "free midrange fit",
+     "tau_max": 150.0037156227988,
+     "d_star": 176.06961604598774,
+     "d_star_over_N": 0.5868987201532925,
+     "rms_relative_error_vs_detailed_curve": 0.04788215092732034,
+     "max_relative_error_vs_detailed_curve": 0.07317149554309636,
+     "measured_ratio_min": 0.8934973357466852,
+     "measured_ratio_max": 0.9994861902225624
+    },
+    {
+     "name": "rho-memory tangent",
+     "tau_max": 75.0,
+     "d_star": 37.5,
+     "d_star_over_N": 0.125,
+     "rms_relative_error_vs_detailed_curve": 0.8185985097185606,
+     "max_relative_error_vs_detailed_curve": 1.2926080366045434,
+     "measured_ratio_min": 0.45843640067831454,
+     "measured_ratio_max": 0.8197770575821173
+    },
+    {
+     "name": "endpoint half-time",
+     "tau_max": 75.0,
+     "d_star": 99.66198123777104,
+     "d_star_over_N": 0.33220660412590347,
+     "rms_relative_error_vs_detailed_curve": 0.17194045188051163,
+     "max_relative_error_vs_detailed_curve": 0.28529898521947034,
+     "measured_ratio_min": 1.0524411652202366,
+     "measured_ratio_max": 1.253483767124005
+    }
+   ],
+   "rms_relative_error_vs_detailed_curve": 0.04788215092732031,
+   "max_relative_error_vs_detailed_curve": 0.07317149554309617,
+   "measured_ratio_min": 0.8934973357466852,
+   "measured_ratio_max": 0.9994861902225624,
+   "measured_points": [
+    {
+     "dN": 0.06222222222222223,
+     "measured_t_half": 13.4821559583403,
+     "simple_t_half": 15.089195478208584,
+     "measured_over_simple": 0.8934973357466852
+    },
+    {
+     "dN": 0.12,
+     "measured_t_half": 27.72389313275304,
+     "simple_t_half": 27.738145262997154,
+     "measured_over_simple": 0.9994861902225624
+    },
+    {
+     "dN": 0.195,
+     "measured_t_half": 41.29375438936381,
+     "simple_t_half": 42.40538607155502,
+     "measured_over_simple": 0.9737856016611796
+    },
+    {
+     "dN": 0.3,
+     "measured_t_half": 55.905642057348814,
+     "simple_t_half": 60.03170616210333,
+     "measured_over_simple": 0.9312685850771436
+    }
+   ]
+  }
+ }
+}
