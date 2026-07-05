@@ -3,22 +3,24 @@ import seaborn as sns
 r"""Pearson autocorrelation of the selection-coefficient DFE along the pure p-spin (SK)
 adaptive walk (figS8_sk_pearson).
 
-A 2x2 figure:
+A 2x3 figure:
   A  Subset autocorrelation of the distribution of selection coefficients for p=2 (N=500),
-     re-anchored at 4 angles to the final config, tracking only the spins still in their
+     re-anchored at 4 points along the walk, tracking only the spins still in their
      anchor state.
   B  Same subset autocorrelation for p=3 (N=500).
-  C  As A but tracking *all* spins (not just the unflipped subset).
-  D  As B but tracking *all* spins.
+  C  Same subset autocorrelation for p=4 (N=200).
+  D  As A but tracking *all* spins (not just the unflipped subset).
+  E  As B but tracking *all* spins.
+  F  As C but tracking *all* spins.
 
 For each walk we replay the stored flip sequence, recording, at every step t, the spin
 configuration sigma(t), the full DFE (the fitness change Delta F_i of flipping each spin via the
 native incremental p-spin updates), and the total fitness F(t). The per-spin selection coefficient
-is s_i(t) = Delta F_i(t) / F(t). The anchors are the steps where the angle to the final config,
-theta(t) = arccos(sigma(t).sigma_f / N), reaches theta_0, 3 theta_0/4, theta_0/2, theta_0/4
-(theta_0 = the start). From each anchor we either track only the spins still in their anchor state
-(flipped an even number of times since the anchor; top row) or track all spins (bottom row), and
-correlate their anchor selection coefficients against their current ones:
+is s_i(t) = Delta F_i(t) / F(t). The anchors are the steps at fractions t_0 = k0/T of walk
+completion (T = total walk length), placed at t_0 in {0%, 25%, 50%, 85%}. From each anchor we
+either track only the spins still in their anchor state (flipped an even number of times since
+the anchor; top row) or track all spins (bottom row), and correlate their anchor selection
+coefficients against their current ones:
 rho(dt) = corr(s_anchor[subset], s_{anchor+dt}[subset]), rho(0) = 1. Dashed reference lines are
 overlaid: -2(p-1)t/N and -2p t/N for the subset row, -2(p+1)t/N and -2p t/N for the all-spins row.
 """
@@ -26,12 +28,10 @@ overlaid: -2(p-1)t/N and -2p t/N for the subset row, -2(p+1)t/N and -2p t/N for 
 import os
 import pickle
 import sys
-from fractions import Fraction
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from matplotlib.lines import Line2D
 from matplotlib.ticker import MaxNLocator
 
 # Repo root on path so we can drive the native p-spin DFE updates.
@@ -44,9 +44,10 @@ from cmn import cmn_pspin
 plt.rcParams['font.family'] = 'sans-serif'
 mpl.rcParams.update({
     "axes.labelsize": 16,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
-    "legend.fontsize": 14,
+    "axes.titlesize": 18,
+    "xtick.labelsize": 16,
+    "ytick.labelsize": 16,
+    "legend.fontsize": 16,
 })
 
 # ───────────────────────────────────── Configuration ─────────────────────────────────────
@@ -54,6 +55,7 @@ mpl.rcParams.update({
 PEARSON_FILES = {
     2: "../data/PSPIN/N500_P2_pure_repeats10.pkl",
     3: "../data/PSPIN/N500_P3_pure_repeats10.pkl",
+    4: "../data/PSPIN/N200_P4_pure_repeats5.pkl",
 }
 CACHE_PATH = "../data/cache/figS8_sk_pearson_cache.pkl"
 
@@ -61,19 +63,20 @@ CACHE_PATH = "../data/cache/figS8_sk_pearson_cache.pkl"
 PEARSON_FLOOR = 1e-3      # clip rho before taking the log
 PEARSON_MIN_REPS = 3      # plot only steps still reached by at least this many walks
 FITNESS_FLOOR = 1e-9      # guard the s = dF/F division against a near-zero fitness
-# Re-anchor the subset autocorrelation at 4 points along the walk, defined by where the angle
-# to the final config, theta(t) = arccos(sigma(t).sigma_f / N), reaches these fractions of theta_0.
-ANCHOR_FRACS = [1.0, 0.75, 0.5, 0.25]
+# Re-anchor the subset autocorrelation at 4 points along the walk, defined by these fractions
+# of walk completion. Anchor step k0 = round(frac * T), where T is the total walk length; each
+# curve's legend label is its t_0 = k0/T (percent of walk completed at the anchor).
+ANCHOR_FRACS = [0.0, 0.25, 0.5, 0.75]
 ANCHOR_COLORS = sns.color_palette("CMRmap", 4)
 # Common steps-since-anchor window shown for every anchor curve, per interaction order.
-PEARSON_WINDOW = {2: 20, 3: 20}
+PEARSON_WINDOW = {2: 20, 3: 20, 4: 6}
 
 
 def apply_axis_style(ax, label):
     ax.text(
         -0.08, 1.04, label,
         transform=ax.transAxes,
-        fontsize=17,
+        fontsize=18,
         fontweight="bold",
         va="bottom",
         ha="left",
@@ -125,13 +128,9 @@ def _subsample(last, n_markers=8):
     return np.arange(0, last + 1, max(1, (last + 1) // n_markers))
 
 
-def _theta_frac_label(frac):
-    """LaTeX label for a fraction of theta_0 (1 -> theta_0, 0.75 -> 3 theta_0/4, 0.5 -> theta_0/2)."""
-    fr = Fraction(frac).limit_denominator(100)
-    if fr == 1:
-        return r"$\theta_0$"
-    num, den = fr.numerator, fr.denominator
-    return rf"$\theta_0/{den}$" if num == 1 else rf"${num}\theta_0/{den}$"
+def _t_frac_label(frac):
+    """LaTeX label showing the anchor's t_0 as percent of walk completed (0 -> 0%, 0.25 -> 25%)."""
+    return rf"$t_0={100 * frac:g}\%$"
 
 
 def _fracs_tag(fracs):
@@ -142,12 +141,11 @@ def _fracs_tag(fracs):
 # ───────────────────────────────────── Replay & autocorrelation ─────────────────────────────────────
 
 def _replay_walk(entry):
-    """Replay one stored walk: return (sig_hist, sel_hist, theta, theta0).
+    """Replay one stored walk: return (sig_hist, sel_hist).
 
     sig_hist[t] is the spin configuration at step t and sel_hist[t] is the per-spin selection
     coefficient s_i(t) = Delta F_i(t) / F(t), where Delta F is the full DFE (native incremental
-    p-spin updates) and F(t) is the total fitness. theta(t) = arccos(sigma(t).sigma_f / N) is the
-    angle to the final config, and theta0 = theta(0).
+    p-spin updates) and F(t) is the total fitness.
     """
     sigma0 = np.asarray(entry.get("init_sigma", entry.get("init_alpha")), dtype=np.int8)
     J = entry["J"]
@@ -171,11 +169,7 @@ def _replay_walk(entry):
     # Per-spin selection coefficient s_i = Delta F_i / F (guard a near-zero total fitness).
     safe_fit = np.where(np.abs(fit_hist) < FITNESS_FLOOR, np.nan, fit_hist)
     sel_hist = dfe_hist / safe_fit[:, None]
-
-    # Angle to the final config (overlap angle; int32 avoids int8 overflow in the dot).
-    sig_f = sig_hist[-1].astype(np.int32)
-    theta = np.arccos(np.clip(sig_hist.astype(np.int32) @ sig_f / N, -1.0, 1.0))
-    return sig_hist, sel_hist, theta, float(theta[0])
+    return sig_hist, sel_hist
 
 
 def _subset_autocorr_from_anchor(sig_hist, sel_hist, k0, track_all=False):
@@ -203,12 +197,11 @@ def _subset_autocorr_from_anchor(sig_hist, sel_hist, k0, track_all=False):
 
 
 def compute_pearson_dfe(file_path, n_repeats, track_all=False):
-    """Subset selection-coefficient autocorrelation re-anchored at 4 angles along the walk.
+    """Subset selection-coefficient autocorrelation re-anchored at 4 walk-completion fractions.
 
     With track_all=False each anchor curve tracks only the spins still in their anchor state;
     with track_all=True it tracks all spins. Returns one aggregated curve (columnwise mean/std
-    of log rho vs steps-since-anchor, plus replicate counts) per anchor, together with the mean
-    start angle theta_0.
+    of log rho vs steps-since-anchor, plus replicate counts) per anchor.
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"{file_path} not found. Ensure data is present.")
@@ -221,14 +214,12 @@ def compute_pearson_dfe(file_path, n_repeats, track_all=False):
 
     n = min(n_repeats, len(data))
     anchor_traces = [[] for _ in ANCHOR_FRACS]
-    theta0_vals = []
 
     for k in range(n):
-        sig_hist, sel_hist, theta, theta0 = _replay_walk(data[k])
-        theta0_vals.append(theta0)
+        sig_hist, sel_hist = _replay_walk(data[k])
+        T = sig_hist.shape[0] - 1
         for a, frac in enumerate(ANCHOR_FRACS):
-            hits = np.flatnonzero(theta <= frac * theta0)
-            k0 = int(hits[0]) if hits.size else 0
+            k0 = min(T, max(0, int(round(frac * T))))
             anchor_traces[a].append(
                 _subset_autocorr_from_anchor(sig_hist, sel_hist, k0, track_all=track_all))
     del data  # free the (possibly multi-GB) walk file before returning
@@ -242,14 +233,14 @@ def compute_pearson_dfe(file_path, n_repeats, track_all=False):
         mean_logv, std_logv, counts = _finite_mean_std(logv)
         anchors.append({
             "frac": frac,
-            "label": _theta_frac_label(frac),
+            "label": _t_frac_label(frac),
             "mean_logv": mean_logv,
             "std_logv": std_logv,
             "counts": counts,
             "n_reps": len(anchor_traces[a]),
         })
 
-    return {"anchors": anchors, "theta0_mean": float(np.mean(theta0_vals))}
+    return {"anchors": anchors}
 
 
 # ───────────────────────────────────── Cache ─────────────────────────────────────
@@ -276,7 +267,7 @@ def _cached(cache, key, n_repeats, compute_fn):
 
 # ───────────────────────────────────── Plotting ─────────────────────────────────────
 
-def plot_panel_pearson(ax, result, p, N, track_all=False):
+def plot_panel_pearson(ax, result, p, N, track_all=False, show_ylabel=True):
     """Log subset selection-coefficient autocorrelation vs steps-since-anchor, one curve per anchor.
 
     Every anchor is shown over the same window (PEARSON_WINDOW[p] steps); a curve ends earlier
@@ -314,36 +305,40 @@ def plot_panel_pearson(ax, result, p, N, track_all=False):
             label=r"$-2p\,t/N$")
 
     ax.set_xlim(0, window)
-    ax.set_xlabel("Steps since anchor")
-    ax.set_ylabel(r"$\log\,\rho(t_0, t_0 + t)$")
-    ax.set_title(rf"$p={p}$, $N={N}$, $\theta_0={np.degrees(result['theta0_mean']):.0f}^\circ$")
+    ax.set_xlabel("t (# of mutations)")
+    if show_ylabel:
+        ax.set_ylabel(r"$\log\,\rho(t_0, t_0 + t)$")
+    ax.set_title(rf"$p={p}$, $N={N}$")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
 
-    # Two-column legend: the theta anchors fill the left column, the reference fits the right.
-    # (matplotlib fills column-major, so pad the fits with blanks to align the columns.)
+    # Two separate legends: the t_0 anchors at the lower left, and the reference fits in a
+    # distinct legend at the top right.
     handles, labels = ax.get_legend_handles_labels()
-    n_theta = len(result["anchors"])
-    pad = n_theta - (len(handles) - n_theta)
-    handles = handles[:n_theta] + handles[n_theta:] + [Line2D([], [], color="none")] * pad
-    labels = labels[:n_theta] + labels[n_theta:] + [""] * pad
-    ax.legend(handles, labels, frameon=False, loc="lower left", ncol=2, fontsize=11)
+    n_anchors = len(result["anchors"])
+    anchor_leg = ax.legend(handles[:n_anchors], labels[:n_anchors],
+                           frameon=False, loc="lower left")
+    ax.add_artist(anchor_leg)
+    ax.legend(handles[n_anchors:], labels[n_anchors:],
+              frameon=False, loc="upper right")
 
 
 def make_figure(pearson, out_path):
-    """Assemble the 2x2 figure: subset autocorrelation (top row, unflipped spins) and all-spin
-    autocorrelation (bottom row), p=2 then p=3 in each row."""
-    fig, axes = plt.subplots(2, 2, figsize=(12.4, 11.0))
+    """Assemble the 2x3 figure: subset autocorrelation (top row, unflipped spins) and all-spin
+    autocorrelation (bottom row), p=2, p=3, p=4 in each row."""
+    fig, axes = plt.subplots(2, 3, figsize=(18.6, 11.0))
     fig.subplots_adjust(wspace=0.30, hspace=0.30)
 
-    for ax, label in zip(axes.flat, ("A", "B", "C", "D")):
+    for ax, label in zip(axes.flat, ("A", "B", "C", "D", "E", "F")):
         apply_axis_style(ax, label)
 
-    # Top row: unflipped subset.
-    plot_panel_pearson(axes[0, 0], pearson[2]["curve"], 2, pearson[2]["N"], track_all=False)
-    plot_panel_pearson(axes[0, 1], pearson[3]["curve"], 3, pearson[3]["N"], track_all=False)
-    # Bottom row: all spins.
-    plot_panel_pearson(axes[1, 0], pearson[2]["curve_all"], 2, pearson[2]["N"], track_all=True)
-    plot_panel_pearson(axes[1, 1], pearson[3]["curve_all"], 3, pearson[3]["N"], track_all=True)
+    # Top row: unflipped subset (y-label only on the leftmost panel A).
+    plot_panel_pearson(axes[0, 0], pearson[2]["curve"], 2, pearson[2]["N"], track_all=False, show_ylabel=True)
+    plot_panel_pearson(axes[0, 1], pearson[3]["curve"], 3, pearson[3]["N"], track_all=False, show_ylabel=False)
+    plot_panel_pearson(axes[0, 2], pearson[4]["curve"], 4, pearson[4]["N"], track_all=False, show_ylabel=False)
+    # Bottom row: all spins (y-label only on the leftmost panel D).
+    plot_panel_pearson(axes[1, 0], pearson[2]["curve_all"], 2, pearson[2]["N"], track_all=True, show_ylabel=True)
+    plot_panel_pearson(axes[1, 1], pearson[3]["curve_all"], 3, pearson[3]["N"], track_all=True, show_ylabel=False)
+    plot_panel_pearson(axes[1, 2], pearson[4]["curve_all"], 4, pearson[4]["N"], track_all=True, show_ylabel=False)
 
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     print(f"Saved figure to {out_path}")
@@ -366,7 +361,7 @@ def main(n_repeats=10):
 
     pearson = {}
     pearson_tag = _fracs_tag(ANCHOR_FRACS)
-    for p in (2, 3):
+    for p in (2, 3, 4):
         pf = PEARSON_FILES[p]
         N = _file_N(pf)
         entry = {"N": N}
@@ -383,7 +378,7 @@ def main(n_repeats=10):
         with open(CACHE_PATH, "wb") as f:
             pickle.dump(cache, f)
 
-    out_path = os.path.join(out_dir, "figS8_sk_pearson.pdf")
+    out_path = os.path.join(out_dir, "figS8_pspin_pearson.pdf")
     make_figure(pearson, out_path)
 
 
