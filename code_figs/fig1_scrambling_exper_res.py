@@ -48,26 +48,11 @@ m = Ttable.set_index('alle')['fitted1']
 k = Ftable.set_index('alle')['fitted1']
 # Find common alleles
 common_0_2 = r.index.intersection(m.index)
-common_0_15 = r.index.intersection(k.index)
-baym_dfe0K_2  = r.loc[common_0_2].values    # generation 0K
-baym_dfe0K_15 = r.loc[common_0_15].values    # generation 0K
-baym_dfe2K  = m.loc[common_0_2].values    # generation 2K
-baym_dfe15K = k.loc[common_0_15].values    # generation 15K
-
-#  Asencao data:
-dirnum = 2
-asencao_datapath = "../data/asencao_dfe_arrays"
-experiment_dirs = sorted([
-    d for d in os.listdir(asencao_datapath)
-    if os.path.isdir(os.path.join(asencao_datapath, d))
-])
-exp_dir = experiment_dirs[dirnum]
-exp_path = os.path.join(asencao_datapath, exp_dir)
-try:
-    asenc_R = np.load(os.path.join(exp_path, "R.npy"))
-    asenc_S = np.load(os.path.join(exp_path, "S.npy"))
-except Exception as e:
-    print(f"Skipping {exp_dir}: {e}")
+common_2_15 = m.index.intersection(k.index)
+baym_dfe0K_2  = r.loc[common_0_2].values    # generation 0K (vs 2K)
+baym_dfe2K    = m.loc[common_0_2].values    # generation 2K (vs 0K)
+baym_dfe2K_15 = m.loc[common_2_15].values   # generation 2K (vs 15K)
+baym_dfe15K   = k.loc[common_2_15].values   # generation 15K (vs 2K)
 
 
 def thresholded_histogram(data, threshold, final_bins):
@@ -332,10 +317,10 @@ def main():
     ax_bottom_middle = fig.add_subplot(gs[1, 1])
     ax_bottom_right = fig.add_subplot(gs[1, 2])
 
-    create_segben(ax_top_left, baym_dfe0K_15, baym_dfe15K, labels=('0', '15K'))
-    create_segben(ax_bottom_left, asenc_R, asenc_S, labels=('R', 'S'))
-    create_overlapping_dfes(ax_top_middle, ax_top_right, baym_dfe0K_15, baym_dfe15K)
-    create_overlapping_dfes(ax_bottom_middle, ax_bottom_right, asenc_R, asenc_S)
+    create_segben(ax_top_left, baym_dfe0K_2, baym_dfe2K, labels=('0', '2K'))
+    create_segben(ax_bottom_left, baym_dfe2K_15, baym_dfe15K, labels=('2K', '15K'))
+    create_overlapping_dfes(ax_top_middle, ax_top_right, baym_dfe0K_2, baym_dfe2K)
+    create_overlapping_dfes(ax_bottom_middle, ax_bottom_right, baym_dfe2K_15, baym_dfe15K)
 
     # Panel labels
     labels = {
