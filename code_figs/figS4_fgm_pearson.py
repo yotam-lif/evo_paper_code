@@ -57,7 +57,7 @@ LOG_CUTOFF = -0.8             # show each panel only down to this log-correlatio
 SQRT_HALF_PI = np.sqrt(np.pi / 2.0)   # |dR~/dt| for the SSWM radial law
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-OUT_PATH = DATA_DIR.parent / "figs_paper" / "figS4_pearson_angular.pdf"
+OUT_PATH = DATA_DIR.parent / "figs_paper" / "figS4_fgm_pearson.pdf"
 CACHE_PATH = DATA_DIR / "figS4_pearson_angular_cache.pkl"
 
 FAR_COLOR = "steelblue"
