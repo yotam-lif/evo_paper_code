@@ -8,7 +8,7 @@ A 2x3 figure:
      re-anchored at 4 points along the walk, tracking only the spins still in their
      anchor state.
   B  Same subset autocorrelation for p=3 (N=500).
-  C  Same subset autocorrelation for p=4 (N=200).
+  C  Same subset autocorrelation for p=4 (N=300).
   D  As A but tracking *all* spins (not just the unflipped subset).
   E  As B but tracking *all* spins.
   F  As C but tracking *all* spins.
@@ -52,10 +52,13 @@ mpl.rcParams.update({
 
 # ───────────────────────────────────── Configuration ─────────────────────────────────────
 # Highest available N per interaction order, used for the two Pearson DFE panels.
+# A path may be a single pickle holding a list of walk entries, or a directory
+# holding one pickle per repeat (see _iter_entries); p=4 uses the latter because
+# each N=300 repeat is ~9 GB and must be streamed one at a time.
 PEARSON_FILES = {
     2: "../data/PSPIN/N500_P2_pure_repeats10.pkl",
     3: "../data/PSPIN/N500_P3_pure_repeats10.pkl",
-    4: "../data/PSPIN/N200_P4_pure_repeats5.pkl",
+    4: "../data/PSPIN/N300_P4_pure_repeats5",
 }
 CACHE_PATH = "../data/cache/figS8_sk_pearson_cache.pkl"
 
@@ -69,7 +72,7 @@ FITNESS_FLOOR = 1e-9      # guard the s = dF/F division against a near-zero fitn
 ANCHOR_FRACS = [0.0, 0.25, 0.5, 0.75]
 ANCHOR_COLORS = sns.color_palette("CMRmap", 4)
 # Common steps-since-anchor window shown for every anchor curve, per interaction order.
-PEARSON_WINDOW = {2: 20, 3: 20, 4: 6}
+PEARSON_WINDOW = {2: 20, 3: 20, 4: 20}
 
 
 def apply_axis_style(ax, label):
@@ -196,6 +199,48 @@ def _subset_autocorr_from_anchor(sig_hist, sel_hist, k0, track_all=False):
     return seg
 
 
+def _rep_sort_key(name):
+    """Order per-repeat filenames by their 'rep<k>' index when present, else lexically."""
+    for part in os.path.splitext(name)[0].split("_"):
+        if part.startswith("rep"):
+            try:
+                return (0, int(part[3:]))
+            except ValueError:
+                break
+    return (1, name)
+
+
+def _iter_entries(file_path, n_repeats):
+    """Yield up to n_repeats stored walk entries, loading lazily to bound memory.
+
+    Two on-disk layouts are supported:
+      * a single pickle holding a list of entries (loaded once, indexed);
+      * a directory holding one pickle per repeat (loaded and freed one at a
+        time, so only a single ~9 GB walk is resident at once).
+    """
+    if os.path.isdir(file_path):
+        files = sorted(
+            (f for f in os.listdir(file_path) if f.endswith(".pkl")),
+            key=_rep_sort_key,
+        )
+        n = min(n_repeats, len(files))
+        for name in files[:n]:
+            path = os.path.join(file_path, name)
+            size_gb = os.path.getsize(path) / 1024 ** 3
+            print(f"    loading {name} ({size_gb:.2f} GB) ...", flush=True)
+            with open(path, "rb") as f:
+                entry = pickle.load(f)
+            yield entry
+            del entry
+    else:
+        with open(file_path, "rb") as f:
+            data = pickle.load(f)
+        n = min(n_repeats, len(data))
+        for k in range(n):
+            yield data[k]
+        del data
+
+
 def compute_pearson_dfe(file_path, n_repeats, track_all=False):
     """Subset selection-coefficient autocorrelation re-anchored at 4 walk-completion fractions.
 
@@ -206,23 +251,18 @@ def compute_pearson_dfe(file_path, n_repeats, track_all=False):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"{file_path} not found. Ensure data is present.")
 
-    size_gb = os.path.getsize(file_path) / 1024 ** 3
-    print(f"  loading {os.path.basename(file_path)} ({size_gb:.2f} GB) for Pearson DFE, "
+    print(f"  computing Pearson DFE from {os.path.basename(file_path)}, "
           f"up to {n_repeats} reps ...", flush=True)
-    with open(file_path, "rb") as f:
-        data = pickle.load(f)
 
-    n = min(n_repeats, len(data))
     anchor_traces = [[] for _ in ANCHOR_FRACS]
 
-    for k in range(n):
-        sig_hist, sel_hist = _replay_walk(data[k])
+    for entry in _iter_entries(file_path, n_repeats):
+        sig_hist, sel_hist = _replay_walk(entry)
         T = sig_hist.shape[0] - 1
         for a, frac in enumerate(ANCHOR_FRACS):
             k0 = min(T, max(0, int(round(frac * T))))
             anchor_traces[a].append(
                 _subset_autocorr_from_anchor(sig_hist, sel_hist, k0, track_all=track_all))
-    del data  # free the (possibly multi-GB) walk file before returning
 
     anchors = []
     for a, frac in enumerate(ANCHOR_FRACS):

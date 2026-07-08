@@ -1,5 +1,5 @@
 import math
-from itertools import combinations
+from itertools import chain, combinations
 
 import numpy as np
 
@@ -42,7 +42,14 @@ def _build_spin_indices(N, p):
     index of every interaction (i_1 < i_2 < ... < i_p).
     """
     site_dtype = _site_index_dtype(N)
-    tuples = np.array(list(combinations(range(N), p)), dtype=site_dtype)
+    num_interactions = math.comb(N, p)
+    # Stream the C(N, p) combinations straight into a preallocated array via
+    # np.fromiter instead of materializing a Python list of ~C(N, p) tuples
+    # first. For large N this avoids a multi-GB transient spike while producing
+    # the identical lexicographic ordering.
+    flat = chain.from_iterable(combinations(range(N), p))
+    tuples = np.fromiter(flat, dtype=site_dtype, count=num_interactions * p)
+    tuples = tuples.reshape(num_interactions, p)
     return tuple(np.ascontiguousarray(tuples[:, k]) for k in range(p))
 
 
@@ -55,13 +62,27 @@ def _build_site_interaction_map(N, spin_indices):
     """
     num_interactions = spin_indices[0].shape[0]
     idx_dtype = _interaction_index_dtype(num_interactions)
-    site_map = [[] for _ in range(N)]
 
+    # Vectorized equivalent of the naive per-site append loop. For each column
+    # we group the interaction-row indices by the site appearing in that column;
+    # a stable argsort keeps increasing row order within each (column, site)
+    # bucket, and concatenating buckets in column order reproduces exactly the
+    # order the naive "for column: for row, site: append" loop would produce.
+    per_column_buckets = []
     for column in spin_indices:
-        for row, site in enumerate(column):
-            site_map[int(site)].append(row)
+        order = np.argsort(column, kind="stable").astype(idx_dtype, copy=False)
+        boundaries = np.cumsum(np.bincount(column, minlength=N))[:-1]
+        per_column_buckets.append(np.split(order, boundaries))
+        del order
 
-    return [np.array(rows, dtype=idx_dtype) for rows in site_map]
+    num_columns = len(spin_indices)
+    site_map = [
+        np.concatenate(
+            [per_column_buckets[k][i] for k in range(num_columns)]
+        ).astype(idx_dtype, copy=False)
+        for i in range(N)
+    ]
+    return site_map
 
 
 # ---------------------------------------------------------------------------
