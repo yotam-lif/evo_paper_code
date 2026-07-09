@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 r"""Table S1: p-spin p/N fits from experimental DFE means + consecutive-DFE Pearson.
 
-Combines the two Table S1 analyses for the Ascensao and Couce data into a single
+Combines the two Table S1 analyses for the Ascensao, Couce and Limdi data into a single
 generator.  Cleaning conventions match ``code_figs/figS5_fgm_exper.py``.
 
 Part A -- p-spin p/N fit (raw DFE means)
@@ -10,7 +10,9 @@ For each data set the p-spin mean relation
 
     mean(DFE) = -2 p / N   =>   p / N = -mean(DFE) / 2
 
-is evaluated on the raw (untrimmed) finite DFE values.  Two CSV tables:
+is evaluated on the raw (untrimmed) finite DFE values.  Limdi contributes one row per
+LTEE population (two ancestors + twelve evolved), pooling the Green/Red replicate markers.
+Two CSV tables:
 
     data/TableS1_pspin_pN.csv       columns: dataset, p/N
     data/TableS1_pspin_pl_ph.csv    columns: dataset, p_l, p_h
@@ -30,6 +32,10 @@ are index-aligned, so two transitions per experiment: R -> L and R -> S.
 Couce (Ara+2 lineage): mutations are matched across strains on the ``site`` column with the
 stricter p/N-fit cleaning (drop NaN/duplicate ``fitted1``, ``abn > 1``, finite ``> -100``).
 Two consecutive intervals: 0K -> 2K and 2K -> 15K.
+
+Limdi (TnSeq gene-knockout DFEs): each evolved population is matched to its LTEE ancestor
+(REL606 -> each Ara-N, REL607 -> each Ara+N) on the ``Genes`` column, with replicate markers
+pooled and duplicate genes aggregated by mean.  Twelve ancestor -> evolved transitions.
 
     data/TableS1_pearson_consecutive.csv   columns: dataset, transition, pearson_r,
                                                      log_pearson_r, n
@@ -52,6 +58,10 @@ REPO_DIR = os.path.dirname(SCRIPT_DIR)
 DATA_DIR = os.path.join(REPO_DIR, "data")
 ASENCAO_DIR = os.path.join(DATA_DIR, "asencao_dfe_arrays")
 COUCE_DIR = os.path.join(DATA_DIR, "alex_code")
+LIMDI_CSV = os.path.join(
+    DATA_DIR, "anurag_data", "Analysis", "Part_3_TnSeq_analysis",
+    "Processed_data_for_plotting", "dfe_data_pandas.csv",
+)
 
 OUT_PN = os.path.join(DATA_DIR, "TableS1_pspin_pN.csv")
 OUT_PL_PH = os.path.join(DATA_DIR, "TableS1_pspin_pl_ph.csv")
@@ -80,6 +90,19 @@ COUCE_DISPLAY = {
 ASENCAO_ANCESTOR = "R"
 ASENCAO_EVOLVED = ("L", "S")
 COUCE_INTERVALS = (("0K", "2K"), ("2K", "15K"))
+
+# Limdi et al. TnSeq DFE (gene-knockout fitness effects across the LTEE panel).
+# Two LTEE ancestors, each the founder of six evolved populations of matching Ara phenotype.
+# Replicates (Green/Red fluorescent markers) are pooled; genes are aggregated by mean.
+LIMDI_ANCESTORS = ("REL606", "REL607")
+LIMDI_EVOLVED = {
+    "REL606": tuple(f"Ara-{i}" for i in range(1, 7)),  # REL606 is the Ara- founder.
+    "REL607": tuple(f"Ara+{i}" for i in range(1, 7)),  # REL607 is the Ara+ founder.
+}
+# Population display order: ancestors first, then their evolved descendants.
+LIMDI_POP_ORDER = list(LIMDI_ANCESTORS) + [
+    pop for anc in LIMDI_ANCESTORS for pop in LIMDI_EVOLVED[anc]
+]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -120,9 +143,28 @@ def load_couce_means():
     return rows
 
 
+def load_limdi_frame():
+    """Load the Limdi DFE table, keeping only finite fitness estimates."""
+    tab = pd.read_csv(LIMDI_CSV)
+    tab = tab[np.isfinite(tab["Fitness estimate"])]
+    return tab
+
+
+def load_limdi_means():
+    """Yield (dataset_name, raw DFE mean) per Limdi population (replicates pooled)."""
+    tab = load_limdi_frame()
+    means = tab.groupby("Population")["Fitness estimate"].mean()
+    rows = []
+    for pop in LIMDI_POP_ORDER:
+        if pop not in means.index:
+            continue
+        rows.append((f"Limdi {pop}", float(means[pop])))
+    return rows
+
+
 def build_pn_rows():
     """Return list of (dataset, p_over_N) across all experiments."""
-    means = load_asencao_means() + load_couce_means()
+    means = load_asencao_means() + load_couce_means() + load_limdi_means()
     return [(name, -0.5 * mean) for name, mean in means]
 
 
@@ -203,8 +245,30 @@ def load_couce_pearson_rows():
     return rows
 
 
+def load_limdi_gene_series(tab, pop):
+    """Mean fitness effect per gene for one Limdi population (replicates pooled)."""
+    sub = tab[tab["Population"] == pop]
+    return sub.groupby("Genes")["Fitness estimate"].mean()
+
+
+def load_limdi_pearson_rows():
+    """Yield (dataset, transition, r, n) for each Limdi ancestor -> evolved pair."""
+    tab = load_limdi_frame()
+    rows = []
+    for anc in LIMDI_ANCESTORS:
+        anc_series = load_limdi_gene_series(tab, anc)
+        for evo in LIMDI_EVOLVED[anc]:
+            evo_series = load_limdi_gene_series(tab, evo)
+            joined = pd.concat([anc_series, evo_series], axis=1, join="inner")
+            a, b = joined.iloc[:, 0].to_numpy(), joined.iloc[:, 1].to_numpy()
+            r, n = pearson(a, b)
+            rows.append((f"Limdi {evo}", f"{anc} -> {evo}", r, n))
+    return rows
+
+
 def build_pearson_rows():
-    return load_asencao_pearson_rows() + load_couce_pearson_rows()
+    return (load_asencao_pearson_rows() + load_couce_pearson_rows()
+            + load_limdi_pearson_rows())
 
 
 def write_pearson_table(rows, out_csv):

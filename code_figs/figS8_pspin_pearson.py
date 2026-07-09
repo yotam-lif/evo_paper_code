@@ -3,26 +3,26 @@ import seaborn as sns
 r"""Pearson autocorrelation of the selection-coefficient DFE along the pure p-spin (SK)
 adaptive walk (figS8_sk_pearson).
 
-A 2x3 figure:
+A 2x2 figure:
   A  Subset autocorrelation of the distribution of selection coefficients for p=2 (N=500),
      re-anchored at 4 points along the walk, tracking only the spins still in their
      anchor state.
   B  Same subset autocorrelation for p=3 (N=500).
   C  Same subset autocorrelation for p=4 (N=300).
-  D  As A but tracking *all* spins (not just the unflipped subset).
-  E  As B but tracking *all* spins.
-  F  As C but tracking *all* spins.
+  D  Start/end variance ratio Var[s](0)/Var[s](t) rescaled by (p-1)/p, for each p in
+     {2, 3, 4}, collapsing onto a horizontal line at 1.
 
 For each walk we replay the stored flip sequence, recording, at every step t, the spin
 configuration sigma(t), the full DFE (the fitness change Delta F_i of flipping each spin via the
 native incremental p-spin updates), and the total fitness F(t). The per-spin selection coefficient
-is s_i(t) = Delta F_i(t) / F(t). The anchors are the steps at fractions t_0 = k0/T of walk
-completion (T = total walk length), placed at t_0 in {0%, 25%, 50%, 85%}. From each anchor we
-either track only the spins still in their anchor state (flipped an even number of times since
-the anchor; top row) or track all spins (bottom row), and correlate their anchor selection
-coefficients against their current ones:
-rho(dt) = corr(s_anchor[subset], s_{anchor+dt}[subset]), rho(0) = 1. Dashed reference lines are
-overlaid: -2(p-1)t/N and -2p t/N for the subset row, -2(p+1)t/N and -2p t/N for the all-spins row.
+is s_i(t) = Delta F_i(t) / F(t). For panels A-C the anchors are the steps at fractions t_0 = k0/T
+of walk completion (T = total walk length), placed at t_0 in {0%, 25%, 50%, 85%}. From each anchor
+we track only the spins still in their anchor state (flipped an even number of times since the
+anchor) and correlate their anchor selection coefficients against their current ones:
+rho(dt) = corr(s_anchor[subset], s_{anchor+dt}[subset]), rho(0) = 1. Dashed reference lines
+-2(p-1)t/N and -2p t/N are overlaid. Panel D reports, per interaction order p, the across-spin
+variance ratio Var(Delta F_i at t=0) / Var(Delta F_i at t=T) rescaled by (p-1)/p, averaged over
+repeats, which collapses onto a horizontal line at 1.
 """
 
 import os
@@ -144,11 +144,12 @@ def _fracs_tag(fracs):
 # ───────────────────────────────────── Replay & autocorrelation ─────────────────────────────────────
 
 def _replay_walk(entry):
-    """Replay one stored walk: return (sig_hist, sel_hist).
+    """Replay one stored walk: return (sig_hist, sel_hist, dfe_hist).
 
-    sig_hist[t] is the spin configuration at step t and sel_hist[t] is the per-spin selection
-    coefficient s_i(t) = Delta F_i(t) / F(t), where Delta F is the full DFE (native incremental
-    p-spin updates) and F(t) is the total fitness.
+    sig_hist[t] is the spin configuration at step t, dfe_hist[t] is the full DFE (the fitness
+    effect Delta F_i(t) of flipping each spin via the native incremental p-spin updates), and
+    sel_hist[t] is the per-spin selection coefficient s_i(t) = Delta F_i(t) / F(t), where F(t)
+    is the total fitness.
     """
     sigma0 = np.asarray(entry.get("init_sigma", entry.get("init_alpha")), dtype=np.int8)
     J = entry["J"]
@@ -172,7 +173,7 @@ def _replay_walk(entry):
     # Per-spin selection coefficient s_i = Delta F_i / F (guard a near-zero total fitness).
     safe_fit = np.where(np.abs(fit_hist) < FITNESS_FLOOR, np.nan, fit_hist)
     sel_hist = dfe_hist / safe_fit[:, None]
-    return sig_hist, sel_hist
+    return sig_hist, sel_hist, dfe_hist
 
 
 def _subset_autocorr_from_anchor(sig_hist, sel_hist, k0, track_all=False):
@@ -257,7 +258,7 @@ def compute_pearson_dfe(file_path, n_repeats, track_all=False):
     anchor_traces = [[] for _ in ANCHOR_FRACS]
 
     for entry in _iter_entries(file_path, n_repeats):
-        sig_hist, sel_hist = _replay_walk(entry)
+        sig_hist, sel_hist, _ = _replay_walk(entry)
         T = sig_hist.shape[0] - 1
         for a, frac in enumerate(ANCHOR_FRACS):
             k0 = min(T, max(0, int(round(frac * T))))
@@ -281,6 +282,31 @@ def compute_pearson_dfe(file_path, n_repeats, track_all=False):
         })
 
     return {"anchors": anchors}
+
+
+def compute_var_ratio(file_path, n_repeats):
+    """Per-repeat across-spin variance of the fitness effect (DFE) at the start and end of the walk.
+
+    For each stored walk, compute the across-spin variance of the fitness effect Delta F_i at
+    step 0 (start) and at the final step T (local optimum). Both variances are returned per repeat
+    ({"var_start": [...], "var_end": [...]}) so the ratio (and its direction) can be formed at plot
+    time without recomputing.
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"{file_path} not found. Ensure data is present.")
+
+    print(f"  computing DFE variance ratio from {os.path.basename(file_path)}, "
+          f"up to {n_repeats} reps ...", flush=True)
+
+    var_start_list, var_end_list = [], []
+    for entry in _iter_entries(file_path, n_repeats):
+        _, _, dfe_hist = _replay_walk(entry)
+        var_start = np.nanvar(dfe_hist[0])
+        var_end = np.nanvar(dfe_hist[-1])
+        if np.isfinite(var_start) and np.isfinite(var_end) and var_start > 0 and var_end > 0:
+            var_start_list.append(float(var_start))
+            var_end_list.append(float(var_end))
+    return {"var_start": var_start_list, "var_end": var_end_list}
 
 
 # ───────────────────────────────────── Cache ─────────────────────────────────────
@@ -362,23 +388,52 @@ def plot_panel_pearson(ax, result, p, N, track_all=False, show_ylabel=True):
               frameon=False, loc="upper right")
 
 
+def plot_panel_var_ratio(ax, per_p_data):
+    """Start/end variance ratio Var[s](0)/Var[s](t) * (p-1)/p vs p, with a horizontal line at 1.
+
+    per_p_data maps p -> {"var_start": [...], "var_end": [...]} of per-repeat across-spin DFE
+    variances. Each point is the mean over repeats of (var_start/var_end) * (p-1)/p; error bars
+    are the std over repeats. The rescaling collapses the ratio onto the dashed line at 1.
+    """
+    ps = sorted(per_p_data)
+    xs, ys, yerr = [], [], []
+    for p in ps:
+        var_start = np.asarray(per_p_data[p]["var_start"], dtype=float)
+        var_end = np.asarray(per_p_data[p]["var_end"], dtype=float)
+        r = (var_end / var_start ) * p / (p - 1.0)
+        r = r[np.isfinite(r)]
+        if r.size == 0:
+            continue
+        xs.append(p)
+        ys.append(float(np.mean(r)))
+        yerr.append(float(np.std(r)))
+
+    ax.axhline(1.0, color="grey", lw=2.0, ls="--")
+    ax.errorbar(xs, ys, yerr=yerr, fmt="o", color="black", markersize=8,
+                capsize=4, elinewidth=1.2, lw=0)
+
+    ax.set_xlabel(r"$p$")
+    ax.set_ylabel(r"$\frac{\mathrm{Var}[s](t)}{\mathrm{Var}[s](0)}\times\frac{p}{p-1}$")
+    ax.set_xticks(ps)
+
+
 def make_figure(pearson, out_path):
-    """Assemble the 2x3 figure: subset autocorrelation (top row, unflipped spins) and all-spin
-    autocorrelation (bottom row), p=2, p=3, p=4 in each row."""
-    fig, axes = plt.subplots(2, 3, figsize=(18.6, 11.0))
+    """Assemble the 2x2 figure: subset selection-coefficient autocorrelation for p=2, p=3, p=4
+    (panels A-C, unflipped subset), and the start/end fitness-effect (DFE) variance ratio
+    Var(DF_0)/Var(DF_t) versus p, with the (p-1)/p reference curve (panel D)."""
+    fig, axes = plt.subplots(2, 2, figsize=(12.4, 11.0))
     fig.subplots_adjust(wspace=0.30, hspace=0.30)
 
-    for ax, label in zip(axes.flat, ("A", "B", "C", "D", "E", "F")):
+    for ax, label in zip(axes.flat, ("A", "B", "C", "D")):
         apply_axis_style(ax, label)
 
-    # Top row: unflipped subset (y-label only on the leftmost panel A).
+    # Panels A-C: unflipped subset autocorrelation (y-label only on the leftmost column).
     plot_panel_pearson(axes[0, 0], pearson[2]["curve"], 2, pearson[2]["N"], track_all=False, show_ylabel=True)
     plot_panel_pearson(axes[0, 1], pearson[3]["curve"], 3, pearson[3]["N"], track_all=False, show_ylabel=False)
-    plot_panel_pearson(axes[0, 2], pearson[4]["curve"], 4, pearson[4]["N"], track_all=False, show_ylabel=False)
-    # Bottom row: all spins (y-label only on the leftmost panel D).
-    plot_panel_pearson(axes[1, 0], pearson[2]["curve_all"], 2, pearson[2]["N"], track_all=True, show_ylabel=True)
-    plot_panel_pearson(axes[1, 1], pearson[3]["curve_all"], 3, pearson[3]["N"], track_all=True, show_ylabel=False)
-    plot_panel_pearson(axes[1, 2], pearson[4]["curve_all"], 4, pearson[4]["N"], track_all=True, show_ylabel=False)
+    plot_panel_pearson(axes[1, 0], pearson[4]["curve"], 4, pearson[4]["N"], track_all=False, show_ylabel=True)
+    # Panel D: start/end fitness-effect variance ratio Var(DF_0)/Var(DF_t) versus p.
+    per_p_data = {p: pearson[p]["var_ratio"] for p in (2, 3, 4)}
+    plot_panel_var_ratio(axes[1, 1], per_p_data)
 
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     print(f"Saved figure to {out_path}")
@@ -405,13 +460,18 @@ def main(n_repeats=10):
         pf = PEARSON_FILES[p]
         N = _file_N(pf)
         entry = {"N": N}
-        for key, track_all in (("curve", False), ("curve_all", True)):
-            tag = "all_" if track_all else ""
-            value, d = _cached(
-                cache, f"pearson_anchors_{tag}p{p}_N{N}_{pearson_tag}", n_repeats,
-                lambda pf=pf, ta=track_all: compute_pearson_dfe(pf, n_repeats, track_all=ta))
-            dirty |= d
-            entry[key] = value
+        value, d = _cached(
+            cache, f"pearson_anchors_p{p}_N{N}_{pearson_tag}", n_repeats,
+            lambda pf=pf: compute_pearson_dfe(pf, n_repeats, track_all=False))
+        dirty |= d
+        entry["curve"] = value
+
+        value, d = _cached(
+            cache, f"var_dfe_startend_p{p}_N{N}", n_repeats,
+            lambda pf=pf: compute_var_ratio(pf, n_repeats))
+        dirty |= d
+        entry["var_ratio"] = value
+
         pearson[p] = entry
 
     if dirty:
