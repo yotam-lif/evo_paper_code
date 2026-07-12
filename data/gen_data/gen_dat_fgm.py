@@ -1,4 +1,7 @@
+import argparse
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import pickle
 from concurrent.futures import ProcessPoolExecutor
 from cmn.cmn_fgm import Fisher
@@ -14,12 +17,19 @@ def run_simulation(r, n, sig, m, max_steps):
     }
 
 if __name__ == "__main__":
-    n = 32
+    parser = argparse.ArgumentParser(description='Generate FGM model data.')
+    parser.add_argument('--n', type=int, required=True, help='Number of dimensions')
+    parser.add_argument('--sig', type=float, default=0.05, help='Mutation size sigma')
+    parser.add_argument('--m', type=int, required=True, help='Number of loci')
+    parser.add_argument('--repeats', type=int, required=True, help='Number of repeats')
+    parser.add_argument('--max_steps', type=int, default=1000, help='Max relaxation steps')
+    args = parser.parse_args()
 
-    sig = 0.05
-    max_steps = 1000
-    repeats = 10 ** 3
-    m = n * 10 ** 3
+    n = args.n
+    sig = args.sig
+    max_steps = args.max_steps
+    repeats = args.repeats
+    m = args.m
 
     # Use all available CPUs
     with ProcessPoolExecutor() as executor:

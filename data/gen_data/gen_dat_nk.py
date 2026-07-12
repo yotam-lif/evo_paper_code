@@ -19,7 +19,7 @@ logging.basicConfig(
 )
 
 # Create the output directory if it doesn't exist
-output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'NK'))
+output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../NK'))
 os.makedirs(output_dir, exist_ok=True)
 
 
