@@ -35,6 +35,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.ticker import MaxNLocator
 
 plt.rcParams["font.family"] = "sans-serif"
@@ -58,11 +59,12 @@ LOG_CUTOFF = -0.8             # show each panel only down to this log-correlatio
 SQRT_HALF_PI = np.sqrt(np.pi / 2.0)   # |dR~/dt| for the SSWM radial law
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-OUT_PATH = DATA_DIR.parent / "figs_paper" / "figS3_fgm_autocorr.pdf"
+OUT_PATH = DATA_DIR.parent / "figs_paper" / "figS5_fgm_autocorr.pdf"
 CACHE_PATH = DATA_DIR / "figS4_pearson_angular_cache.pkl"
 
-FAR_COLOR = "steelblue"
-NEAR_COLOR = "darkorange"
+CMR_COLORS = sns.color_palette("CMRmap", 4)
+FAR_COLOR = CMR_COLORS[0]
+NEAR_COLOR = CMR_COLORS[1]
 THEORY_COLOR = "black"
 CLOSED_LABEL = "Theory (Eq. *)"     # far field: time-dependent closed form
 LINEAR_LABEL = "Theory (Eq. **)"    # near field: linear angular timescale

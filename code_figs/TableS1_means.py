@@ -7,32 +7,31 @@ DFE) and report the relative difference
 
     rel_diff = |mean_late - mean_early| / |mean_early|
 
-Data loading mirrors ``code_figs/TableS1_pspin_exper_fit.py`` exactly (Ascensao, Couce,
-Limdi).  A fixed-width table is written to
+Data is loaded via ``cmn/cmn_exper.py`` (shared with TableS2_pspin_exper_fit.py).  A CSV
+table is written to
 
-    data/mean_ratio_consecutive.txt
+    data/TableS1_means_consecutive.csv
 
 Run:
-    python code_figs/mean_reldiff_consecutive.py
+    python code_figs/TableS1_means.py
 """
+import csv
 import os
+import sys
 
 import numpy as np
 
-from TableS1_pspin_exper_fit import (
-    ASENCAO_DIR,
-    ASENCAO_ANCESTOR,
-    ASENCAO_EVOLVED,
-    COUCE_FILES,
-    COUCE_INTERVALS,
-    LIMDI_ANCESTORS,
-    LIMDI_EVOLVED,
-    DATA_DIR,
-    load_couce_strain,
-    load_limdi_frame,
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(SCRIPT_DIR)
+if REPO_DIR not in sys.path:
+    sys.path.insert(0, REPO_DIR)
+from cmn import cmn_exper  # noqa: E402  (shared experimental-data loaders + structure)
+from cmn.cmn_exper import (  # noqa: E402
+    DATA_DIR, COUCE_INTERVALS, ASENCAO_ANCESTOR, ASENCAO_EVOLVED,
+    LIMDI_ANCESTORS, LIMDI_EVOLVED,
 )
 
-OUT_TXT = os.path.join(DATA_DIR, "mean_ratio_consecutive.txt")
+OUT_CSV = os.path.join(DATA_DIR, "TableS1_means_consecutive.csv")
 
 
 def series_mean(a):
@@ -51,23 +50,22 @@ def rel_diff(mean_early, mean_late):
 
 def asencao_rows():
     rows = []
-    for exp in sorted(os.listdir(ASENCAO_DIR)):
-        sub = os.path.join(ASENCAO_DIR, exp)
-        anc_path = os.path.join(sub, f"{ASENCAO_ANCESTOR}.npy")
-        if not (os.path.isdir(sub) and os.path.exists(anc_path)):
+    for exp in cmn_exper.asencao_experiments():
+        anc = cmn_exper.load_asencao_array(exp, ASENCAO_ANCESTOR)
+        if anc is None:
             continue
-        m_early = series_mean(np.load(anc_path))
+        m_early = series_mean(anc)
         for evo in ASENCAO_EVOLVED:
-            evo_path = os.path.join(sub, f"{evo}.npy")
-            if not os.path.exists(evo_path):
+            evolved = cmn_exper.load_asencao_array(exp, evo)
+            if evolved is None:
                 continue
-            m_late = series_mean(np.load(evo_path))
+            m_late = series_mean(evolved)
             rows.append((f"Asc {exp}", f"{ASENCAO_ANCESTOR} -> {evo}", m_early, m_late))
     return rows
 
 
 def couce_rows():
-    strains = {name: load_couce_strain(fname) for name, fname in COUCE_FILES.items()}
+    strains = {name: cmn_exper.load_couce_site_series(name) for name in ("0K", "2K", "15K")}
     means = {name: series_mean(s.to_numpy()) for name, s in strains.items()}
     rows = []
     for early, late in COUCE_INTERVALS:
@@ -81,7 +79,7 @@ def limdi_pop_mean(tab, pop):
 
 
 def limdi_rows():
-    tab = load_limdi_frame()
+    tab = cmn_exper.load_limdi_frame()
     rows = []
     for anc in LIMDI_ANCESTORS:
         m_early = limdi_pop_mean(tab, anc)
@@ -94,22 +92,15 @@ def limdi_rows():
 def main():
     blocks = [asencao_rows(), couce_rows(), limdi_rows()]
 
-    header = (f"{'dataset':<16}{'transition':<18}{'mean_early':>12}"
-              f"{'mean_late':>12}{'rel_diff':>9}")
-    sep = "-" * len(header)
-    lines = [header, sep]
-    for i, block in enumerate(blocks):
-        for dataset, transition, m_early, m_late in block:
-            lines.append(f"{dataset:<16}{transition:<18}{m_early:>12.4f}"
-                         f"{m_late:>12.4f}{rel_diff(m_early, m_late):>9.3f}")
-        if i < len(blocks) - 1:
-            lines.append(sep)
+    with open(OUT_CSV, "w", newline="") as fh:
+        writer = csv.writer(fh)
+        writer.writerow(["dataset", "transition", "mean_early", "mean_late", "rel_diff"])
+        for block in blocks:
+            for dataset, transition, m_early, m_late in block:
+                writer.writerow([dataset, transition, f"{m_early:.4g}",
+                                 f"{m_late:.4g}", f"{rel_diff(m_early, m_late):.4g}"])
 
-    text = "\n".join(lines) + "\n"
-    with open(OUT_TXT, "w") as fh:
-        fh.write(text)
-    print(text)
-    print(f"Saved {OUT_TXT}")
+    print(f"Saved {OUT_CSV}")
 
 
 if __name__ == "__main__":

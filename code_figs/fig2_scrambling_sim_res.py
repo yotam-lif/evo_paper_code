@@ -83,18 +83,18 @@ mpl.rcParams.update(
 fig = plt.figure(figsize=(18, 16), constrained_layout=True)
 gs = GridSpec(3, 3, figure=fig)
 
-# Add subplots for each row (FGM, SK, NK)
-# FGM (First row)
+# Add subplots for each row (SK, NK, FGM)
+# SK (First row)
 axA = fig.add_subplot(gs[0, 0])
 axB = fig.add_subplot(gs[0, 1])
 axC = fig.add_subplot(gs[0, 2])
 
-# SK (Second row)
+# NK (Second row)
 axD = fig.add_subplot(gs[1, 0])
 axE = fig.add_subplot(gs[1, 1])
 axF = fig.add_subplot(gs[1, 2])
 
-# NK (Third row)
+# FGM (Third row)
 axG = fig.add_subplot(gs[2, 0])
 axH = fig.add_subplot(gs[2, 1])
 axI = fig.add_subplot(gs[2, 2])
@@ -168,32 +168,32 @@ nk_fitness = 1.0 + np.concatenate([[0.0], np.cumsum(nk_gains)])  # F(sigma_t), l
 nk_dfe1 = np.asarray(dfes[ind1]) / nk_fitness[ind1]
 nk_dfe2 = np.asarray(dfes[ind2]) / nk_fitness[ind2]
 
-# FGM Plots
-create_segben_sim(
-    axA,
-    fgm_dfe1,
-    fgm_dfe2,
-    labels=(r"$t_1$", r"$t_2$"),
-)
-create_overlapping_dfes_sim(axB, axC, fgm_dfe1, fgm_dfe2, xlim=FGM_XLIM)
-
 # SK Plots
 create_segben_sim(
-    axD,
+    axA,
     sk_dfe1,
     sk_dfe2,
     labels=(r"$t_1$", rf"$t_2$"),
 )
-create_overlapping_dfes_sim(axE, axF, sk_dfe1, sk_dfe2, xlim=SK_XLIM)
+create_overlapping_dfes_sim(axB, axC, sk_dfe1, sk_dfe2, xlim=SK_XLIM)
 
 # NK Plots
 create_segben_sim(
-    axG,
+    axD,
     nk_dfe1,
     nk_dfe2,
     labels=(rf"$t_1$", rf"$t_2$"),
 )
-create_overlapping_dfes_sim(axH, axI, nk_dfe1, nk_dfe2, xlim=NK_XLIM)
+create_overlapping_dfes_sim(axE, axF, nk_dfe1, nk_dfe2, xlim=NK_XLIM)
+
+# FGM Plots
+create_segben_sim(
+    axG,
+    fgm_dfe1,
+    fgm_dfe2,
+    labels=(r"$t_1$", r"$t_2$"),
+)
+create_overlapping_dfes_sim(axH, axI, fgm_dfe1, fgm_dfe2, xlim=FGM_XLIM)
 
 # Save the figure
 os.makedirs(OUTPUT_DIR, exist_ok=True)

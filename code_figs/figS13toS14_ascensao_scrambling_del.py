@@ -23,7 +23,7 @@ def _save_new_figs_as_pdf():
         if num in _saved_fig_ids:
             continue
         fig = plt.figure(num)
-        out = os.path.join(out_dir, f"figS{num+7}_ascensao_scrambling.pdf")
+        out = os.path.join(out_dir, f"figS{num+11}_ascensao_scrambling.pdf")
         fig.savefig(out, bbox_inches="tight", format='pdf')
         _saved_fig_ids.add(num)
 
@@ -108,18 +108,18 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
         for (x0, y0), (x1, y1) in segs:
             ax.plot([x0, x1], [y0, y1], linestyle="--", color="grey", lw=lw_main)
 
-    bdfe_anc = dfe_anc[dfe_anc > 0]
-    bdfe_evo = dfe_evo[dfe_evo > 0]
+    ddfe_anc = dfe_anc[dfe_anc < 0]
+    ddfe_evo = dfe_evo[dfe_evo < 0]
 
-    bdfe_anc_inds = np.where(dfe_anc > 0)
-    bdfe_evo_inds = np.where(dfe_evo > 0)
+    ddfe_anc_inds = np.where(dfe_anc < 0)
+    ddfe_evo_inds = np.where(dfe_evo < 0)
 
-    prop_bdfe_anc = dfe_evo[bdfe_anc_inds]
-    prop_bdfe_evo = dfe_anc[bdfe_evo_inds]
+    prop_ddfe_anc = dfe_evo[ddfe_anc_inds]
+    prop_ddfe_evo = dfe_anc[ddfe_evo_inds]
 
     # Left Panel - Forward propagate
-    counts, bin_edges, _ = thresholded_histogram(data=prop_bdfe_anc, threshold=3, final_bins=20)
-    anc_counts, anc_bin_edges, _ = thresholded_histogram(data=bdfe_anc, threshold=3, final_bins=20)
+    counts, bin_edges, _ = thresholded_histogram(data=prop_ddfe_anc, threshold=3, final_bins=20)
+    anc_counts, anc_bin_edges, _ = thresholded_histogram(data=ddfe_anc, threshold=3, final_bins=20)
     dfe_counts, dfe_bin_edges, _ = thresholded_histogram(data=dfe_evo, threshold=5, final_bins=30)
     max1 = np.max(counts)
     max2 = np.max(anc_counts)
@@ -175,8 +175,8 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     ax_left.set_xlabel(r'Fitness effect $(s)$')
 
     # Right Panel
-    counts2, bin_edges2, _ = thresholded_histogram(data=bdfe_evo, threshold=2, final_bins=20)
-    anc2_counts, anc2_bin_edges, _ = thresholded_histogram(data=prop_bdfe_evo, threshold=2, final_bins=30)
+    counts2, bin_edges2, _ = thresholded_histogram(data=ddfe_evo, threshold=2, final_bins=20)
+    anc2_counts, anc2_bin_edges, _ = thresholded_histogram(data=prop_ddfe_evo, threshold=2, final_bins=30)
     dfe2_counts, dfe2_bin_edges, _ = thresholded_histogram(data=dfe_anc, threshold=5, final_bins=30)
     max1 = np.max(counts2)
     max2 = np.max(anc2_counts)
@@ -244,14 +244,11 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
 
-# Find valid experiment directories
-experiment_dirs = sorted([
-    d for d in os.listdir(datapath)
-    if os.path.isdir(os.path.join(datapath, d))
-])
-print(experiment_dirs)
+# Explicit selection of experiments and their figure numbers
+experiments = [("GHI", 13), ("PQT", 14)]
+print(experiments)
 
-for i, exp_dir in enumerate(experiment_dirs):
+for exp_dir, fig_num in experiments:
     fig = plt.figure(figsize=(12, 8))
     gs = GridSpec(2, 2, figure=fig)
     exp_path = os.path.join(datapath, exp_dir)
@@ -300,6 +297,6 @@ for i, exp_dir in enumerate(experiment_dirs):
     S_valid = S[valid_indices]
     create_overlapping_dfes(ax3, ax4, R_valid, S_valid)
     plt.tight_layout()
-    out = os.path.join(out_dir, f"figS{i+8}_ascensao_scrambling_{exp_dir}.pdf")
+    out = os.path.join(out_dir, f"figS{fig_num}_ascensao_scrambling_{exp_dir}.pdf")
     fig.savefig(out, bbox_inches="tight", format='pdf')
     plt.close(fig)
