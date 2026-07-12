@@ -40,9 +40,10 @@ from matplotlib.ticker import MaxNLocator
 plt.rcParams["font.family"] = "sans-serif"
 mpl.rcParams.update({
     "axes.labelsize": 16,
-    "xtick.labelsize": 12,
-    "ytick.labelsize": 12,
-    "legend.fontsize": 13,
+    "axes.titlesize": 16,
+    "xtick.labelsize": 16,
+    "ytick.labelsize": 16,
+    "legend.fontsize": 14,
 })
 
 # ---- Configuration ------------------------------------------------------------
@@ -57,7 +58,7 @@ LOG_CUTOFF = -0.8             # show each panel only down to this log-correlatio
 SQRT_HALF_PI = np.sqrt(np.pi / 2.0)   # |dR~/dt| for the SSWM radial law
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-OUT_PATH = DATA_DIR.parent / "figs_paper" / "figS4_fgm_pearson.pdf"
+OUT_PATH = DATA_DIR.parent / "figs_paper" / "figS5_fgm_pearson.pdf"
 CACHE_PATH = DATA_DIR / "figS4_pearson_angular_cache.pkl"
 
 FAR_COLOR = "steelblue"
@@ -193,7 +194,7 @@ def load_curves(panels):
 
 # ---- Figure -------------------------------------------------------------------
 def apply_axis_style(ax, label):
-    ax.text(-0.08, 1.04, label, transform=ax.transAxes, fontsize=17, fontweight="bold",
+    ax.text(-0.08, 1.04, label, transform=ax.transAxes, fontsize=18, fontweight="bold",
             va="bottom", ha="left")
     for spine in ax.spines.values():
         spine.set_linewidth(1.4)

@@ -20,9 +20,10 @@ from scipy.stats import cramervonmises_2samp, ks_2samp, wasserstein_distance
 plt.rcParams["font.family"] = "sans-serif"
 mpl.rcParams.update({
     "axes.labelsize": 16,
-    "xtick.labelsize": 12,
-    "ytick.labelsize": 12,
-    "legend.fontsize": 13,
+    "axes.titlesize": 16,
+    "xtick.labelsize": 16,
+    "ytick.labelsize": 16,
+    "legend.fontsize": 14,
 })
 
 CMR_COLORS = sns.color_palette("CMRmap", 4)
@@ -42,7 +43,7 @@ def apply_axis_style(ax, label):
     ax.text(
         -0.08, 1.04, label,
         transform=ax.transAxes,
-        fontsize=17,
+        fontsize=18,
         fontweight="bold",
         va="bottom",
         ha="left",
@@ -615,7 +616,7 @@ def run_experiment(n_values, r0_tilde_values, phi,
 
     out_dir = "../figs_paper"
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "figS1_radial_scrambling.pdf")
+    out_path = os.path.join(out_dir, "figS2_radial_scrambling.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     print(f"Figure saved to {out_path}")
 

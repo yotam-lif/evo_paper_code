@@ -12,9 +12,10 @@ from scipy.stats import ks_2samp, cramervonmises_2samp
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['font.size'] = 16
 mpl.rcParams['axes.labelsize'] = 16
-mpl.rcParams['xtick.labelsize'] = 14
-mpl.rcParams['ytick.labelsize'] = 14
-mpl.rcParams['legend.fontsize'] = 12
+mpl.rcParams['axes.titlesize'] = 16
+mpl.rcParams['xtick.labelsize'] = 16
+mpl.rcParams['ytick.labelsize'] = 16
+mpl.rcParams['legend.fontsize'] = 14
 color = sns.color_palette('CMRmap', 5)
 EVO_FILL = (color[1][0], color[1][1], color[1][2], 0.5)
 ANC_FILL = (0.5, 0.5, 0.5, 0.15)
@@ -131,7 +132,7 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     counts_shifted = counts + z
     dfe_counts_shifted = dfe_counts + z
     ax_left.set_xlim(-xlim, xlim)
-    ax_left.tick_params(labelsize=14)
+    ax_left.tick_params(labelsize=16)
     ax_left.set_ylim(0, ylim + 10)
 
     ax_left.stairs(
@@ -194,7 +195,7 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     z = ylim * z_frac
     counts2_shifted = counts2 + z
     ax_right.set_xlim(-xlim, xlim)
-    ax_right.tick_params(labelsize=14)
+    ax_right.tick_params(labelsize=16)
     ax_right.set_ylim(0, ylim + 10)
 
     ax_right.stairs(
@@ -300,7 +301,7 @@ def create_segben(ax, dfe_anc, dfe_evo, labels=(r'$t_1$', r'$t_2$')):
     ax.set_xlim(x0 - 0.2, x1 + 0.2)
     ax.set_ylabel(r'Fitness effect $(s)$')
     ax.axhline(0, linestyle='--', color='black', linewidth=0.8)
-    ax.tick_params(labelsize=14)
+    ax.tick_params(labelsize=16)
     # ax.legend(frameon=False)
 
 
@@ -332,7 +333,7 @@ def main():
         ax_bottom_right: "F"
     }
     for ax, label in labels.items():
-        ax.text(-0.01, 1.1, label, transform=ax.transAxes, fontweight='heavy', va='top', ha='left')
+        ax.text(-0.01, 1.1, label, transform=ax.transAxes, fontsize=18, fontweight='heavy', va='top', ha='left')
         for spine in ax.spines.values():
             spine.set_linewidth(1.5)
         ax.tick_params(axis='both', width=1.5)

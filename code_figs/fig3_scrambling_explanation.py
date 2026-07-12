@@ -13,9 +13,10 @@ plt.rcParams["font.family"] = "sans-serif"
 mpl.rcParams.update(
     {
         "axes.labelsize": 16,
-        "xtick.labelsize": 14,
-        "ytick.labelsize": 14,
-        "legend.fontsize": 16,
+        "axes.titlesize": 16,
+        "xtick.labelsize": 16,
+        "ytick.labelsize": 16,
+        "legend.fontsize": 14,
     }
 )
 

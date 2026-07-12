@@ -119,7 +119,7 @@ def gamma_panel(ax):
     ax.xaxis.set_minor_formatter(NullFormatter())
     ax.set_xlabel(r"$n$")
     ax.set_ylabel(r"$\gamma_n$")
-    ax.set_title(r"FGM: $r_{\text{final}} \sim m^{-\gamma_n}$", fontsize=17, pad=8)
+    ax.set_title(r"FGM: $r_{\text{final}} \sim m^{-\gamma_n}$", fontsize=16, pad=8)
     ax.grid(True, which="both", ls=":", lw=0.5, alpha=0.4)
 
 
@@ -135,7 +135,7 @@ def main():
 
     out_dir = os.path.join("..", "figs_paper")
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "figS6_peak_dfe_bayes.pdf")
+    out_path = os.path.join(out_dir, "figS7_peak_dfe_bayes.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     print(f"Saved: {out_path}")
 

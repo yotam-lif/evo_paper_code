@@ -16,33 +16,38 @@ os.makedirs(out_dir, exist_ok=True)
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['font.size'] = 16
 mpl.rcParams['axes.labelsize'] = 16
-mpl.rcParams['xtick.labelsize'] = 14
-mpl.rcParams['ytick.labelsize'] = 14
-mpl.rcParams['legend.fontsize'] = 12
+mpl.rcParams['axes.titlesize'] = 16
+mpl.rcParams['xtick.labelsize'] = 16
+mpl.rcParams['ytick.labelsize'] = 16
+mpl.rcParams['legend.fontsize'] = 14
 color = sns.color_palette('CMRmap', 5)
 EVO_FILL = (color[1][0], color[1][1], color[1][2], 0.5)
 ANC_FILL = (0.5, 0.5, 0.5, 0.15)
 DFE_FILL = color[2]
-xlim = 0.11
-shift_frac = -0.02
+xlim = 0.06
+shift_frac = 0.025
 abn = 1
 
 baym_datadir = os.path.join('..', 'data', 'alex_code')
 
 
 def load_baym_data():
+    # Load and filter
     Rtable = pd.read_csv(os.path.join(baym_datadir, "Rfitted_fil.txt"), sep="\t").dropna(subset=["fitted1"])
     Ttable = pd.read_csv(os.path.join(baym_datadir, "2Kfitted_fil.txt"), sep="\t").dropna(subset=["fitted1"])
     Ftable = pd.read_csv(os.path.join(baym_datadir, "15Kfitted_fil.txt"), sep="\t").dropna(subset=["fitted1"])
 
+    # Remove duplicates
     Rtable = Rtable.drop_duplicates(subset=["fitted1"])
     Ttable = Ttable.drop_duplicates(subset=["fitted1"])
     Ftable = Ftable.drop_duplicates(subset=["fitted1"])
 
+    # Filter by abundance
     Rtable = Rtable[(Rtable["abn"] > abn)]
     Ttable = Ttable[(Ttable["abn"] > abn)]
     Ftable = Ftable[(Ftable["abn"] > abn)]
 
+    # Extract series
     r = Rtable.set_index('alle')['fitted1']
     m = Ttable.set_index('alle')['fitted1']
     k = Ftable.set_index('alle')['fitted1']
@@ -70,6 +75,7 @@ def thresholded_histogram(data, threshold, final_bins):
             bin_mask = (data >= bin_edges[i]) & (data < bin_edges[i + 1])
             valid_data.append(data[bin_mask])
     if not valid_data:
+        # Fallback if sparse
         return np.histogram(data, bins=final_bins, density=True)[0], np.histogram(data, bins=final_bins, density=True)[
             1], data
 
@@ -78,8 +84,8 @@ def thresholded_histogram(data, threshold, final_bins):
     return final_counts, final_edges, cleaned_data
 
 
-def create_overlapping_dfes_del(ax_left, ax_right, dfe_anc, dfe_evo, label_anc="Anc.", label_evo="Evo."):
-    # Logic for DELETERIOUS mutations (< 0)
+def create_overlapping_dfes_ben(ax_left, ax_right, dfe_anc, dfe_evo, label_anc="Anc.", label_evo="Evo."):
+    # Logic for BENEFICIAL mutations (> 0)
     z_frac = 0.1
     lw_main = 1.0
     valid_indices = np.isfinite(dfe_anc) & np.isfinite(dfe_evo)
@@ -99,21 +105,21 @@ def create_overlapping_dfes_del(ax_left, ax_right, dfe_anc, dfe_evo, label_anc="
         for (x0, y0), (x1, y1) in segs:
             ax.plot([x0, x1], [y0, y1], linestyle="--", color="grey", lw=lw_main)
 
-    # Filter deleterious in ancestor background
-    ddfe_anc = dfe_anc[dfe_anc < 0]
-    ddfe_evo = dfe_evo[dfe_evo < 0]
+    # Filter beneficials in ancestor background
+    bdfe_anc = dfe_anc[dfe_anc > 0]
+    bdfe_evo = dfe_evo[dfe_evo > 0]
 
-    ddfe_anc_inds = np.where(dfe_anc < 0)
-    ddfe_evo_inds = np.where(dfe_evo < 0)
+    bdfe_anc_inds = np.where(dfe_anc > 0)
+    bdfe_evo_inds = np.where(dfe_evo > 0)
 
     # Propagate
-    prop_ddfe_anc = dfe_evo[ddfe_anc_inds]
-    prop_ddfe_evo = dfe_anc[ddfe_evo_inds]
+    prop_bdfe_anc = dfe_evo[bdfe_anc_inds]
+    prop_bdfe_evo = dfe_anc[bdfe_evo_inds]
 
     # --- Left Panel (Forward Time) ---
-    counts, bin_edges, _ = thresholded_histogram(data=prop_ddfe_anc, threshold=2, final_bins=35)
-    anc_counts, anc_bin_edges, _ = thresholded_histogram(data=ddfe_anc, threshold=2, final_bins=35)
-    dfe_counts, dfe_bin_edges, _ = thresholded_histogram(data=dfe_evo, threshold=2, final_bins=35)
+    counts, bin_edges, _ = thresholded_histogram(data=prop_bdfe_anc, threshold=3, final_bins=25)
+    anc_counts, anc_bin_edges, _ = thresholded_histogram(data=bdfe_anc, threshold=3, final_bins=20)
+    dfe_counts, dfe_bin_edges, _ = thresholded_histogram(data=dfe_evo, threshold=6, final_bins=30)
 
     bin_edges = bin_edges - xlim * shift_frac
     dfe_bin_edges = dfe_bin_edges - xlim * shift_frac
@@ -139,9 +145,9 @@ def create_overlapping_dfes_del(ax_left, ax_right, dfe_anc, dfe_evo, label_anc="
     ax_left.set_xlabel(r'Fitness effect $(s)$')
 
     # --- Right Panel (Backward Time) ---
-    counts2, bin_edges2, _ = thresholded_histogram(data=ddfe_evo, threshold=2, final_bins=40)
-    anc2_counts, anc2_bin_edges, _ = thresholded_histogram(data=prop_ddfe_evo, threshold=2, final_bins=40)
-    dfe2_counts, dfe2_bin_edges, _ = thresholded_histogram(data=dfe_anc, threshold=2, final_bins=40)
+    counts2, bin_edges2, _ = thresholded_histogram(data=bdfe_evo, threshold=2, final_bins=12)
+    anc2_counts, anc2_bin_edges, _ = thresholded_histogram(data=prop_bdfe_evo, threshold=3, final_bins=22)
+    dfe2_counts, dfe2_bin_edges, _ = thresholded_histogram(data=dfe_anc, threshold=8, final_bins=24)
 
     bin_edges2 = bin_edges2 + xlim * shift_frac
     dfe2_bin_edges = dfe2_bin_edges - xlim * shift_frac
@@ -185,10 +191,10 @@ def main():
     ax4 = fig.add_subplot(gs[1, 1])
 
     # Row 1: 0K vs 2K
-    create_overlapping_dfes_del(ax1, ax2, d0, d2, label_anc="0K", label_evo="2K")
+    create_overlapping_dfes_ben(ax1, ax2, d0, d2, label_anc="0K", label_evo="2K")
 
     # Row 2: 2K vs 15K
-    create_overlapping_dfes_del(ax3, ax4, d2_new, d15, label_anc="2K", label_evo="15K")
+    create_overlapping_dfes_ben(ax3, ax4, d2_new, d15, label_anc="2K", label_evo="15K")
 
     # Labels
     panel_labels = ['A', 'B', 'C', 'D']
@@ -209,7 +215,7 @@ def main():
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
-    output_path = os.path.join(out_dir, "figS17_couce_scramble_del.pdf")
+    output_path = os.path.join(out_dir, "figS16_couce_scramble_ben.pdf")
     fig.savefig(output_path, format="pdf", bbox_inches='tight')
     print(f"Saved {output_path}")
 

@@ -49,9 +49,10 @@ def _save_all_figures_as_svg(prefix="ascencao_scrambling_fig", directory="."):
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['font.size'] = 16
 mpl.rcParams['axes.labelsize'] = 16
-mpl.rcParams['xtick.labelsize'] = 14
-mpl.rcParams['ytick.labelsize'] = 14
-mpl.rcParams['legend.fontsize'] = 12
+mpl.rcParams['axes.titlesize'] = 16
+mpl.rcParams['xtick.labelsize'] = 16
+mpl.rcParams['ytick.labelsize'] = 16
+mpl.rcParams['legend.fontsize'] = 14
 color = sns.color_palette('CMRmap', 5)
 EVO_FILL = (color[1][0], color[1][1], color[1][2], 0.5)
 ANC_FILL = (0.5, 0.5, 0.5, 0.15)
@@ -129,7 +130,7 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     counts_shifted = counts + z
     dfe_counts_shifted = dfe_counts + z
     ax_left.set_xlim(-xlim, xlim)
-    ax_left.tick_params(labelsize=14)
+    ax_left.tick_params(labelsize=16)
     ax_left.set_ylim(0, ylim + 10)
     bin_edges = bin_edges - xlim * shift_frac
     dfe_bin_edges = dfe_bin_edges - xlim * shift_frac
@@ -186,7 +187,7 @@ def create_overlapping_dfes(ax_left, ax_right, dfe_anc, dfe_evo):
     counts2_shifted = counts2 + z
     dfe2_counts_shifted = dfe2_counts + z
     ax_right.set_xlim(-xlim, xlim)
-    ax_right.tick_params(labelsize=14)
+    ax_right.tick_params(labelsize=16)
     bin_edges2 = bin_edges2 + xlim * shift_frac
     dfe2_bin_edges = dfe2_bin_edges - xlim * shift_frac
     anc2_bin_edges = anc2_bin_edges - xlim * shift_frac

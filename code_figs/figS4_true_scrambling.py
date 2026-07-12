@@ -77,9 +77,10 @@ from scipy.stats import wasserstein_distance
 plt.rcParams["font.family"] = "sans-serif"
 mpl.rcParams.update({
     "axes.labelsize": 16,
-    "xtick.labelsize": 12,
-    "ytick.labelsize": 12,
-    "legend.fontsize": 13,
+    "axes.titlesize": 16,
+    "xtick.labelsize": 16,
+    "ytick.labelsize": 16,
+    "legend.fontsize": 14,
 })
 
 SIGMA = 0.05
@@ -116,7 +117,7 @@ def apply_axis_style(ax, label):
     ax.text(
         -0.08, 1.04, label,
         transform=ax.transAxes,
-        fontsize=17,
+        fontsize=18,
         fontweight="bold",
         va="bottom",
         ha="left",
@@ -450,7 +451,7 @@ if __name__ == "__main__":
                              f"(comma-separated, paired with n={','.join(map(str, NEAR_PANEL_NS))}; "
                              "NOT scaled by sqrt(n)).")
     parser.add_argument("--out", default=os.path.join("..", "figs_paper",
-                        "figS3_true_scrambling.pdf"), help="Output figure path.")
+                        "figS4_true_scrambling.pdf"), help="Output figure path.")
     parser.add_argument("--cache", default=os.path.join("..", "data",
                         "figS3_emd_regimes_cache.pkl"),
                         help="Aggregated-curve cache (set empty to disable).")

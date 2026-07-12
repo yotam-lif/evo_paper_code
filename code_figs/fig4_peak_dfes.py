@@ -38,9 +38,10 @@ plt.rcParams["font.family"] = "sans-serif"
 mpl.rcParams.update(
     {
         "axes.labelsize": 16,
+        "axes.titlesize": 16,
         "xtick.labelsize": 16,
         "ytick.labelsize": 16,
-        "legend.fontsize": 16,
+        "legend.fontsize": 14,
     }
 )
 
@@ -188,7 +189,7 @@ def waterfall_plot_panel(ax, time_datasets, colors, time_values,
         axis.pane.set_alpha(0.0)
         axis.line.set_linewidth(1.5)
     ax.grid(False)
-    ax.set_title("Additive model", fontsize=18, pad=10)
+    ax.set_title("Additive model", fontsize=16, pad=10)
 
 
 # ── KDE line plot (used for final-DFE panels) ─────────────────────────────────
@@ -486,13 +487,13 @@ def main():
 
     # B, C, D: final DFEs — FGM, SK, NK
     fgm_final_panel(axes[0, 1], fgm_final)
-    axes[0, 1].set_title("FGM", fontsize=18, pad=10)
+    axes[0, 1].set_title("FGM", fontsize=16, pad=10)
 
     pspin_final_panel(axes[1, 0], pspin_data)
-    axes[1, 0].set_title("p-spin", fontsize=18, pad=10)
+    axes[1, 0].set_title("p-spin", fontsize=16, pad=10)
 
     nk_final_panel(axes[1, 1], nk_data_arr, nk_k_values)
-    axes[1, 1].set_title("NK", fontsize=18, pad=10)
+    axes[1, 1].set_title("NK", fontsize=16, pad=10)
 
     # B–D: standard 2d panel labels at the top-left of each data area.
     label_kw = dict(fontsize=18, fontweight="bold", va="bottom", ha="left")

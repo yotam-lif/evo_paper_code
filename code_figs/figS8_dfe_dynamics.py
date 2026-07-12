@@ -28,8 +28,10 @@ plt.rcParams["font.family"] = "sans-serif"
 mpl.rcParams.update(
     {
         "axes.labelsize": 16,
+        "axes.titlesize": 16,
         "xtick.labelsize": 16,
         "ytick.labelsize": 16,
+        "legend.fontsize": 14,
     }
 )
 
@@ -134,7 +136,7 @@ def waterfall_plot_panel(ax, time_datasets, colors, time_values,
         axis.line.set_linewidth(1.5)
     ax.grid(False)
     if title:
-        ax.set_title(title, fontsize=18, pad=10)
+        ax.set_title(title, fontsize=16, pad=10)
 
 
 def extract_fgm_ridge_data(reps):
@@ -270,7 +272,7 @@ def main():
 
     out_dir = os.path.join("..", "figs_paper")
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "figS7_dfe_dynamics.pdf")
+    out_path = os.path.join(out_dir, "figS8_dfe_dynamics.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches=_content_bbox(fig, pad=0.2))
     print(f"Saved: {out_path}")
 

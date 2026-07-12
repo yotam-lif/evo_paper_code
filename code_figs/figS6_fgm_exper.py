@@ -1,4 +1,4 @@
-r"""Fisher's Geometric Model DFE fit to ancestor genotypes -> figS5_exper_bayes.pdf.
+r"""Fisher's Geometric Model DFE fit to ancestor genotypes -> figS6_exper_bayes.pdf.
 
 For each ancestor DFE (Couce 0K/2K, the Ascensao R's, Limdi REL606/REL607) we fit the
 analytic isotropic FGM distribution of fitness effects in LOG-fitness (the selection
@@ -35,7 +35,7 @@ FGM does not model, so a small lower-tail fraction is dropped; the beneficial ta
 See the TRIM_* config.
 
 Outputs:
-    figs_paper/figS5_exper_bayes.pdf       per-clone data + moment-locked FGM fit (the figure)
+    figs_paper/figS6_exper_bayes.pdf       per-clone data + moment-locked FGM fit (the figure)
     data/fgm_dfe_sigma_profile.json        per-DFE summaries + bootstrap CIs
     data/fgm_dfe_sigma_profile_params.txt  human-readable parameter table
 
@@ -69,7 +69,7 @@ LIMDI_CSV = os.path.join(
     "Processed_data_for_plotting", "dfe_data_pandas.csv")
 SIGMA_JSON = os.path.join(DATA, "fgm_dfe_sigma_profile.json")
 SIGMA_TXT = os.path.join(DATA, "fgm_dfe_sigma_profile_params.txt")
-FIG_PATH = os.path.join(FIGS, "figS5_exper_bayes.pdf")
+FIG_PATH = os.path.join(FIGS, "figS6_exper_bayes.pdf")
 
 # ── tail trimming (per data source) ───────────────────────────────────────────
 # The log-fitness FGM DFE has one-sided support s <= s_max = r^2/2. The strongly-
@@ -113,12 +113,12 @@ FLOOR_FRAC_FLAG = 0.20       # bootstrap floor-fraction above which r is "uniden
 # House style (matches fig1/fig4/figS3/figS4/figSX_peak_dfe_bayes): sans-serif, large
 # axis labels, mid-size ticks/legends.
 plt.rcParams["font.family"] = "sans-serif"
-mpl.rcParams.update({"axes.labelsize": 16, "axes.titlesize": 15,
-                     "xtick.labelsize": 13, "ytick.labelsize": 13,
-                     "legend.fontsize": 13})
-TITLE_FS = 15                # per-panel clone/title text
-LABEL_FS = 15               # x-axis label
-TICK_FS = 12               # tick labels
+mpl.rcParams.update({"axes.labelsize": 16, "axes.titlesize": 16,
+                     "xtick.labelsize": 16, "ytick.labelsize": 16,
+                     "legend.fontsize": 14})
+TITLE_FS = 16                # per-panel clone/title text
+LABEL_FS = 16               # x-axis label
+TICK_FS = 16               # tick labels
 ANNOT_FS = 11              # in-panel parameter box / annotations
 XLABEL_S = r"Fitness effect $(s)$"   # paper convention is "Fitness effect $(\Delta)$"
 _CMR = sns.color_palette("CMRmap", 5)
@@ -370,7 +370,7 @@ def bootstrap_sigma_profile(effects, B=BOOT_B, seed=BOOT_SEED, eps=None):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Figure: per-clone data histogram + moment-locked FGM fit (figS5_exper_bayes.pdf)
+# Figure: per-clone data histogram + moment-locked FGM fit (figS6_exper_bayes.pdf)
 # Display names: Couce 0K is the REL607 ancestor of the Ara+2 line, so it and the Limdi
 # REL607 are two measurements of REL607 -> (1)/(2); Couce 2K is the evolved Ara+2 at 2000
 # generations. PQT/SLR (not FGM-shaped) are dropped from the figure.
