@@ -304,7 +304,7 @@ def create_overlapping_dfes_sim(ax_left, ax_right, dfe_anc, dfe_evo, xlim=0.08, 
     ax_left.set_xlim(-xlim, xlim)
     ax_left.set_ylim(0, ylim)
     ax_left.tick_params(labelsize=14)
-    ax_left.set_xlabel(r'Fitness effect $(s)$')
+    ax_left.set_xlabel(r'Fitness effect $(\Delta)$')
     ax_left.legend(frameon=False)
 
     # --- Right Panel (Backward) ---
@@ -443,7 +443,7 @@ def create_segben_sim(ax, dfe_anc, dfe_evo, labels=(r'$t_1$', r'$t_2$'), ben=Tru
     ax.set_xticks([x0, x1])
     ax.set_xticklabels(labels)
     ax.set_xlim(x0 - 0.2, x1 + 0.2)
-    ax.set_ylabel(r'Fitness effect $(s)$')
+    ax.set_ylabel(r'Fitness effect $(\Delta)$')
     ax.axhline(0, linestyle='--', color='black', linewidth=0.8)
     ax.tick_params(labelsize=14)
     # ax.legend(frameon=False)
