@@ -43,9 +43,9 @@ from cmn import cmn_fgm, cmn_exper
 # fraction lets the fit match the bulk. The BENEFICIAL tail carries the distance-to-
 # optimum signal, so it is kept (bar a tiny Ascensao upper trim for isolated outliers).
 # Each entry is (frac_deleterious, frac_beneficial).
-TRIM_COUCE = (0.02, 0.001)
+TRIM_COUCE = (0.1, 0.001)
 TRIM_ASENCAO = (0.007, 0.001)
-NBINS = 250                  # multinomial bins over [min(data), max(data)]
+NBINS = 200                  # multinomial bins over [min(data), max(data)]
 
 # ── Limdi TnSeq-LTEE config ───────────────────────────────────────────────────
 # The Limdi knockout DFE per clone = per-gene transposon-insertion fitness effects
@@ -53,7 +53,7 @@ NBINS = 250                  # multinomial bins over [min(data), max(data)]
 # ~0.955), averaged per gene. Drop the worst few % of the deleterious tail per clone.
 POOL_REPLICATES = "mean"          # "mean" (average Green+Red per gene) | "concat"
 TRIM_DEFAULT = (0.1, 0.001)        # per-clone (deleterious frac, beneficial frac)
-TRIM_LIMDI = {"REL606": (0.12, 0.005)}   # per-clone overrides; fallback = TRIM_DEFAULT
+TRIM_LIMDI = {"REL606": (0.1, 0.001)}   # per-clone overrides; fallback = TRIM_DEFAULT
 #                                  REL606: drop the top 1% beneficials (extreme
 #                                  most-beneficial genes; see the trim sweep).
 MEAS_ERR = 0.005                  # Gaussian measurement-error s.d. on each effect; >0
@@ -70,10 +70,10 @@ ORDER = [p for p in (["REL606"] + _ANCESTORS_RAW["REL606"]
 
 # ── sigma-profile inference (n/s0/r locked to the sample mean+variance) ────────
 NSIG_PROFILE = 400           # 1-D sigma grid resolution along the moment-locked curve
-N_FLOOR = 1.6                # floor on the effective dimension n (caps sigma from above,
+N_FLOOR = 0.5                # floor on the effective dimension n (caps sigma from above,
 #                              since n = 2|E|/sigma^2); keeps n >= N_FLOOR. Note tau blows up
 #                              (-> nan) as n -> 1, since tau1 = 2 r^2 / ((n-1) sigma^2)
-N_CAP = 200.0                # cap n (=> small-sigma floor) so the curve stays finite
+N_CAP = 50.0                # cap n (=> small-sigma floor) so the curve stays finite
 BOOT_B = 300                 # bootstrap-over-genes resamples for the CIs
 BOOT_SEED = 0
 FLOOR_FRAC_FLAG = 0.20       # bootstrap floor-fraction above which r is "unidentified"
@@ -91,53 +91,88 @@ def _trim(v, trim):
     return v[(v >= lo) & (v <= hi)]
 
 
-def load_couce():
-    """Couce et al. DFEs for the three backgrounds (0K / 2K / 15K), tail-trimmed for FGM."""
-    return [(label, _trim(cmn_exper.load_couce_effects(label), TRIM_COUCE))
-            for label in ("0K", "2K", "15K")]
+def _resolve_trims(trim, names, default):
+    """Normalize a caller-supplied ``trim`` into ``{name: (frac_del, frac_ben)}`` for
+    the datasets ``names``. ``trim`` may be:
+
+      * ``None``            -> ``default`` (a single pair or a {name: pair} mapping),
+      * a single ``(del, ben)`` pair          -> broadcast to every dataset,
+      * a mapping ``{name: (del, ben)}``      -> per dataset; missing names fall back
+        to ``default`` (or its per-name entry if ``default`` is itself a mapping),
+      * a 2-D array/sequence of ``(del, ben)`` rows -> one row per dataset, in ``names``
+        order (this is what the figure passes -- a trim per panel).
+    """
+    if trim is None:
+        trim = default
+
+    def _fallback(nm):
+        return default.get(nm, TRIM_DEFAULT) if isinstance(default, dict) else default
+
+    if isinstance(trim, dict):
+        return {nm: tuple(trim.get(nm, _fallback(nm))) for nm in names}
+    arr = np.asarray(trim, float)
+    if arr.ndim == 1:                                   # single (del, ben) pair
+        return {nm: (float(arr[0]), float(arr[1])) for nm in names}
+    if arr.shape[0] != len(names):
+        raise ValueError(f"trim has {arr.shape[0]} rows but {len(names)} datasets "
+                         f"({list(names)}); pass one (frac_del, frac_ben) row per dataset")
+    return {nm: (float(row[0]), float(row[1])) for nm, row in zip(names, arr)}
 
 
-def load_asencao():
-    """Ascensao et al. DFEs: one trimmed array per background (L / R / S) per experiment."""
-    out = []
-    for d in cmn_exper.asencao_experiments():
-        for arr in ("L", "R", "S"):
-            v = cmn_exper.load_asencao_array(d, arr)
-            if v is None:
-                continue
-            v = v[np.isfinite(v)]
-            out.append((f"Asc {d} {arr}", _trim(v, TRIM_ASENCAO)))
-    return out
+def load_couce(trim=TRIM_COUCE, labels=("0K", "2K", "15K")):
+    """Couce et al. DFEs for the requested backgrounds, tail-trimmed for FGM.
+
+    ``labels`` are the backgrounds to load (default all three: 0K / 2K / 15K). ``trim``
+    is the tail trim (default ``TRIM_COUCE``); see :func:`_resolve_trims` -- pass a single
+    ``(frac_del, frac_ben)`` pair to share it, or a 2-D array with one row per label.
+    """
+    trims = _resolve_trims(trim, labels, TRIM_COUCE)
+    return [(label, _trim(cmn_exper.load_couce_effects(label), trims[label]))
+            for label in labels]
+
+
+def load_asencao(trim=TRIM_ASENCAO):
+    """Ascensao et al. DFEs: one trimmed array per background (L / R / S) per experiment.
+
+    ``trim`` (default ``TRIM_ASENCAO``) is applied to every background; see
+    :func:`_resolve_trims` for the accepted forms (single pair / {name: pair} / 2-D array
+    keyed by the ``"Asc <exp> <arr>"`` dataset name).
+    """
+    specs = [(f"Asc {d} {arr}", cmn_exper.load_asencao_array(d, arr))
+             for d in cmn_exper.asencao_experiments() for arr in ("L", "R", "S")]
+    specs = [(name, v[np.isfinite(v)]) for name, v in specs if v is not None]
+    trims = _resolve_trims(trim, [name for name, _ in specs], TRIM_ASENCAO)
+    return [(name, _trim(v, trims[name])) for name, v in specs]
 
 
 def load_limdi(populations=None, trim=None):
     """Limdi TnSeq-LTEE DFEs: ``{population: effects}`` for the kept populations.
 
-    Green/Red libraries are pooled per gene per ``POOL_REPLICATES``; each clone gets
-    its own per-clone tail trim from ``TRIM_LIMDI`` (fallback ``TRIM_DEFAULT``).
+    Green/Red libraries are pooled per gene per ``POOL_REPLICATES``; each clone is then
+    tail-trimmed.
 
     ``populations`` selects which population labels to keep (defaults to ``ORDER``, which
     applies the figure's Ara-2/Ara+4 exclusion). Pass an explicit list to override the
     exclusion, e.g. the full LTEE panel used by the p/N table.
 
-    ``trim`` overrides the per-clone tail trim for ALL requested clones: pass a
-    ``(frac_deleterious, frac_beneficial)`` tuple, or ``(0.0, 0.0)`` to keep the raw
-    DFE with both tails intact. ``None`` (default) uses the per-clone TRIM_LIMDI/TRIM_DEFAULT.
+    ``trim`` is the caller-supplied tail trim; see :func:`_resolve_trims`. ``None``
+    (default) uses the per-clone ``TRIM_LIMDI`` mapping (fallback ``TRIM_DEFAULT``); pass a
+    single ``(frac_del, frac_ben)`` pair to share one trim, or a 2-D array with one row per
+    KEPT clone (in the order they appear in ``populations``/``ORDER``).
     """
     keep = ORDER if populations is None else list(populations)
     frame = cmn_exper.load_limdi_frame()
     present = set(frame["Population"].astype(str))
+    kept = [pop for pop in keep if pop in present]
+    trims = _resolve_trims(trim, kept, TRIM_LIMDI)
     out = {}
-    for pop in keep:
-        if pop not in present:
-            continue
+    for pop in kept:
         if POOL_REPLICATES == "mean":
             v = cmn_exper.limdi_gene_series(frame, pop).to_numpy(float)
         else:
             v = frame.loc[frame["Population"] == pop, "Fitness estimate"].to_numpy(float)
         v = v[np.isfinite(v)]
-        t = trim if trim is not None else TRIM_LIMDI.get(pop, TRIM_DEFAULT)
-        out[pop] = _trim(v, t)
+        out[pop] = _trim(v, trims[pop])
     return out
 
 
@@ -215,7 +250,9 @@ def _model_pdf(xs, n, s, r):
     pdf = np.where(np.isfinite(pdf), pdf, 0.0)
     if MEAS_ERR > 0.0 and np.asarray(xs).size > 1:
         dx = float(xs[1] - xs[0])
-        J = int(np.ceil(5.0 * MEAS_ERR / dx))
+        # cap the kernel half-width to the grid: np.convolve(..., "same") returns
+        # max(len(pdf), len(ker)), so a kernel wider than xs would mis-size the output.
+        J = min(int(np.ceil(5.0 * MEAS_ERR / dx)), (np.asarray(xs).size - 1) // 2)
         off = np.arange(-J, J + 1) * dx
         ker = np.exp(-0.5 * (off / MEAS_ERR) ** 2)
         ker /= ker.sum()
@@ -312,147 +349,3 @@ def bootstrap_sigma_profile(effects, B=BOOT_B, seed=BOOT_SEED, eps=None):
             else [float("nan")] * 3
     return ({k: pct(acc[k]) for k in (*keys, "tau")},
             float(np.mean(floors)) if floors else 1.0)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# moment-prior Bayesian estimator: reparametrize the DFE by its moments (E, V, sigma).
-# The moment-locked sigma_profile is the rho->0 (delta-prior) limit of this. Here E and V
-# float near their sample values (Gaussian priors, std = rho*|measured|) and sigma gets a
-# half-normal (scale = sigma_max), so r is NO LONGER rigidly slaved to the sample variance.
-# Each (E, V, sigma) maps to an FGM triple by the same inversion the sigma_profile uses:
-#     n = 2|E|/sigma^2,  s0 = (V/sigma^2 - |E|)/2,  r = sqrt(2 s0),
-# so the same fgm_bin_loglik (ε-convolved) scores it. Uncertainty is read straight off the
-# normalized 3-D posterior grid (MAP + marginal credible intervals) -- no bootstrap.
-# ══════════════════════════════════════════════════════════════════════════════
-NE_GRID = 41                 # E-axis grid points (around the sample mean)
-NV_GRID = 41                 # V-axis grid points (around the sample variance)
-NSIG_GRID = 160              # sigma-axis grid points
-PRIOR_SPAN = 4.0             # grid half-width in units of the prior std
-RHO_DEFAULT = 0.2            # shared relative prior width (std = rho*|measured|)
-
-
-def _tau_grid(n, sigma, r):
-    """Vectorized :func:`_tau`; nan where sigma<=0, r<=0, non-finite, or n->1."""
-    n, sigma, r = np.broadcast_arrays(np.asarray(n, float), np.asarray(sigma, float),
-                                      np.asarray(r, float))
-    out = np.full(n.shape, np.nan)
-    denom1 = (n - 1.0) * sigma * sigma
-    ok = (np.isfinite(n) & np.isfinite(sigma) & np.isfinite(r)
-          & (sigma > 0.0) & (r > 0.0) & (np.abs(denom1) > 1e-12))
-    with np.errstate(divide="ignore", invalid="ignore"):
-        tau1 = 2.0 * r * r / denom1                       # diffusive / curvature scale
-        tau2 = np.sqrt(2.0 / np.pi) * r / sigma            # ballistic / drift scale
-        inv = 1.0 / tau1 + 1.0 / tau2
-        val = np.where(np.abs(inv) > 1e-12, 1.0 / inv, np.nan)
-    out[ok] = val[ok]
-    return out
-
-
-def _weighted_pctl(vals, w, qs=(2.5, 50.0, 97.5)):
-    """Weighted percentiles of ``vals`` with weights ``w`` (flattened; non-finite/0-weight
-    entries dropped). Used for posterior marginal credible intervals off the grid."""
-    vals = np.asarray(vals, float).ravel()
-    w = np.asarray(w, float).ravel()
-    m = np.isfinite(vals) & np.isfinite(w) & (w > 0.0)
-    if not m.any():
-        return [float("nan")] * len(qs)
-    vals, w = vals[m], w[m]
-    order = np.argsort(vals)
-    vals, cw = vals[order], np.cumsum(w[order])
-    cw = cw / cw[-1]
-    return [float(np.interp(q / 100.0, cw, vals)) for q in qs]
-
-
-def moment_prior_map(effects, rho=RHO_DEFAULT, eps=None, full=False):
-    """MAP + posterior credible intervals of the FGM DFE under moment priors.
-
-    Reparametrizes by (E, V, sigma): given a triple, n=2|E|/sigma^2,
-    s0=(V/sigma^2-|E|)/2, r=sqrt(2 s0). Priors: E~N(Ehat,(rho|Ehat|)^2),
-    V~N(Vhat,(rho Vhat)^2) with Ehat, Vhat the sample mean and (ε-deconvolved) variance,
-    and sigma~HalfNormal(scale=sigma_max=sqrt(Vhat/|Ehat|)). The MAP and marginal
-    2.5/50/97.5 credible intervals of (n, sigma, r, s0, tau) are read off the normalized
-    3-D posterior grid. ``eps`` defaults to MEAS_ERR (sample variance deconvolved). The
-    ``edge`` flag is True when the MAP sits on a grid boundary (grid too narrow).
-    """
-    if eps is None:
-        eps = MEAS_ERR
-    e = np.asarray(effects, float)
-    Ehat = float(e.mean())
-    absEhat = abs(Ehat)
-    Vhat = max(float(e.var()) - eps * eps, 1e-12)          # deconvolve measurement error
-    sig_max = float(np.sqrt(Vhat / absEhat)) if absEhat > 0.0 else 0.0
-    out = {"E": Ehat, "V": Vhat, "sigma_max": sig_max, "rho": float(rho),
-           "n_e": float(2.0 * Ehat * Ehat / Vhat) if Vhat > 0.0 else float("nan"),
-           "map": {k: float("nan") for k in ("E", "V", "sigma", "n", "s0", "r")},
-           "ci": {k: [float("nan")] * 3 for k in ("n", "sigma", "r", "s0", "tau")},
-           "edge": True}
-    if not (absEhat > 0.0 and sig_max > 0.0 and rho > 0.0):
-        return out
-
-    # ── grids (E kept strictly negative; V kept positive) ──────────────────────
-    sdE, sdV = rho * absEhat, rho * Vhat
-    Egrid = np.linspace(Ehat - PRIOR_SPAN * sdE, min(Ehat + PRIOR_SPAN * sdE, -1e-9), NE_GRID)
-    Vgrid = np.linspace(max(Vhat - PRIOR_SPAN * sdV, 1e-12), Vhat + PRIOR_SPAN * sdV, NV_GRID)
-    sig_lo = max(sig_max / 12.0, float(np.sqrt(2.0 * absEhat / N_CAP)))
-    sig_hi = sig_max * 1.05                                 # sigma_max is the s0=0 edge
-    if sig_lo >= sig_hi:
-        sig_lo = sig_hi / 12.0
-    Sgrid = np.linspace(sig_lo, sig_hi, NSIG_GRID)
-
-    # (E, V) plane, shared across sigma slices
-    absE_col = -Egrid                                      # |E| on the negative E grid
-    EE, VV = np.meshgrid(absE_col, Vgrid, indexing="ij")   # (NE, NV)
-    Eg2, Vg2 = np.meshgrid(Egrid, Vgrid, indexing="ij")
-    lp_EV = -0.5 * ((Eg2 - Ehat) / sdE) ** 2 - 0.5 * ((Vg2 - Vhat) / sdV) ** 2
-
-    p = _prep(e)
-    logpost = np.full((NE_GRID, NV_GRID, NSIG_GRID), -np.inf)
-    with measurement_error(eps):
-        for k, sig in enumerate(Sgrid):
-            s2 = sig * sig
-            n = 2.0 * EE / s2
-            s0 = 0.5 * (VV / s2 - EE)
-            valid = (s0 >= 0.0) & (n >= N_FLOOR) & (n <= N_CAP)
-            if not valid.any():
-                continue
-            r = np.sqrt(2.0 * np.clip(s0, 0.0, None))
-            ll = np.full(EE.shape, -np.inf)
-            nv = n[valid]
-            llv = cmn_fgm.fgm_bin_loglik(p["counts"], p["edges"], nv,
-                                         np.full(nv.shape, sig), r[valid])
-            ll[valid] = np.where(np.isfinite(llv), llv, -np.inf)
-            lp_sig = -0.5 * (sig / sig_max) ** 2           # half-normal, scale = sigma_max
-            logpost[:, :, k] = ll + lp_EV + lp_sig
-    if not np.isfinite(logpost).any():
-        return out
-
-    iE, iV, iS = np.unravel_index(int(np.argmax(logpost)), logpost.shape)
-    Emap, Vmap, smap = float(Egrid[iE]), float(Vgrid[iV]), float(Sgrid[iS])
-    absEmap = -Emap
-    nmap = 2.0 * absEmap / (smap * smap)
-    s0map = max(0.5 * (Vmap / (smap * smap) - absEmap), 0.0)
-    rmap = float(np.sqrt(2.0 * s0map))
-    out["map"] = {"E": Emap, "V": Vmap, "sigma": smap, "n": float(nmap),
-                  "s0": float(s0map), "r": rmap}
-    out["edge"] = bool(iS in (0, NSIG_GRID - 1) or iE in (0, NE_GRID - 1)
-                       or iV in (0, NV_GRID - 1))
-
-    # ── marginal credible intervals off the normalized posterior ───────────────
-    post = np.exp(logpost - logpost.max())
-    post = np.where(np.isfinite(post), post, 0.0)
-    absE3 = (-Egrid)[:, None, None]
-    V3 = Vgrid[None, :, None]
-    S3 = Sgrid[None, None, :]
-    n3 = 2.0 * absE3 / (S3 * S3)
-    s03 = np.clip(0.5 * (V3 / (S3 * S3) - absE3), 0.0, None)
-    r3 = np.sqrt(2.0 * s03)
-    quant = {"n": np.broadcast_to(n3, post.shape),
-             "sigma": np.broadcast_to(S3, post.shape),
-             "s0": np.broadcast_to(s03, post.shape),
-             "r": np.broadcast_to(r3, post.shape),
-             "tau": _tau_grid(n3, S3, r3)}
-    out["ci"] = {k: _weighted_pctl(v, post) for k, v in quant.items()}
-    if full:
-        out["_grids"] = {"E": Egrid, "V": Vgrid, "sigma": Sgrid}
-        out["_logpost"] = logpost
-    return out

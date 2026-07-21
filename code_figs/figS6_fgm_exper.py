@@ -1,6 +1,6 @@
 r"""Fisher's Geometric Model DFE fit to ancestor genotypes -> figS6_exper_bayes.pdf.
 
-For each ancestor DFE (Couce 0K/2K, the Ascensao R's, Limdi REL606/REL607) we fit the
+For each ancestor DFE (Couce 0K/2K, Limdi REL606/REL607) we fit the
 analytic isotropic FGM distribution of fitness effects in LOG-fitness (the selection
 coefficient competition assays measure):
 
@@ -32,12 +32,13 @@ deconvolved) describes the true, de-noised DFE.
 
 Robustness: the strongly-deleterious extremes are mostly lethals / essential-gene knockouts
 FGM does not model, so a small lower-tail fraction is dropped; the beneficial tail is kept.
-See the TRIM_* config.
+See the TRIMS array (one (frac_del, frac_ben) row per dataset).
 
 Outputs:
-    figs_paper/figS6_exper_bayes.pdf       per-clone data + moment-locked FGM fit (the figure)
-    data/fgm_dfe_sigma_profile.json        per-DFE summaries + bootstrap CIs
-    data/fgm_dfe_sigma_profile_params.txt  human-readable parameter table
+    figs_paper/figS6_exper_bayes.pdf           per-clone data + moment-locked FGM fit (the figure)
+    figs_paper/figS6_sigma_loglik_profile.pdf  per-clone sigma likelihood profile (bimodality check)
+    data/fgm_dfe_sigma_profile.json            per-DFE summaries + bootstrap CIs
+    data/fgm_dfe_sigma_profile_params.txt      human-readable parameter table
 
 Run from anywhere:  python code_figs/figS6_fgm_exper.py
 """
@@ -59,7 +60,7 @@ from cmn import cmn_fgm
 # Data loaders + the moment-locked sigma-profile fit live in cmn_fgm_exper so the parameter
 # table (TableS3_fgm_fit_params.py) shares one implementation with this figure.
 from cmn.cmn_fgm_exper import (  # noqa: E402  (shared fit + loaders; figure code stays here)
-    load_couce, load_asencao, load_limdi, sigma_profile, bootstrap_sigma_profile,
+    load_couce, load_limdi, sigma_profile, bootstrap_sigma_profile,
     _tau, _model_pdf, ORDER, MEAS_ERR, BOOT_B, FLOOR_FRAC_FLAG,
 )
 
@@ -68,6 +69,7 @@ FIGS = os.path.join(REPO_DIR, "figs_paper")
 SIGMA_JSON = os.path.join(DATA, "fgm_dfe_sigma_profile.json")
 SIGMA_TXT = os.path.join(DATA, "fgm_dfe_sigma_profile_params.txt")
 FIG_PATH = os.path.join(FIGS, "figS6_exper_bayes.pdf")
+FIG_PROFILE_PATH = os.path.join(FIGS, "figS6_sigma_loglik_profile.pdf")
 
 # House style (matches fig1/fig4/figS3/figS4/figSX_peak_dfe_bayes): sans-serif, large
 # axis labels, mid-size ticks/legends.
@@ -78,7 +80,7 @@ mpl.rcParams.update({"axes.labelsize": 16, "axes.titlesize": 16,
 TITLE_FS = 16                # per-panel clone/title text
 LABEL_FS = 16               # x-axis label
 TICK_FS = 16               # tick labels
-ANNOT_FS = 11              # in-panel parameter box / annotations
+ANNOT_FS = 12              # in-panel parameter box / annotations
 XLABEL_S = r"Fitness effect $(s)$"   # paper convention is "Fitness effect $(\Delta)$"
 _CMR = sns.color_palette("CMRmap", 5)
 DATA_FILL = (0.5, 0.5, 0.5, 0.35)
@@ -89,22 +91,19 @@ MODEL_COLOR = _CMR[2]
 # Figure: per-clone data histogram + moment-locked FGM fit (figS6_exper_bayes.pdf)
 # Display names: Couce 0K is the REL607 ancestor of the Ara+2 line, so it and the Limdi
 # REL607 are two measurements of REL607 -> (1)/(2); Couce 2K is the evolved Ara+2 at 2000
-# generations. PQT/SLR (not FGM-shaped) are dropped from the figure.
+# generations.
 # ══════════════════════════════════════════════════════════════════════════════
 SIGMA_FIG_NAMES = {"Couce 0K": "REL607 (1)", "Couce 2K": "ARA+2 (2K)",
-                   "Asc GHI R": "GHI R", "Asc MNO R": "MNO R",
                    "REL606": "REL606", "REL607": "REL607 (2)"}
-SIGMA_FIG_DROP = ("Asc PQT R", "Asc SLR R")
-# Panel layout (row-major): row 1 = REL607 (1), REL607 (2), ARA+2 (2K);
-#                           row 2 = REL606, MNO, GHI.
-SIGMA_FIG_ORDER = ["Couce 0K", "REL607", "Couce 2K",
-                   "REL606", "Asc MNO R", "Asc GHI R"]
+# Panel layout (2x2, row-major): row 1 = REL607 (1), REL607 (2);
+#                                row 2 = ARA+2 (2K), REL606.
+SIGMA_FIG_ORDER = ["Couce 0K", "REL607", "Couce 2K", "REL606"]
 
 
 def plot_ancestors_sigma(results, data_map, order, path):
     """Per-clone panel: data histogram + moment-locked FGM fit, with a parameter box."""
-    names = [nm for nm in SIGMA_FIG_ORDER if nm not in SIGMA_FIG_DROP]
-    ncol, nrow = 3, 2
+    names = list(SIGMA_FIG_ORDER)
+    ncol, nrow = 2, 2
     fig, axes = plt.subplots(nrow, ncol, figsize=(3.7 * ncol, 3.0 * nrow), squeeze=False)
     axes = axes.ravel()
     for ax, name in zip(axes, names):
@@ -137,6 +136,58 @@ def plot_ancestors_sigma(results, data_map, order, path):
         ax.set_yticks([])
         ax.tick_params(labelsize=TICK_FS)
         for sp in ("top", "right", "left"):
+            ax.spines[sp].set_visible(False)
+    for ax in axes[len(names):]:
+        ax.axis("off")
+    fig.tight_layout()
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved {path}")
+
+
+def plot_sigma_profiles(profiles, order, path):
+    """Per-clone sigma likelihood profile along the moment-locked curve (bimodality check).
+
+    Plots the RELATIVE profile likelihood L(sigma)/L_max vs sigma -- the exact 1-D slice
+    sigma_profile maximises (with n, s0, r locked to the sample moments at each sigma). A
+    single clean peak => sigma is well identified; two humps / a shoulder => bimodal or a
+    flat ridge; a peak jammed against sigma_max (the s0=0 edge) or the small-sigma end
+    => the MAP is at a boundary. sigma_hat (MAP) and sigma_max are marked.
+    """
+    names = list(SIGMA_FIG_ORDER)
+    ncol, nrow = 2, 2
+    fig, axes = plt.subplots(nrow, ncol, figsize=(3.7 * ncol, 3.0 * nrow), squeeze=False)
+    axes = axes.ravel()
+    for ax, name in zip(axes, names):
+        pr = profiles[name]
+        sig, post = pr["sigma"], pr["post"]
+        ax.set_title(SIGMA_FIG_NAMES.get(name, name), fontsize=TITLE_FS, color="black")
+        ax.set_xlabel(r"$\sigma$", fontsize=LABEL_FS)
+        if sig is None or post is None or not np.isfinite(post).any() or post.max() <= 0.0:
+            ax.text(0.5, 0.5, "no profile\n(floored / unfit)", transform=ax.transAxes,
+                    ha="center", va="center", fontsize=ANNOT_FS, color="0.4")
+            ax.set_yticks([])
+            continue
+        rel = post / post.max()                       # exp(loglik - max loglik): peak = 1
+        ax.plot(sig, rel, color=MODEL_COLOR, lw=2.0)
+        ax.fill_between(sig, 0.0, rel, color=MODEL_COLOR, alpha=0.12)
+        ax.plot(pr["sigma_map"], 1.0, "o", color=MODEL_COLOR, ms=5, zorder=5)  # MAP (razor
+        #                                        spikes pinned at an edge stay visible here)
+        ax.axvline(pr["sigma_map"], color="k", lw=1.0, ls="--", label=r"$\hat{\sigma}$")
+        ax.set_xlim(float(sig.min()), float(sig.max()))   # zoom to the sigma grid so the
+        smax = pr["sigma_max"]                             # profile shape fills the panel
+        if np.isfinite(smax) and smax > 0.0:
+            if smax <= float(sig.max()):                  # sigma_max in range -> draw it
+                ax.axvline(smax, color="0.55", lw=0.9, ls=":", label=r"$\sigma_{\max}$")
+            else:                                         # off to the right -> annotate
+                ax.text(0.97, 0.55, rf"$\sigma_{{\max}}={smax:.2g}\!\rightarrow$",
+                        transform=ax.transAxes, ha="right", va="center",
+                        fontsize=ANNOT_FS - 2, color="0.5")
+        ax.set_ylabel("rel. likelihood", fontsize=ANNOT_FS)
+        ax.set_ylim(0.0, 1.05)
+        ax.tick_params(labelsize=TICK_FS)
+        ax.legend(fontsize=ANNOT_FS - 2, loc="upper right", frameon=False)
+        for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
     for ax in axes[len(names):]:
         ax.axis("off")
@@ -184,12 +235,14 @@ def write_sigma_profile_txt(results, order, path):
 
 
 def run_sigma_profile(specs, data_map, order):
-    """Moment-locked sigma-profile fit + bootstrap for the ancestors; writes the figure."""
+    """Moment-locked sigma-profile fit + bootstrap for the ancestors; writes the data + fit
+    figure and the per-clone sigma likelihood-profile diagnostic."""
     print(f"1-D sigma profile (moment-locked n,s0,r); bootstrap B={BOOT_B}, eps={MEAS_ERR}")
     print(f"{'ancestor':<11}{'N':>6}{'skew':>7}  {'r [95% boot CI]':<26}{'n':>6}"
           f"{'s0':>9}{'sigma':>9}{'floor%':>8}  id?")
     print("-" * 100)
     results = {}
+    profiles = {}
     for name, eff in specs:
         f = sigma_profile(eff, full=True)
         boot, floor_frac = bootstrap_sigma_profile(eff)
@@ -206,6 +259,8 @@ def run_sigma_profile(specs, data_map, order):
             "map": {"sigma": f["sigma"], "n": f["n"], "s0": f["s0"], "r": f["r"]},
             "boot": boot, "floor_frac": floor_frac, "identified": identified,
         }
+        profiles[name] = {"sigma": f.get("_sig"), "post": f.get("_post"),
+                          "sigma_map": f["sigma"], "sigma_max": f["sigma_max"]}
     with open(SIGMA_JSON, "w") as fh:
         json.dump({"per_dfe": results,
                    "config": {"meas_err": MEAS_ERR, "boot_B": BOOT_B,
@@ -214,17 +269,40 @@ def run_sigma_profile(specs, data_map, order):
     print(f"\nSaved {SIGMA_JSON}")
     write_sigma_profile_txt(results, order, SIGMA_TXT)
     plot_ancestors_sigma(results, data_map, order, FIG_PATH)
+    plot_sigma_profiles(profiles, order, FIG_PROFILE_PATH)
     return results
 
 
-def ancestor_dfes():
-    """The ancestor DFEs to fit: Couce 0K & 2K, the Ascensao R's, Limdi REL606 & REL607."""
-    couce = dict(load_couce())                 # 0K, 2K, 15K
-    asc = dict(load_asencao())                 # all L/R/S
-    limdi = load_limdi()                        # kept clones (dict)
-    specs = [("Couce 0K", couce["0K"]), ("Couce 2K", couce["2K"])]
-    specs += [(k, v) for k, v in sorted(asc.items()) if k.endswith(" R")]
-    specs += [("REL606", limdi["REL606"]), ("REL607", limdi["REL607"])]
+# Per-dataset tail trims (frac_deleterious, frac_beneficial) -- one row per dataset, in
+# ancestor_dfes() order (Couce 0K, Couce 2K, REL606, REL607). Handed straight to the
+# cmn_fgm_exper loaders (see _resolve_trims), so the trims live here with the figure.
+TRIMS = np.array([
+    [0.02, 0.001],   # Couce 0K  -> REL607 (1)
+    [0.02, 0.001],   # Couce 2K  -> ARA+2 (2K)
+    [0.1, 0.001],   # REL606
+    [0.1, 0.001],   # REL607 (2)
+])
+
+# TRIMS = np.array([
+#     [0.09, 0.001],   # Couce 0K  -> REL607 (1)
+#     [0.09, 0.001],   # Couce 2K  -> ARA+2 (2K)
+#     [0.15, 0.005],   # REL606
+#     [0.16, 0.005],   # REL607 (2)
+# ])
+
+
+def ancestor_dfes(trims=TRIMS):
+    """The ancestor DFEs to fit: Couce 0K & 2K, Limdi REL606 & REL607.
+
+    ``trims`` is a 2-D array of (frac_deleterious, frac_beneficial), one row per dataset in
+    the order (Couce 0K, Couce 2K, REL606, REL607); each row is passed to the matching
+    cmn_fgm_exper loader as its tail trim.
+    """
+    trims = np.asarray(trims, float)
+    couce = dict(load_couce(trim=trims[0:2], labels=("0K", "2K")))
+    limdi = load_limdi(populations=["REL606", "REL607"], trim=trims[2:4])
+    specs = [("Couce 0K", couce["0K"]), ("Couce 2K", couce["2K"]),
+             ("REL606", limdi["REL606"]), ("REL607", limdi["REL607"])]
     return specs
 
 

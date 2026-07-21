@@ -186,8 +186,7 @@ def extract_nk_ridge_data(nk_data):
 
 def load_fgm_reps():
     for path in [
-        "../data/FGM/fgm_rps1000_n4_sig0.05_m2000.pkl",
-        "../data/FGM/fgm_rps1000_n4_sig0.05.pkl",
+        "../data/FGM/fgm_rps100_n4_sig0.05.pkl",
     ]:
         if os.path.exists(path):
             with open(path, "rb") as f:
@@ -204,7 +203,7 @@ def load_pspin_data():
 
 
 def load_nk_single_k():
-    path = "../data/NK/N_2000_K_8_repeats_100.pkl"
+    path = "../data/NK/N_700_K_4_repeats_10.pkl"
     if os.path.exists(path):
         with open(path, "rb") as f:
             return pickle.load(f)
@@ -264,7 +263,7 @@ def main():
     waterfall_plot_panel(ax2, pspin_datasets, CMR_COLORS, PERCENTS,
                          title="p-spin", xlim=(-15.0, 13.0))
     waterfall_plot_panel(ax3, nk_datasets, CMR_COLORS, PERCENTS,
-                         title="NK", xlim=(-25.0, 18.0))
+                         title="NK", xlim=(-50.0, 40.0))
 
     label_kw = dict(fontsize=18, fontweight="bold", va="bottom", ha="left")
     for panel_label, ax in zip(["A", "B", "C"], [ax1, ax2, ax3]):

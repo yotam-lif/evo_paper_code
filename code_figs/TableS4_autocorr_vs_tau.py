@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-r"""Table S4: FGM-predicted vs observed DFE-autocorrelation decay for the Ara+ lineage.
+r"""Table S4: FGM-predicted vs observed DFE-autocorrelation decay for both adaptive arms.
 
-For every consecutive transition in the Ara+ (REL607-descended) lineage we cross the FGM
-scrambling timescale ``tau`` -- fit to the *ancestor* DFE's shape (from
-``data/TableS3_fgm_fit_params.csv``) -- against the DFE autocorrelation actually *observed*
-between the two genotypes (the Pearson ``r`` from ``data/TableS2_pspin.csv``).
+For every consecutive transition in the Ara+ (REL607-descended) and Ara- (REL606-descended)
+lineages we cross the FGM scrambling timescale ``tau`` -- fit to the *ancestor* DFE's shape
+(from ``data/TableS3_fgm_fit_params.csv``) -- against the DFE autocorrelation actually
+*observed* between the two genotypes (the Pearson ``r`` from ``data/TableS2_pspin.csv``).
 
 The p-spin / FGM scrambling picture predicts the DFE autocorrelation between two genotypes
 separated by ``t`` fixed mutations decays as
@@ -17,17 +17,21 @@ compare against the REAL, measured Pearson ``r`` (its log ``ln r``). Equivalentl
 measured ``r`` into an observed decay timescale ``tau_obs = -t / ln r`` and read it against the
 FGM ``tau``.
 
-Datasets -- the Ara+ lineage only (REL607 and its descendants):
-    * Couce Ara+ timepoints:  0K (== the REL607 ancestor) -> 2K -> 15K.
-    * Limdi LTEE:             REL607 (ancestor) -> each evolved Ara+N.
+Datasets -- both arms:
+    Ara+ lineage (REL607 and its descendants):
+        * Couce Ara+ timepoints:  0K (== the REL607 ancestor) -> 2K -> 15K.
+        * Limdi LTEE:             REL607 (ancestor) -> each evolved Ara+N.
+    Ara- lineage (REL606 and its descendants):
+        * Limdi LTEE:             REL606 (ancestor) -> each evolved Ara-N.
 
-``tau`` is always the FGM tau of the ANCESTOR DFE -- "REL607 (both)": Couce 0K and Limdi
-REL607, plus Couce 2K for the 2K->15K interval -- the landscape timescale where the adaptive
-walk starts. It is read straight from ``data/TableS3_fgm_fit_params.csv``; ``r`` and ``t``
-(== n_fixed) come from ``data/TableS2_pspin.csv``.
+``tau`` is always the FGM tau of the ANCESTOR DFE -- Couce 0K and Limdi REL607 (plus Couce 2K
+for the 2K->15K interval) for the Ara+ arm, and Limdi REL606 for the Ara- arm -- the landscape
+timescale where the adaptive walk starts. It is read straight from
+``data/TableS3_fgm_fit_params.csv``; ``r`` and ``t`` (== n_fixed) come from
+``data/TableS2_pspin.csv``.
 
     data/TableS4_autocorr_vs_tau.csv
-    columns: lineage, transition, t, r_real, ln_r_real, tau_anc, tau_obs,
+    columns: arm, lineage, transition, t, r_real, ln_r_real, tau_anc, tau_obs,
              ln_r_exp, r_exp, ratio_anc_obs
 
 where, per transition:
@@ -58,20 +62,28 @@ TABLE_S3 = os.path.join(DATA_DIR, "TableS3_fgm_fit_params.csv")  # FGM tau per D
 
 OUT_CSV = os.path.join(DATA_DIR, "TableS4_autocorr_vs_tau.csv")
 
-COLUMNS = ["lineage", "transition", "t", "r_real", "ln_r_real",
+COLUMNS = ["arm", "lineage", "transition", "t", "r_real", "ln_r_real",
            "tau_anc", "tau_obs", "ln_r_exp", "r_exp", "ratio_anc_obs"]
 
 
-def is_ara_plus(dataset):
-    """Keep only the Ara+ (REL607-descended) lineage rows of TableS2_pspin.csv."""
-    return dataset == "Couce Ara+2" or dataset.startswith("Limdi Ara+")
+def lineage_arm(dataset):
+    """Adaptive arm ('Ara+' / 'Ara-') for a TableS2_pspin.csv row, or None to skip it.
+
+    Ara+ (REL607-descended): Couce Ara+2 timepoints and Limdi Ara+N.
+    Ara- (REL606-descended): Limdi Ara-N.
+    """
+    if dataset == "Couce Ara+2" or dataset.startswith("Limdi Ara+"):
+        return "Ara+"
+    if dataset.startswith("Limdi Ara-"):
+        return "Ara-"
+    return None
 
 
 def tau_key(endpoint):
     """Map a transition's ANCESTOR endpoint to its TableS3 ``dataset`` name.
 
     Couce timepoints are written "0K"/"2K" in the transition but "Couce 0K"/"Couce 2K" in
-    TableS3; the Limdi ancestor ("REL607") already matches TableS3 verbatim.
+    TableS3; the Limdi ancestors ("REL606"/"REL607") already match TableS3 verbatim.
     """
     return f"Couce {endpoint}" if endpoint in ("0K", "2K", "15K") else endpoint
 
@@ -83,21 +95,27 @@ def load_tau_lookup():
 
 
 def load_transitions():
-    """Ara+ lineage transitions from TableS2_pspin.csv, with the ancestor resolved to a tau key."""
+    """Ara+ and Ara- lineage transitions from TableS2_pspin.csv, ancestor resolved to a tau key.
+
+    Ara+ rows are returned first, then Ara-; within each arm the TableS2 file order is kept.
+    """
     df = pd.read_csv(TABLE_S2)
     rows = []
     for _, r in df.iterrows():
-        if not is_ara_plus(str(r["dataset"])):
+        arm = lineage_arm(str(r["dataset"]))
+        if arm is None:
             continue
-        transition = str(r["transition"])                   # "0K -> 2K" | "REL607 -> Ara+1"
+        transition = str(r["transition"])   # "0K -> 2K" | "REL607 -> Ara+1" | "REL606 -> Ara-1"
         anc_ep = transition.split("->")[0].strip()
         rows.append({
+            "arm": arm,
             "lineage": "Couce" if str(r["dataset"]).startswith("Couce") else "Limdi",
             "transition": transition,
             "anc_key": tau_key(anc_ep),
             "t": int(r["n_fixed"]),
             "r_real": float(r["pearson_r"]),
         })
+    rows.sort(key=lambda row: 0 if row["arm"] == "Ara+" else 1)   # Ara+ block, then Ara-
     return rows
 
 
@@ -120,6 +138,7 @@ def build_rows():
                                         and tau_obs != 0.0) else float("nan")
 
         rows.append({
+            "arm": tr["arm"],
             "lineage": tr["lineage"],
             "transition": tr["transition"],
             "t": t,
@@ -136,7 +155,7 @@ def build_rows():
 
 def _fmt(key, val):
     """CSV cell formatting: strings/ints verbatim, floats to 6 significant figures."""
-    if key in ("lineage", "transition", "t"):
+    if key in ("arm", "lineage", "transition", "t"):
         return val
     return f"{float(val):.6g}"
 
@@ -166,12 +185,12 @@ def main(argv=None):
     rows = build_rows()
     write_table(rows, args.out_csv)
 
-    header = (f"{'transition':<16}{'t':>6}{'r_real':>9}{'ln r':>9}"
+    header = (f"{'arm':<6}{'transition':<16}{'t':>6}{'r_real':>9}{'ln r':>9}"
               f"{'tau_anc':>9}{'tau_obs':>9}{'exp(-t/ta)':>12}{'-t/ta':>9}{'ta/obs':>9}")
     print(header)
     print("-" * len(header))
     for row in rows:
-        print(f"{row['transition']:<16}{row['t']:>6}"
+        print(f"{row['arm']:<6}{row['transition']:<16}{row['t']:>6}"
               f"{_g(row['r_real'], 9, 3)}{_g(row['ln_r_real'], 9, 3)}"
               f"{_g(row['tau_anc'], 9, 3)}{_g(row['tau_obs'], 9, 3)}"
               f"{_g(row['r_exp'], 12, 3)}{_g(row['ln_r_exp'], 9, 3)}"
