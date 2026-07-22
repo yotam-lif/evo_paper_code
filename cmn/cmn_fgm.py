@@ -80,21 +80,14 @@ class Fisher:
         """
         return float(np.exp(self.compute_log_fitness(r)))
 
-    def compute_dfe(self, r, sel_coeff=False):
+    def compute_dfe(self, r):
         """
         Compute distribution of fitness effects at phenotype r.
         Returns array of w(r + delta_i) - w(r) for each pre-sampled delta.
-
-        If ``sel_coeff`` is True, each absolute effect is divided by the current
-        fitness w(r), returning selection coefficients s_i = (w(r+delta_i) - w(r)) / w(r)
-        instead of raw fitness differences.
         """
         r = np.asarray(r, dtype=float)
         w0 = self.compute_fitness(r)
-        dfe = np.array([self.compute_fitness(r + delta) - w0 for delta in self.deltas])
-        if sel_coeff:
-            dfe = dfe / w0
-        return dfe
+        return np.array([self.compute_fitness(r + delta) - w0 for delta in self.deltas])
 
     def compute_bdfe(self, dfe):
         """

@@ -13,18 +13,17 @@ from cmn.cmn_plots import create_overlapping_dfes_sim, create_segben_sim
 from cmn import cmn_pspin
 
 
-# The stored p-spin/NK datasets predate the selection-coefficient update, so their DFEs
-# are raw fitness differences ΔF. Here we transform each DFE into selection
-# coefficients s_i = ΔF_i / F(σ), where F(σ) is the fitness at that point in the walk
-# and the fitness offset is chosen so that the *initial* configuration has fitness 1
-# (matching cmn.compute_fit_off across the models). Per model:
-#   * FGM   : recomputed live via Fisher.compute_dfe(r, sel_coeff=True) (ratio w'/w - 1).
-#   * p-spin: recomputed live from the stored landscape J via
-#             cmn_pspin.compute_dfe(sigma, J, f_off, sel_coeff=True); the offset
-#             pins the initial fitness to 1 (cmn_pspin.compute_fit_off).
-#   * NK    : the landscape is NOT stored, only the precomputed ΔF DFEs and flip
-#             sequence. The fitness is reconstructed exactly from the walk:
-#             F(σ_t) = 1 + Σ_{k<t} dfes[k][flip_seq[k]]  (the initial fitness is 1).
+# Every DFE is plotted as the raw (absolute) fitness effect ΔF, NOT as a selection
+# coefficient -- no effect is divided by the fitness at that point in the walk. Per model:
+#   * FGM   : ΔF_i = w(r + delta_i) - w(r), taken straight from the live SSWM walk
+#             (dfes[k] is the DFE at phenotype traj[k]).
+#   * p-spin: ΔF_i for flipping each spin i, recomputed from the stored landscape J
+#             via cmn_pspin.compute_dfe(sigma, J).
+#   * NK    : the landscape is NOT stored, only the precomputed ΔF DFEs. These pickles
+#             predate cmn_nk's switch to an extensive fitness, so they hold INTENSIVE
+#             effects (fitness = mean of f_i over loci), ~N times smaller than the
+#             p-spin's extensive sum over interactions. They are multiplied by N to put
+#             both models on the same scale -- see the note at the NK data block.
 
 
 def auto_xlim(dfe1, dfe2, q=99.0):
@@ -47,21 +46,21 @@ FGM_M = 4 * 10 ** 3
 FGM_RANDOM_STATE = 1
 FGM_T1 = 0.8
 FGM_T2 = 0.9
-FGM_XLIM = 0.08  # now derived automatically from the selection-coefficient data
+FGM_XLIM = 0.08  # x-axis half-width of the fitness-effect (ΔF) box
 
-# SK parameters
+# p-spin parameters
 SK_FILE = "N2000_P2_pure_repeats10.pkl"
 SK_ENTRY = 1
-SK_T1 = 0.3
-SK_T2 = 0.55
-SK_XLIM = 1.1 * 10 **-2  # now derived automatically from the selection-coefficient data
+SK_T1 = 0.05
+SK_T2 = 0.5
+SK_XLIM = 12  # x-axis half-width of the fitness-effect (ΔF) box
 
 # NK parameters
 NK_FILE = "N_2000_K_32_repeats_100.pkl"
 NK_ENTRY = 2
-NK_T1 = 0.1
+NK_T1 = 0.05
 NK_T2 = 0.5
-NK_XLIM = 2 * 10 ** -2  # now derived automatically from the selection-coefficient data
+NK_XLIM = 40  # x-axis half-width of the fitness-effect (ΔF) box, after the xN rescale
 
 # Output parameters
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "figs_paper")
@@ -126,10 +125,10 @@ fgm = Fisher(n=FGM_N, sigma=FGM_SIGMA, m=FGM_M, random_state=FGM_RANDOM_STATE)
 flips, traj, dfes = fgm.relax()
 ind1 = int(FGM_T1 * (len(dfes) - 1))
 ind2 = int(FGM_T2 * (len(dfes) - 1))
-# Recompute as selection coefficients: traj[k] is the phenotype at which dfes[k]
-# was taken, so this reproduces dfes[ind] but as s_i = (w(r+delta_i) - w(r)) / w(r).
-fgm_dfe1 = fgm.compute_dfe(traj[ind1], sel_coeff=True)
-fgm_dfe2 = fgm.compute_dfe(traj[ind2], sel_coeff=True)
+# Raw fitness effects ΔF_i = w(r + delta_i) - w(r); dfes[k] is the DFE recorded at
+# phenotype traj[k] along the walk.
+fgm_dfe1 = dfes[ind1]
+fgm_dfe2 = dfes[ind2]
 
 # SK data
 res_directory = os.path.join(os.path.dirname(__file__), "..", "data", "PSPIN")
@@ -144,11 +143,9 @@ ind1 = int(SK_T1 * (len(flip_seq) - 1))
 ind2 = int(SK_T2 * (len(flip_seq) - 1))
 sig1 = compute_sigma_from_hist(init_sigma, flip_seq, t=ind1)
 sig2 = compute_sigma_from_hist(init_sigma, flip_seq, t=ind2)
-# Offset so the initial configuration has fitness 1, then let compute_dfe divide each
-# effect by the fitness at that time (sel_coeff=True) -> selection coefficients.
-f_off_sk = cmn_pspin.compute_fit_off(init_sigma, J)
-sk_dfe1 = cmn_pspin.compute_dfe(sig1, J, f_off=f_off_sk, sel_coeff=True)
-sk_dfe2 = cmn_pspin.compute_dfe(sig2, J, f_off=f_off_sk, sel_coeff=True)
+# Raw fitness effects ΔF_i for flipping each spin i, at the two points in the walk.
+sk_dfe1 = cmn_pspin.compute_dfe(sig1, J)
+sk_dfe2 = cmn_pspin.compute_dfe(sig2, J)
 
 # NK data
 res_directory = os.path.join(os.path.dirname(__file__), "..", "data", "NK")
@@ -160,13 +157,16 @@ flip_seq = data_entry["flip_seq"]
 dfes = data_entry["dfes"]
 ind1 = int(NK_T1 * (len(flip_seq) - 1))
 ind2 = int(NK_T2 * (len(flip_seq) - 1))
-# The NK landscape is not stored, so reconstruct the fitness from the walk itself.
-# Each accepted flip k changes the fitness by dfes[k][flip_seq[k]], and the initial
-# fitness is pinned to 1, so F(sigma_t) = 1 + sum_{k<t} dfes[k][flip_seq[k]].
-nk_gains = np.array([dfes[k][flip_seq[k]] for k in range(len(flip_seq))])
-nk_fitness = 1.0 + np.concatenate([[0.0], np.cumsum(nk_gains)])  # F(sigma_t), len == len(dfes)
-nk_dfe1 = np.asarray(dfes[ind1]) / nk_fitness[ind1]
-nk_dfe2 = np.asarray(dfes[ind2]) / nk_fitness[ind2]
+# The pickles under data/NK/ were generated BEFORE cmn_nk switched to the extensive
+# convention, so their effects are intensive (fitness = mean of f_i over loci) and ~N
+# times smaller than the p-spin's. Rescale by N to match; each stored DFE holds one entry
+# per locus, so N is just its length.
+# IMPORTANT: cmn_nk.NK.compute_fitness is now EXTENSIVE. If data/NK/ is ever regenerated
+# with the current code its effects are already extensive -- DROP this * nk_n rescale, or
+# they will be inflated by a further factor of N.
+nk_n = len(dfes[ind1])
+nk_dfe1 = np.asarray(dfes[ind1]) * nk_n
+nk_dfe2 = np.asarray(dfes[ind2]) * nk_n
 
 # SK Plots
 create_segben_sim(
