@@ -3,8 +3,7 @@ r"""Shared loaders for the experimental DFE datasets (Couce, Ascensao, Limdi).
 One place to read and clean the raw experimental data, so every analysis script uses the
 same conventions instead of copy-pasting the file parsing:
 
-    code_figs/TableS1_means.py            mean-DFE relative differences
-    code_figs/TableS2_pspin_exper_fit.py  p-spin p/N estimates (matched-DFE correlations)
+    code_figs/TableS1_autocorr.py         DFE autocorrelation across consecutive transitions
     cmn/cmn_fgm_exper.py                  FGM sigma-profile fit (adds tail-trimming on top)
 
 The loaders return the data in the minimal cleaned form each analysis builds on; analysis-
@@ -21,15 +20,17 @@ REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(REPO_DIR, "data")
 ASENCAO_DIR = os.path.join(DATA_DIR, "asencao_dfe_arrays")
 COUCE_DIR = os.path.join(DATA_DIR, "alex_code")
-LIMDI_CSV = os.path.join(
+LIMDI_DIR = os.path.join(
     DATA_DIR, "anurag_data", "Analysis", "Part_3_TnSeq_analysis",
-    "Processed_data_for_plotting", "dfe_data_pandas.csv",
+    "Processed_data_for_plotting",
 )
+LIMDI_META = os.path.join(DATA_DIR, "anurag_data", "Metadata", "all_metadata_REL606.txt")
 
 # ── dataset structure ─────────────────────────────────────────────────────────
 # Couce Ara+2 lineage: three sequenced timepoints (0K == the REL607 ancestor).
 COUCE_FILES = {"0K": "Rfitted_fil.txt", "2K": "2Kfitted_fil.txt", "15K": "15Kfitted_fil.txt"}
 COUCE_INTERVALS = (("0K", "2K"), ("2K", "15K"))          # consecutive transitions
+COUCE_SPAN = ("0K", "15K")                               # the whole lineage, end to end
 
 # Ascensao: per experiment the R (ancestor), L and S (evolved) arrays are index-aligned.
 ASENCAO_BACKGROUNDS = ("L", "R", "S")
@@ -48,12 +49,34 @@ LIMDI_PANEL = (["REL606"] + list(LIMDI_EVOLVED["REL606"])
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Couce et al. -- per-site selection coefficients (fitted1) per timepoint
+# Couce et al. -- per-SEGMENT selection coefficients (fitted1) per timepoint
+#
+# THE UNIT OF ANALYSIS IS NOT AN INSERTION SITE.  Couce et al. "divided each locus into 5
+# segments of equal length and then pooled all insertions in each segment", so one row is a
+# fifth of a gene (or of an intergenic region), pooled over ``abn`` insertion mutants (median
+# 7).  ``alle`` = "<ORF>-<segment 1..5>" is therefore the identity of a row and is unique
+# within a file; ``site`` is just ONE representative coordinate out of the ``abn`` pooled,
+# and since the three libraries were mutagenised independently the representative differs
+# between timepoints for 40% of shared segments.  Match on ``alle``, never on ``site``.
+#
+# Note also that the Couce DFE has NO lethal tail: across all three timepoints exactly one row
+# of 38882 falls below -0.3 (IR2123 at 15K, an intergenic region pooling 2 insertions with
+# sterr1 = 0.056 -- noise, not lethality), and it is not present at 2K so it never enters a
+# matched pair.  Otherwise the deepest segment is -0.23 / -0.24 / -0.21 at 0K / 2K / 15K.  The
+# knockouts that are lethal in DM25 -- amino-acid auxotrophs above all -- are absent from the
+# library rather than filtered out of the analysis.  Of the 163 genes Limdi et al. score at
+# s < -0.3, only 60 appear in the Couce ancestor library at all, at a median of 1 covered
+# segment and 80 reads against 4 segments and 644 reads for the rest; the survivors are the
+# C-terminal insertions that leave the protein functional (serB: -0.50 in Limdi, +0.06 here),
+# a phenomenon the paper itself documents.  Couce values are consequently commensurate only
+# with the Limdi ``s > -0.3`` range, and even there the scales differ (on shared genes of the
+# same strain, s_Limdi ~ 1.4 * s_Couce).
 # ══════════════════════════════════════════════════════════════════════════════
 def _couce_clean(name):
-    """Cleaned Couce frame for one timepoint: fitted1 is the per-site selection coefficient.
+    """Cleaned Couce frame for one timepoint: fitted1 is the per-segment selection coefficient.
 
-    Keep abn > 1, drop NaN / duplicate fits and the -107 failed-fit sentinel.
+    Keep abn > 1, drop NaN / duplicate fits and the -107 failed-fit sentinel.  ``alle`` is
+    unique in the result, so no de-duplication is needed to key on it.
     """
     path = os.path.join(COUCE_DIR, COUCE_FILES[name])
     tab = pd.read_csv(path, sep="\t").dropna(subset=["fitted1"])
@@ -63,17 +86,26 @@ def _couce_clean(name):
     return tab
 
 
-def load_couce_site_series(name):
-    """Couce timepoint as a Series indexed by mutation ``site`` (one effect per site).
+def load_couce_segment_series(name):
+    """Couce timepoint as a Series indexed by ``alle`` (= "<ORF>-<segment 1..5>").
 
-    De-duplicating on site makes the cross-timepoint merge unambiguous (used for matching).
+    ``alle`` is the sub-genic segment the authors' own scripts match on, and the only key
+    that is comparable across independently mutagenised libraries -- see the block comment.
     """
-    tab = _couce_clean(name).drop_duplicates(subset=["site"])
-    return tab.set_index("site")["fitted1"]
+    return _couce_clean(name).set_index("alle")["fitted1"]
+
+
+def load_couce_segment_errors(name):
+    """Couce per-segment standard errors (``sterr1``), indexed by ``alle``.
+
+    Built from the same cleaned frame as :func:`load_couce_segment_series`, so the two are
+    row-aligned and share an index.
+    """
+    return _couce_clean(name).set_index("alle")["sterr1"]
 
 
 def load_couce_effects(name):
-    """Couce timepoint as a bare array of selection coefficients (no per-site de-dup)."""
+    """Couce timepoint as a bare array of per-segment selection coefficients."""
     return _couce_clean(name)["fitted1"].to_numpy(float)
 
 
@@ -100,14 +132,62 @@ def load_asencao_array(exp, background):
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Limdi et al. -- TnSeq gene-knockout DFEs across the LTEE panel
+#
+# We read the .npy matrices, NOT dfe_data_pandas.csv.  That CSV is built in the upstream
+# notebook (Fitness_estimation/fitness_calculations.ipynb, cell 36) with
+#
+#     next1["Fitness estimate"] = s_inverse_var[noness_pop, k, 0]   # numpy -> RangeIndex
+#     next1["Genes"]            = names[noness_pop]                 # Series -> ALIGNS ON INDEX
+#
+# so pandas aligns the gene names on the index and CSV row i gets ``names[i]`` while its
+# fitness value belongs to gene ``noness_pop[i]``.  14% of rows end up with a NaN gene name
+# and the rest are mislabelled -- differently per population, since each has its own
+# ``noness_pop``.  Matching genes across populations by that column therefore pairs genes at
+# the same row *position*, which are the same real gene for only ~0.3-6.5% of rows.
+#
+# The .npy matrices carry no labels: they are indexed by metadata row, identically across
+# populations, so matching on the row index is exact.
 # ══════════════════════════════════════════════════════════════════════════════
-def load_limdi_frame():
-    """Limdi DFE table, keeping only finite fitness estimates."""
-    tab = pd.read_csv(LIMDI_CSV)
-    return tab[np.isfinite(tab["Fitness estimate"])]
+# Column order of the population axis in every Limdi .npy matrix (notebook ``libraries``).
+LIMDI_LIBRARIES = ("REL606", "REL607", "Ara-1", "Ara-2", "Ara-3", "Ara-4", "Ara-5", "Ara-6",
+                   "Ara+1", "Ara+2", "Ara+3", "Ara+4", "Ara+5", "Ara+6")
+# Sentinel written by the upstream notebook wherever a gene has no fitness estimate (too few
+# usable TA sites, or the gene is deleted in that background). Real effects bottom out near
+# -0.75, so a plain ``> LIMDI_MISSING`` test is unambiguous.
+LIMDI_MISSING = -1.0
+
+_LIMDI_CACHE = {}
 
 
-def limdi_gene_series(frame, pop):
-    """Mean fitness effect per gene for one Limdi population (replicate markers pooled)."""
-    sub = frame[frame["Population"] == pop]
-    return sub.groupby("Genes")["Fitness estimate"].mean()
+def load_limdi_arrays():
+    """``(fitness, error, gene_names)`` for the Limdi panel, all aligned on metadata rows.
+
+    ``fitness`` is (n_genes, n_libraries, 2) -- the pseudogene-corrected, inverse-variance
+    weighted effect per Green/Red replicate.  ``error`` is (n_genes, n_libraries), the
+    inverse-variance weighted SEM over the per-TA-site estimates of both replicates (the
+    ``_inv`` variant, which is the one the source paper reports).  Missing entries are
+    ``LIMDI_MISSING`` in both.  ``gene_names`` is the (n_genes,) metadata name column.
+    """
+    if not _LIMDI_CACHE:
+        _LIMDI_CACHE["fitness"] = np.load(os.path.join(LIMDI_DIR, "fitness_corrected_genes.npy"))
+        _LIMDI_CACHE["error"] = np.load(os.path.join(LIMDI_DIR, "errors_genes_inv.npy"))
+        meta = pd.read_csv(LIMDI_META, sep="\t")
+        _LIMDI_CACHE["names"] = meta.iloc[:, 0].to_numpy(object)
+    return _LIMDI_CACHE["fitness"], _LIMDI_CACHE["error"], _LIMDI_CACHE["names"]
+
+
+def limdi_gene_series(pop, errors=False):
+    """Fitness effect per gene for one Limdi population, indexed by metadata gene row.
+
+    Green/Red replicates are averaged, and only genes actually measured in ``pop`` are kept.
+    The integer index is the shared gene identity: intersecting two populations' indices
+    matches the same genes across backgrounds.  With ``errors=True`` the paired 1-sigma
+    measurement errors are returned alongside as ``(effects, sigma)``.
+    """
+    fitness, error, _ = load_limdi_arrays()
+    k = LIMDI_LIBRARIES.index(pop)
+    keep = np.where(fitness[:, k, 0] > LIMDI_MISSING)[0]
+    eff = pd.Series(np.mean(fitness[keep, k, :], axis=1), index=keep, name=pop)
+    if not errors:
+        return eff
+    return eff, pd.Series(error[keep, k], index=keep, name=f"{pop}_sigma")

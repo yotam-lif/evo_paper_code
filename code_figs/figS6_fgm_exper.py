@@ -57,8 +57,7 @@ REPO_DIR = os.path.dirname(SCRIPT_DIR)
 if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
 from cmn import cmn_fgm
-# Data loaders + the moment-locked sigma-profile fit live in cmn_fgm_exper so the parameter
-# table (TableS3_fgm_fit_params.py) shares one implementation with this figure.
+# Data loaders + the moment-locked sigma-profile fit live in cmn_fgm_exper.
 from cmn.cmn_fgm_exper import (  # noqa: E402  (shared fit + loaders; figure code stays here)
     load_couce, load_limdi, sigma_profile, bootstrap_sigma_profile,
     _tau, _model_pdf, ORDER, MEAS_ERR, BOOT_B, FLOOR_FRAC_FLAG,

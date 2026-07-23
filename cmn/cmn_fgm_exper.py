@@ -1,10 +1,9 @@
 r"""Shared FGM experimental-DFE machinery: data loaders + moment-locked sigma-profile fit.
 
 This module holds everything the FGM experimental-DFE analysis needs that is NOT figure
-drawing, so both a figure script and a table script can share one implementation:
+drawing:
 
     code_figs/figS6_fgm_exper.py       the figure (imports the fit + loaders from here)
-    code_figs/TableS3_fgm_fit_params.py the parameter table (same fit + loaders)
 
 Contents:
     * Data loaders -- one cleaned array of fitness effects per DFE (Couce, Ascensao, Limdi).
@@ -161,16 +160,17 @@ def load_limdi(populations=None, trim=None):
     KEPT clone (in the order they appear in ``populations``/``ORDER``).
     """
     keep = ORDER if populations is None else list(populations)
-    frame = cmn_exper.load_limdi_frame()
-    present = set(frame["Population"].astype(str))
-    kept = [pop for pop in keep if pop in present]
+    kept = [pop for pop in keep if pop in cmn_exper.LIMDI_LIBRARIES]
     trims = _resolve_trims(trim, kept, TRIM_LIMDI)
+    fitness, _, _ = cmn_exper.load_limdi_arrays()
     out = {}
     for pop in kept:
         if POOL_REPLICATES == "mean":
-            v = cmn_exper.limdi_gene_series(frame, pop).to_numpy(float)
+            v = cmn_exper.limdi_gene_series(pop).to_numpy(float)
         else:
-            v = frame.loc[frame["Population"] == pop, "Fitness estimate"].to_numpy(float)
+            k = cmn_exper.LIMDI_LIBRARIES.index(pop)
+            col = fitness[:, k, :]
+            v = col[col > cmn_exper.LIMDI_MISSING].ravel()
         v = v[np.isfinite(v)]
         out[pop] = _trim(v, trims[pop])
     return out
