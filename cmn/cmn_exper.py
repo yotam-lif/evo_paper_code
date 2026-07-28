@@ -130,6 +130,21 @@ def load_asencao_array(exp, background):
     return np.load(path).astype(float)
 
 
+def load_asencao_errors(exp, background):
+    """Per-gene 1-sigma measurement error (``s std``) for one (experiment, background), or None.
+
+    The published per-gene standard error from the authors' data release
+    (github.com/joaoascensao/S-L-REL606-BarSeq), aligned row-for-row to
+    :func:`load_asencao_array` (NaN where the effect is unmeasured).  These ``*_std.npy`` arrays
+    are built by ``data/asencao_dfe_arrays/build_stds_from_repo.py``; the value-match that fixes
+    the strain mapping (each experiment's files are S/L/R in order) is verified there.
+    """
+    path = os.path.join(ASENCAO_DIR, exp, f"{background}_std.npy")
+    if not os.path.exists(path):
+        return None
+    return np.load(path).astype(float)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Limdi et al. -- TnSeq gene-knockout DFEs across the LTEE panel
 #

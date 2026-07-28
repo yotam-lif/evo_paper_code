@@ -100,7 +100,39 @@ scatter of putatively neutral intergenic insertions (MAD-based sd 0.0139 vs rms 
 is invisible to it, and Couce has no control against which to measure one.
 
     data/TableS1_autocorr.csv
-    columns: dataset, transition, n_fixed_mut, n, autocorr, autocorr_corr
+    columns: dataset, transition, n_fixed_mut, n, autocorr, autocorr_corr, excluded,
+             n_all, autocorr_all, n_cut01, autocorr_cut01
+
+CUTOFF SENSITIVITY (the ``_all`` and ``_cut01`` columns).  The autocorrelation r measures how
+much the DFE is *preserved*; scrambling is its complement, roughly 1 - r.  Because r is a
+Pearson correlation it is dominated by the points farthest from the origin -- the conserved
+deleterious tail -- so where the tail is cut changes r a great deal, and reporting one cut hides
+that.  Each row therefore carries the raw r at three lower cutoffs applied to both sides:
+
+  autocorr_all    no cutoff, every measured gene (the lethal tail included)
+  autocorr        s > -0.3 on both sides -- the primary result (also disattenuated, above)
+  autocorr_cut01  s > -0.1 on both sides -- the stricter cut, most of the tail removed
+
+Reading across them: the high full-range r is carried by the preserved tail, and stripping it
+exposes the scrambling in the near-neutral bulk.  Removing the deleterious side costs only
+~15-18% of genes (n_all vs n_cut01) yet r falls from ~0.85-0.9 to ~0.0-0.4 -- while the isogenic
+control, cut the same way, stays at ~0.59.  That control-versus-evolved gap at the strict cut is
+the real bulk scrambling; the full-range number understates it because the tail dominates it.
+
+Only the -0.3 column is disattenuated.  Below it the reliability collapses (the near-neutral
+bulk has reliability ~0.4-0.6) and the classical correction runs away -- the zero-evolution
+control disattenuates *past 1* -- so a corrected value there would be meaningless.  In the bulk,
+read the raw evolved r against the raw control r, not a disattenuated number.
+
+TAIL DECORRELATION.  The complementary question -- does the conserved tail *also* scramble? --
+has its own table, code_tmp/Table_tail_autocorr.py, because it must be conditioned differently:
+on the ANCESTOR tail only (genes with ancestral s < -0.3), with the evolved effect left free.
+Conditioning on both sides would discard the initially-essential knockouts that became
+dispensable after evolution, which are precisely the tail's strongest decorrelation.  Done that
+way, the initial tail keeps only ~63% of its noise-corrected predictability relative to the
+isogenic ceiling, and ~4.5% of essential knockouts revert to near-neutral against 0% in the
+control.  So the tail is *mostly* conserved but not perfectly -- even large knockout costs shift
+over 50K generations -- while the near-neutral bulk is where the bulk of the scrambling lives.
 
 Run:
     python code_figs/TableS1_autocorr.py
@@ -124,11 +156,18 @@ from cmn.cmn_exper import (  # noqa: E402
 )
 
 OUT_CSV = os.path.join(DATA_DIR, "TableS1_autocorr.csv")
-COLUMNS = ["dataset", "transition", "n_fixed_mut", "n", "autocorr", "autocorr_corr", "excluded"]
+# The -0.3 block (n / autocorr / autocorr_corr) is the primary, unchanged result; the trailing
+# _all and _cut01 columns add the same raw autocorrelation at two other cutoffs (see CUTOFF
+# SENSITIVITY in the docstring).  Columns are append-only, so nothing keyed on the old ones moves.
+COLUMNS = ["dataset", "transition", "n_fixed_mut", "n", "autocorr", "autocorr_corr", "excluded",
+           "n_all", "autocorr_all", "n_cut01", "autocorr_cut01"]
 
 # Non-lethal cutoff, applied to BOTH backgrounds of every pair.  -0.3 is the essentiality
 # threshold used throughout Couce et al.; see THE NON-LETHAL RESTRICTION in the docstring.
 NONLETHAL_CUT = -0.3
+# Two further cutoffs, reported alongside -0.3 to expose how much of r is the conserved tail.
+NO_CUT = None            # keep every measured gene, lethal tail included
+BULK_CUT = -0.1          # stricter: removes more of the deleterious side, exposing the bulk
 
 # Mutations fixed during each transition, keyed by the (unique) transition label.  Couce:
 # per-interval counts along the Ara+2 lineage.  Limdi: the full 0 -> 50K complement of each
@@ -199,12 +238,32 @@ def disattenuate(r, early, late, sig_early, sig_late):
     return float(r / np.sqrt(rel[0] * rel[1]))
 
 
+def _cut_mask(a, b, cut):
+    """Pairs kept at a lower cutoff: both sides finite, and both above ``cut`` (all if None)."""
+    m = np.isfinite(a) & np.isfinite(b)
+    return m if cut is None else m & (a > cut) & (b > cut)
+
+
 def make_row(dataset, transition, a, b, sig_a, sig_b):
-    """One output row for a matched pair of backgrounds, over the non-lethal range."""
+    """One output row for a matched pair of backgrounds.
+
+    The autocorrelation is reported at three lower cutoffs applied to BOTH sides: no cut (every
+    measured gene, ``autocorr_all``), the primary ``s > -0.3`` (``autocorr``), and the stricter
+    ``s > -0.1`` (``autocorr_cut01``).  Comparing them shows how much of r is the conserved
+    deleterious tail -- see CUTOFF SENSITIVITY in the docstring.  The disattenuated value is
+    quoted only at -0.3, where the reliability is high (~0.92) and the correction is trustworthy;
+    below it the correction runs away (the control disattenuates past 1), so it is deliberately
+    not extended to the stricter cut.
+    """
     a, b = np.asarray(a, float), np.asarray(b, float)
     sig_a, sig_b = np.asarray(sig_a, float), np.asarray(sig_b, float)
-    m = (a > NONLETHAL_CUT) & (b > NONLETHAL_CUT)
+
+    m = _cut_mask(a, b, NONLETHAL_CUT)               # primary cut: raw + disattenuated
     r, n = pearson(a[m], b[m])
+    m_all = _cut_mask(a, b, NO_CUT)                  # everything, lethal tail included
+    r_all, n_all = pearson(a[m_all], b[m_all])
+    m01 = _cut_mask(a, b, BULK_CUT)                  # stricter cut, more of the tail removed
+    r01, n01 = pearson(a[m01], b[m01])
     return {
         "dataset": dataset,
         "transition": transition,
@@ -213,7 +272,11 @@ def make_row(dataset, transition, a, b, sig_a, sig_b):
         "autocorr": r,
         "autocorr_corr": disattenuate(r, a[m], b[m], sig_a[m], sig_b[m]),
         "excluded": LIMDI_EXCLUDED.get(transition.split(" -> ")[1], ""),
-        "n_dropped": int((~m).sum()),   # pairs removed by the cut; printed, not written to CSV
+        "n_all": n_all,
+        "autocorr_all": r_all,
+        "n_cut01": n01,
+        "autocorr_cut01": r01,
+        "n_dropped": int((~m).sum()),   # pairs removed by the -0.3 cut; printed, not in CSV
     }
 
 
@@ -274,7 +337,9 @@ def write_table(rows, out_csv):
         for row in rows:
             writer.writerow([row["dataset"], row["transition"], row["n_fixed_mut"], row["n"],
                              f"{row['autocorr']:.4g}", f"{row['autocorr_corr']:.4g}",
-                             row["excluded"]])
+                             row["excluded"],
+                             row["n_all"], f"{row['autocorr_all']:.4g}",
+                             row["n_cut01"], f"{row['autocorr_cut01']:.4g}"])
 
 
 def parse_args(argv):
@@ -293,16 +358,15 @@ def main(argv=None):
     print(f"\nnon-lethal cut s > {NONLETHAL_CUT}, applied to both sides of every pair")
 
     ceiling = next(r["autocorr_corr"] for r in rows if r["dataset"] == "Limdi control")
-    header = (f"{'dataset':<14}{'transition':<20}{'n_fixed':>9}{'n':>7}{'cut':>6}"
-              f"{'autocorr':>11}{'corrected':>11}{'r/ceiling':>11}")
+    header = (f"{'dataset':<13}{'transition':<18}{'n_fix':>6}{'n':>6}"
+              f"{'r(all)':>9}{'r(-.3)':>9}{'corr(-.3)':>10}{'r(-.1)':>9}{'r/ceil':>8}")
     print(header)
     print("-" * len(header))
     for row in rows:
         ratio = row["autocorr_corr"] / ceiling if row["dataset"].startswith("Limdi") else np.nan
-        print(f"{row['dataset']:<14}{row['transition']:<20}{row['n_fixed_mut']:>9}{row['n']:>7}"
-              f"{row['n_dropped']:>6}"
-              f"{row['autocorr']:>11.3f}{row['autocorr_corr']:>11.3f}{ratio:>11.3f}"
-              f"   {row['excluded']}")
+        print(f"{row['dataset']:<13}{row['transition']:<18}{row['n_fixed_mut']:>6}{row['n']:>6}"
+              f"{row['autocorr_all']:>9.3f}{row['autocorr']:>9.3f}{row['autocorr_corr']:>10.3f}"
+              f"{row['autocorr_cut01']:>9.3f}{ratio:>8.3f}   {row['excluded']}")
 
     # Does the corrected autocorrelation actually decay with the number of fixed mutations?
     # Reported on the evolved Limdi populations only (the control is the origin, and the two
@@ -316,12 +380,20 @@ def main(argv=None):
         rr, pp = pearsonr(x, y)
         print(f"decay of corrected r with log10(n_fixed_mut), {tag:<12} r = {rr:+.3f}  p = {pp:.3f}")
 
-    print("\ncut            = pairs removed by the non-lethal cut (0 for Couce: they have no tail)")
-    print("n_fixed_mut    = mutations fixed DURING that transition (cumulative only for Limdi)")
-    print("autocorr       = Pearson r of matched fitness effects, early vs late background")
-    print("autocorr_corr  = the same, disattenuated for published measurement error -- QUOTE THIS")
-    print("r/ceiling      = fraction of the isogenic-ancestor correlation retained (Limdi only)")
+    # TAIL DECORRELATION lives in its own table, code_tmp/Table_tail_autocorr.py.  It must
+    # condition on the ANCESTOR tail only (evolved side free), not on both sides: requiring the
+    # gene to stay deleterious at 50K discards the initially-essential knockouts that became
+    # dispensable, which are the tail's strongest decorrelation.  That table finds the initial
+    # tail keeps only ~63% of its (noise-corrected) predictability, with ~4.5% of essential
+    # knockouts reverting to neutral against 0% in the isogenic control.
+
+    print("\nr(all)         = Pearson r with NO cutoff (every measured gene, lethal tail included)")
+    print("r(-.3)         = Pearson r with s > -0.3 on both sides (the primary cut)")
+    print("corr(-.3)      = r(-.3) disattenuated for published measurement error -- QUOTE THIS")
+    print("r(-.1)         = Pearson r with the stricter s > -0.1 on both sides (more tail removed)")
+    print("r/ceil         = fraction of the isogenic-ancestor corrected correlation retained (Limdi)")
     print("excluded       = non-empty for the two populations Limdi et al. drop as unreliable")
+    print("CSV adds n_all / n_cut01 (pair counts) beside autocorr_all / autocorr_cut01.")
     print(f"\nSaved {args.out}")
 
 

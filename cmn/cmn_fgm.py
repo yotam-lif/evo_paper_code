@@ -21,7 +21,16 @@ class Fisher:
         Random number generator for reproducibility.
     """
 
-    def __init__(self, n, sigma=0.05, m=10**3, random_state=None):
+    def __init__(
+        self,
+        n,
+        sigma=0.05,
+        m=10**3,
+        random_state=None,
+        mutation_distribution="gaussian",
+        mu=0.5,
+        initial_radius=None,
+    ):
         """
         Initialize the model in the diagonal basis.
 
@@ -35,10 +44,18 @@ class Fisher:
             Number of mutation vectors to pre-sample.
         random_state : int or numpy.random.Generator, optional
             Seed or RNG for reproducibility.
+        mutation_distribution : {"gaussian", "heavy_tailed"}
+            Distribution of mutation vectors. Gaussian is the legacy default.
+        mu : float
+            Tail parameter for heavy-tailed mutations.
+        initial_radius : float, optional
+            Initial distance from the optimum. The legacy default is sqrt(n).
         """
         self.n = int(n)
         self.sigma = float(sigma)
         self.m = int(m)
+        self.mutation_distribution = mutation_distribution
+        self.mu = float(mu)
         # RNG setup
         if isinstance(random_state, (int, np.integer)):
             self.rng = np.random.default_rng(random_state)
@@ -47,14 +64,26 @@ class Fisher:
         else:
             self.rng = np.random.default_rng()
 
-        # Pre-sample Gaussian mutation steps
-        self.deltas = self.rng.normal(loc=0.0, scale=self.sigma, size=(self.m, self.n))
+        # Pre-sample mutation steps
+        self.deltas = self.rng.normal(
+            loc=0.0, scale=self.sigma, size=(self.m, self.n)
+        )
+        if self.mutation_distribution == "heavy_tailed":
+            if self.mu <= 0:
+                raise ValueError("mu must be positive")
+            scales = self.rng.gamma(self.mu, size=(self.m, 1))
+            self.deltas /= np.sqrt(2 * scales)
+        elif self.mutation_distribution != "gaussian":
+            raise ValueError(
+                "mutation_distribution must be 'gaussian' or 'heavy_tailed'"
+            )
+
         # Initialize r_0 = (sqrt(n), 0, ..., 0), isotropic so only initial radius of n matters
         # Instead of starting at random r and taking iid gaussian entries of sigma_0 so that r_0 ~ n * sigma_0 ^2,
         # We set scale by sigma_0 = 1 and sigma becomes in units of sigma_0.
         # initial radius scales with n so that effective initial position doesn't become smaller as n increases (mutation size scales with n as well).
         self.r = np.zeros(n)
-        self.r[0] = np.sqrt(n)
+        self.r[0] = np.sqrt(n) if initial_radius is None else float(initial_radius)
 
     def _sample_semicircle(self, n, sigma):
         """
