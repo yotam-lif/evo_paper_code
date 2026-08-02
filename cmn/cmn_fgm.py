@@ -1,5 +1,9 @@
 import numpy as np
+from numpy.polynomial.hermite import hermgauss
 from scipy.stats import ncx2, norm
+
+
+_FITNESS_ERROR_NODES, _FITNESS_ERROR_WEIGHTS = hermgauss(20)
 
 class Fisher:
     """
@@ -207,6 +211,143 @@ def fgm_dfe_logpdf(s, n, sigma, r):
 def fgm_dfe_pdf(s, n, sigma, r):
     """Density of the log-fitness FGM DFE (exp of :func:`fgm_dfe_logpdf`)."""
     return np.exp(fgm_dfe_logpdf(s, n, sigma, r))
+
+
+def fgm_fitness_dfe_logpdf(s, n, sigma, r):
+    r"""Exact density of the absolute fitness effect ``s = w_mut - w_0``.
+
+    The Gaussian FGM closed form is naturally expressed for the log-fitness
+    effect ``x``.  On ``w(R)=exp(-|R|^2/2)``,
+
+    ``s = w_0 * (exp(x) - 1)``, where ``w_0 = exp(-r^2/2)``.
+
+    This function applies the exact inverse transformation and its Jacobian.
+    The finite support is ``-w_0 < s <= 1-w_0``.
+    """
+    s = np.asarray(s, dtype=float)
+    n = float(n)
+    sigma = float(sigma)
+    r = float(r)
+    out = np.full(s.shape, -np.inf, dtype=float)
+    if not (
+        np.isfinite(n)
+        and np.isfinite(sigma)
+        and np.isfinite(r)
+        and n > 0.0
+        and sigma > 0.0
+        and r >= 0.0
+    ):
+        return out
+
+    w0 = np.exp(-0.5 * r * r)
+    keep = (s > -w0) & (s < 1.0 - w0)
+    if np.any(keep):
+        shifted = w0 + s[keep]
+        x = np.log(shifted / w0)
+        out[keep] = (
+            fgm_dfe_logpdf(x, n=n, sigma=sigma, r=r)
+            - np.log(shifted)
+        )
+    return out
+
+
+def fgm_fitness_dfe_pdf(s, n, sigma, r):
+    """Density corresponding to :func:`fgm_fitness_dfe_logpdf`."""
+    with np.errstate(over="ignore", under="ignore", invalid="ignore"):
+        return np.exp(fgm_fitness_dfe_logpdf(s, n, sigma, r))
+
+
+def fgm_fitness_bin_probs(edges, n, sigma, r):
+    r"""Exact probabilities for bins in absolute-fitness-effect coordinates."""
+    edges = np.asarray(edges, dtype=float)
+    w0 = np.exp(-0.5 * float(r) ** 2)
+    below = edges <= -w0
+    above = edges >= 1.0 - w0
+    interior = ~(below | above)
+    log_edges = np.zeros_like(edges)
+    log_edges[interior] = np.log1p(edges[interior] / w0)
+    cdf = _fgm_cdf_s_at(
+        log_edges,
+        np.array([float(n)]),
+        np.array([float(sigma)]),
+        np.array([float(r)]),
+    )[0]
+    cdf[below] = 0.0
+    cdf[above] = 1.0
+    return np.clip(np.diff(cdf), 0.0, 1.0)
+
+
+def fgm_fitness_moments(n, sigma, r):
+    r"""Mean and variance of the exact absolute-fitness DFE.
+
+    For a Gaussian mutation ``delta``, both moments follow from Gaussian
+    integrals for ``w_mut`` and ``w_mut^2``.  Returning them directly avoids
+    approximating ``exp(x)-1`` by ``x`` when imposing moment constraints.
+    """
+    n = float(n)
+    sigma = float(sigma)
+    r = float(r)
+    sigma2 = sigma * sigma
+    w0 = np.exp(-0.5 * r * r)
+    mean_w = np.exp(
+        -0.5 * n * np.log1p(sigma2)
+        - 0.5 * r * r / (1.0 + sigma2)
+    )
+    mean_w2 = np.exp(
+        -0.5 * n * np.log1p(2.0 * sigma2)
+        - r * r / (1.0 + 2.0 * sigma2)
+    )
+    mean_effect = mean_w - w0
+    variance_effect = max(mean_w2 - mean_w * mean_w, 0.0)
+    return float(mean_effect), float(variance_effect)
+
+
+def fgm_fitness_survival_many_eps(cut, n, sigma, r, eps):
+    r"""``P(s_obs >= cut)`` with gene-specific Gaussian errors.
+
+    Gaussian measurement error is integrated with Gauss-Hermite quadrature.
+    At each error node, the raw-fitness threshold is mapped exactly back to a
+    log-fitness threshold before evaluating the noncentral-chi-square CDF.
+    """
+    n = float(n)
+    sigma = float(sigma)
+    r = float(r)
+    eps = np.atleast_1d(np.asarray(eps, dtype=float))
+    if not (
+        n > 0.0
+        and sigma > 0.0
+        and r >= 0.0
+        and np.all(np.isfinite(eps))
+        and np.all(eps >= 0.0)
+    ):
+        return np.full(eps.shape, np.nan, dtype=float)
+
+    w0 = np.exp(-0.5 * r * r)
+    errors = (
+        np.sqrt(2.0)
+        * eps[:, None]
+        * _FITNESS_ERROR_NODES[None, :]
+    )
+    latent_cut = float(cut) - errors
+    below = latent_cut <= -w0
+    above = latent_cut >= 1.0 - w0
+    interior = ~(below | above)
+    x_cut = np.zeros_like(latent_cut)
+    x_cut[interior] = np.log1p(latent_cut[interior] / w0)
+
+    y = (r * r - 2.0 * x_cut) / (sigma * sigma)
+    survival = _ncx2_cdf(
+        np.maximum(y, 0.0),
+        np.asarray(n),
+        np.asarray(r * r / (sigma * sigma)),
+    )
+    survival = np.where(below, 1.0, survival)
+    survival = np.where(above, 0.0, survival)
+    values = (
+        survival
+        @ (_FITNESS_ERROR_WEIGHTS / np.sqrt(np.pi))
+    )
+    return np.clip(values, 0.0, 1.0)
 
 
 # scipy's ncx2.cdf sums ~nc/2 series terms, so it is ~20x slower per element once

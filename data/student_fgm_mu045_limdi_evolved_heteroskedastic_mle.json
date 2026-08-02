@@ -1,0 +1,596 @@
+{
+  "model": "shared_buffer_isotropic_student_fgm",
+  "method": "full_3d_unbinned_conditional_mle_per_gene_gaussian_error_exact_dfe_polish",
+  "config": {
+    "fixed_magnitude_tail_mu": 0.45,
+    "magnitude_density_tail": "q^(-1-mu)",
+    "baseline_mu": 0.5,
+    "conditional_lower_cut": -0.4,
+    "n_lower_bound": 2.0,
+    "replicate_pooling": "mean_per_gene",
+    "per_gene_error_source": "errors_genes_inv.npy via limdi_gene_series",
+    "excluded_published_anomalies": [
+      "Ara-2",
+      "Ara+4"
+    ],
+    "backgrounds": [
+      "Ara-1",
+      "Ara-3",
+      "Ara-4",
+      "Ara-5",
+      "Ara-6",
+      "Ara+1",
+      "Ara+2",
+      "Ara+3",
+      "Ara+5",
+      "Ara+6"
+    ]
+  },
+  "per_dfe": {
+    "Ara-1": {
+      "n": 2.9170630943151887,
+      "r": 0.22992547547387546,
+      "sigma": 0.014725901596035701,
+      "C_n_sigma2": 0.0006325714848292984,
+      "A_r_sigma": 0.00338585992625001,
+      "loglik": 8761.017137502613,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": false,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8753.383485319366,
+      "reoptimization_delta_loglik": 7.368913846432406,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8761.003282714899,
+        "delta_loglik": -0.013854787714080885
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8734.320716543685,
+      "delta_loglik_vs_mu050": 26.696420958927774,
+      "data": {
+        "N": 3449,
+        "min": -0.3997628240504162,
+        "max": 0.045323488059067475,
+        "mean": -0.02328115674288348,
+        "sd": 0.07336745147447983,
+        "skew": -3.462817672252809
+      },
+      "error_summary": {
+        "min": 0.0016960163283987004,
+        "median": 0.008048030553683111,
+        "mean": 0.01090304869014437,
+        "max": 0.10707914024084099
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.05805756244483756,
+        "observed_positive_fraction": 0.4804291098869237,
+        "predicted_positive_fraction": 0.4325790662969444,
+        "positive_fraction_residual": 0.047850043589979296
+      },
+      "elapsed_seconds": 35.38223624229431,
+      "latent_quadrature_start": {
+        "n": 2.917606965225851,
+        "r": 0.2300180186048452,
+        "sigma": 0.014727140001716375,
+        "loglik": 8760.752399165798
+      },
+      "comparison_loglik_mu045": 8761.017137502613,
+      "analytic_polish_success": true,
+      "analytic_polish_message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "latent_check_loglik_at_analytic_mle": 8761.003282714899
+    },
+    "Ara-3": {
+      "n": 2.0,
+      "r": 0.18718758536937663,
+      "sigma": 0.026099173204500833,
+      "C_n_sigma2": 0.0013623336839170685,
+      "A_r_sigma": 0.004885441212287647,
+      "loglik": 8284.608103915049,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8270.486685417589,
+      "reoptimization_delta_loglik": 13.30614899694956,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8283.91440900174,
+        "delta_loglik": -0.6936949133087182
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8262.576562013215,
+      "delta_loglik_vs_mu050": 22.031541901833407,
+      "data": {
+        "N": 3214,
+        "min": -0.39656766247565145,
+        "max": 0.041927210466766694,
+        "mean": -0.02385835733546721,
+        "sd": 0.07703592862147098,
+        "skew": -3.3360770148939736
+      },
+      "error_summary": {
+        "min": 0.0010810839959119894,
+        "median": 0.00556739190737764,
+        "mean": 0.007955534302645222,
+        "max": 0.1063266063783393
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.13918722977808612,
+        "observed_positive_fraction": 0.5497822028624767,
+        "predicted_positive_fraction": 0.414742471463998,
+        "positive_fraction_residual": 0.1350397313984787
+      },
+      "elapsed_seconds": 39.91417098045349,
+      "latent_quadrature_start": {
+        "n": 2.0,
+        "r": 0.1874199053878706,
+        "sigma": 0.026089877888563994,
+        "loglik": 8283.792834414538
+      },
+      "comparison_loglik_mu045": 8284.608103915049,
+      "analytic_polish_success": false,
+      "analytic_polish_message": "ABNORMAL: ",
+      "latent_check_loglik_at_analytic_mle": 8283.91440900174
+    },
+    "Ara-4": {
+      "n": 2.0,
+      "r": 0.1807503031708894,
+      "sigma": 0.02628649890393185,
+      "C_n_sigma2": 0.001381960049252821,
+      "A_r_sigma": 0.004751292646186934,
+      "loglik": 8509.733186425068,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8505.379563729366,
+      "reoptimization_delta_loglik": 3.4734344683129166,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8508.849655183934,
+        "delta_loglik": -0.8835312411338236
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8486.046309917694,
+      "delta_loglik_vs_mu050": 23.68687650737411,
+      "data": {
+        "N": 3353,
+        "min": -0.397938788917455,
+        "max": 0.03844374509868756,
+        "mean": -0.025560882388099487,
+        "sd": 0.08079680418854149,
+        "skew": -3.1846139782567584
+      },
+      "error_summary": {
+        "min": 0.0013058650310096246,
+        "median": 0.00647015356956094,
+        "mean": 0.008954249703615559,
+        "max": 0.0772535347864633
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.1420100316702652,
+        "observed_positive_fraction": 0.5508499850879809,
+        "predicted_positive_fraction": 0.4122944939310567,
+        "positive_fraction_residual": 0.13855549115692417
+      },
+      "elapsed_seconds": 13.772868871688843,
+      "latent_quadrature_start": {
+        "n": 2.0,
+        "r": 0.18095821284728308,
+        "sigma": 0.026277811543018992,
+        "loglik": 8508.852998197679
+      },
+      "comparison_loglik_mu045": 8509.733186425068,
+      "analytic_polish_success": false,
+      "analytic_polish_message": "ABNORMAL: ",
+      "latent_check_loglik_at_analytic_mle": 8508.849655183934
+    },
+    "Ara-5": {
+      "n": 2.0,
+      "r": 0.18708754398543553,
+      "sigma": 0.0269179363642923,
+      "C_n_sigma2": 0.0014491505962241798,
+      "A_r_sigma": 0.005036010603551691,
+      "loglik": 8678.603362960199,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8672.67995216677,
+      "reoptimization_delta_loglik": 5.282521531247767,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8677.941031482682,
+        "delta_loglik": -0.6623314775170002
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8661.39600268385,
+      "delta_loglik_vs_mu050": 17.20736027634848,
+      "data": {
+        "N": 3432,
+        "min": -0.39911123388974945,
+        "max": 0.04603687670347743,
+        "mean": -0.024575366232045454,
+        "sd": 0.07577354549308517,
+        "skew": -3.313864880527728
+      },
+      "error_summary": {
+        "min": 0.001283249828362717,
+        "median": 0.006016450246366977,
+        "mean": 0.008538531765922626,
+        "max": 0.07128598782827522
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.07729519024009346,
+        "observed_positive_fraction": 0.483974358974359,
+        "predicted_positive_fraction": 0.4130558877474837,
+        "positive_fraction_residual": 0.07091847122687528
+      },
+      "elapsed_seconds": 25.395040035247803,
+      "latent_quadrature_start": {
+        "n": 2.0,
+        "r": 0.18734143280065294,
+        "sigma": 0.026907583581988977,
+        "loglik": 8677.962473698019
+      },
+      "comparison_loglik_mu045": 8678.603362960199,
+      "analytic_polish_success": false,
+      "analytic_polish_message": "ABNORMAL: ",
+      "latent_check_loglik_at_analytic_mle": 8677.941031482682
+    },
+    "Ara-6": {
+      "n": 2.0011623029862435,
+      "r": 0.2281368995444228,
+      "sigma": 0.026820737090675548,
+      "C_n_sigma2": 0.0014395399810800769,
+      "A_r_sigma": 0.006118799803362822,
+      "loglik": 8167.596169756764,
+      "success": false,
+      "message": "ABNORMAL: ",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8165.841194038684,
+      "reoptimization_delta_loglik": 1.6410061268770733,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8167.470796845792,
+        "delta_loglik": -0.1253729109712367
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8154.426815029315,
+      "delta_loglik_vs_mu050": 13.16935472744899,
+      "data": {
+        "N": 3408,
+        "min": -0.39992328780195485,
+        "max": 0.05038772863709104,
+        "mean": -0.019150402830226544,
+        "sd": 0.06613641357036353,
+        "skew": -3.7640266953422667
+      },
+      "error_summary": {
+        "min": 0.0016626938594058419,
+        "median": 0.0077492737258366235,
+        "mean": 0.009797158256675204,
+        "max": 0.08195570358685522
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.07344941084116441,
+        "observed_positive_fraction": 0.49735915492957744,
+        "predicted_positive_fraction": 0.4269012771923791,
+        "positive_fraction_residual": 0.07045787773719836
+      },
+      "elapsed_seconds": 37.187971115112305,
+      "latent_quadrature_start": {
+        "n": 2.0011623029862435,
+        "r": 0.2281368995444228,
+        "sigma": 0.026820737090675548,
+        "loglik": 8167.482200165561
+      },
+      "comparison_loglik_mu045": 8167.596169756764,
+      "analytic_polish_success": false,
+      "analytic_polish_message": "ABNORMAL: ",
+      "latent_check_loglik_at_analytic_mle": 8167.470796845792
+    },
+    "Ara+1": {
+      "n": 6.537088970908728,
+      "r": 0.2999500484717969,
+      "sigma": 0.010594144780058759,
+      "C_n_sigma2": 0.0007336960876998089,
+      "A_r_sigma": 0.003177714240295859,
+      "loglik": 8800.701936269827,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": false,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8794.254367428974,
+      "reoptimization_delta_loglik": 6.237565089675627,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8800.704464148477,
+        "delta_loglik": 0.0025278786506532924
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8767.610397193117,
+      "delta_loglik_vs_mu050": 33.09153907670952,
+      "data": {
+        "N": 3346,
+        "min": -0.39850955670874655,
+        "max": 0.045022635160844995,
+        "mean": -0.02680004640573917,
+        "sd": 0.07761185477618567,
+        "skew": -3.156529833459938
+      },
+      "error_summary": {
+        "min": 0.001309877675264241,
+        "median": 0.005262683380522733,
+        "mean": 0.00746536191050524,
+        "max": 0.08398845783209573
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.0602631079375963,
+        "observed_positive_fraction": 0.4572624028690974,
+        "predicted_positive_fraction": 0.40786288724095116,
+        "positive_fraction_residual": 0.04939951562814626
+      },
+      "elapsed_seconds": 20.86179494857788,
+      "latent_quadrature_start": {
+        "n": 6.525563958601026,
+        "r": 0.29973877770402446,
+        "sigma": 0.010601085472691854,
+        "loglik": 8800.49193251865
+      },
+      "comparison_loglik_mu045": 8800.701936269827,
+      "analytic_polish_success": true,
+      "analytic_polish_message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "latent_check_loglik_at_analytic_mle": 8800.704464148477
+    },
+    "Ara+2": {
+      "n": 3.6298659159357647,
+      "r": 0.2380018774703008,
+      "sigma": 0.01999046954133836,
+      "C_n_sigma2": 0.0014505629245913638,
+      "A_r_sigma": 0.0047577692823513925,
+      "loglik": 8218.731280383105,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": false,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8210.755924470925,
+      "reoptimization_delta_loglik": 7.806394098142846,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8218.733446789363,
+        "delta_loglik": 0.0021664062587660737
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8202.136115976791,
+      "delta_loglik_vs_mu050": 16.595164406313415,
+      "data": {
+        "N": 3386,
+        "min": -0.39974385061753537,
+        "max": 0.04494618949418189,
+        "mean": -0.025363359601212093,
+        "sd": 0.07139205980492504,
+        "skew": -3.4027628048951764
+      },
+      "error_summary": {
+        "min": 0.002010663115803096,
+        "median": 0.007701166310618259,
+        "mean": 0.009816283495034476,
+        "max": 0.07778630652093432
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.03701368275472937,
+        "observed_positive_fraction": 0.36798582398109864,
+        "predicted_positive_fraction": 0.39774399159750445,
+        "positive_fraction_residual": -0.029758167616405817
+      },
+      "elapsed_seconds": 18.599942922592163,
+      "latent_quadrature_start": {
+        "n": 3.629865915874601,
+        "r": 0.23800187748443613,
+        "sigma": 0.01999046954137374,
+        "loglik": 8218.562318569067
+      },
+      "comparison_loglik_mu045": 8218.731280383105,
+      "analytic_polish_success": true,
+      "analytic_polish_message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "latent_check_loglik_at_analytic_mle": 8218.733446789363
+    },
+    "Ara+3": {
+      "n": 2.0,
+      "r": 0.1910376257106477,
+      "sigma": 0.026561546597715247,
+      "C_n_sigma2": 0.0014110315153251969,
+      "A_r_sigma": 0.005074254797230253,
+      "loglik": 8123.829518702193,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8119.153572456914,
+      "reoptimization_delta_loglik": 6.529605997365252,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8124.73219703193,
+        "delta_loglik": 0.9026783297367729
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8096.875395089195,
+      "delta_loglik_vs_mu050": 26.954123612998046,
+      "data": {
+        "N": 3392,
+        "min": -0.3989262725249437,
+        "max": 0.03830117555466475,
+        "mean": -0.02892050333598125,
+        "sd": 0.08374913915198623,
+        "skew": -3.02449606371099
+      },
+      "error_summary": {
+        "min": 0.0021516948551673653,
+        "median": 0.007878870555656756,
+        "mean": 0.010349342575900946,
+        "max": 0.07504076939354165
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.06615423923691421,
+        "observed_positive_fraction": 0.46226415094339623,
+        "predicted_positive_fraction": 0.41610901102747827,
+        "positive_fraction_residual": 0.046155139915917964
+      },
+      "elapsed_seconds": 37.6146559715271,
+      "latent_quadrature_start": {
+        "n": 2.0,
+        "r": 0.19517158533902979,
+        "sigma": 0.02640025517875401,
+        "loglik": 8125.683178454279
+      },
+      "comparison_loglik_mu045": 8123.829518702193,
+      "analytic_polish_success": false,
+      "analytic_polish_message": "ABNORMAL: ",
+      "latent_check_loglik_at_analytic_mle": 8124.73219703193
+    },
+    "Ara+5": {
+      "n": 2.414772044022466,
+      "r": 0.24727003894109223,
+      "sigma": 0.02029360077515278,
+      "C_n_sigma2": 0.0009944761321341853,
+      "A_r_sigma": 0.0050179994539270075,
+      "loglik": 8115.9822831867605,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": false,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 8109.180486276566,
+      "reoptimization_delta_loglik": 6.5060710610296155,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 8115.978690885935,
+        "delta_loglik": -0.003592300825403072
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 8097.638187571558,
+      "delta_loglik_vs_mu050": 18.344095615202605,
+      "data": {
+        "N": 3332,
+        "min": -0.3989519713549831,
+        "max": 0.06438448503953345,
+        "mean": -0.023638382451055456,
+        "sd": 0.0746267277296764,
+        "skew": -3.423411226736158
+      },
+      "error_summary": {
+        "min": 0.0014182837066102542,
+        "median": 0.00745574900954557,
+        "mean": 0.009720043737331865,
+        "max": 0.12263649599798329
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.041713913415321505,
+        "observed_positive_fraction": 0.45738295318127253,
+        "predicted_positive_fraction": 0.4312178237457612,
+        "positive_fraction_residual": 0.02616512943551136
+      },
+      "elapsed_seconds": 36.67287516593933,
+      "latent_quadrature_start": {
+        "n": 2.4185723022842387,
+        "r": 0.2474424379369484,
+        "sigma": 0.02030223421593552,
+        "loglik": 8115.686557337595
+      },
+      "comparison_loglik_mu045": 8115.9822831867605,
+      "analytic_polish_success": true,
+      "analytic_polish_message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "latent_check_loglik_at_analytic_mle": 8115.978690885935
+    },
+    "Ara+6": {
+      "n": 257.16657820937814,
+      "r": 2.2761681914099405,
+      "sigma": 0.003711582184656262,
+      "C_n_sigma2": 0.003542686229703893,
+      "A_r_sigma": 0.008448185308518399,
+      "loglik": 6940.024413189329,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": false,
+        "C": false,
+        "A": false
+      },
+      "heteroskedastic_loglik_at_flat_error_fit": 6935.060802549966,
+      "reoptimization_delta_loglik": 6.0125166188636285,
+      "error_node_check": {
+        "number_error_nodes": 96,
+        "loglik_at_fit": 6940.060975501754,
+        "delta_loglik": 0.03656231242530339
+      },
+      "mu": 0.45,
+      "mu050_recomputed_loglik": 6928.761872368172,
+      "delta_loglik_vs_mu050": 11.262540821157017,
+      "data": {
+        "N": 3425,
+        "min": -0.3996361684865252,
+        "max": 0.12473508703381989,
+        "mean": -0.03508711489049697,
+        "sd": 0.0850973783093522,
+        "skew": -2.806732651208911
+      },
+      "error_summary": {
+        "min": 0.0007932883150452131,
+        "median": 0.008675605859253387,
+        "mean": 0.011797730271780583,
+        "max": 0.10606307690234279
+      },
+      "diagnostics": {
+        "conditional_pit_ks": 0.04421806689573794,
+        "observed_positive_fraction": 0.32204379562043794,
+        "predicted_positive_fraction": 0.35207086713111196,
+        "positive_fraction_residual": -0.03002707151067402
+      },
+      "elapsed_seconds": 32.07769703865051,
+      "latent_quadrature_start": {
+        "n": 257.16657820937814,
+        "r": 2.2761681914099405,
+        "sigma": 0.003711582184656262,
+        "loglik": 6941.07331916883
+      },
+      "comparison_loglik_mu045": 6940.024413189329,
+      "analytic_polish_success": true,
+      "analytic_polish_message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "latent_check_loglik_at_analytic_mle": 6940.060975501754
+    }
+  },
+  "comparison": {
+    "sum_comparison_loglik_mu045": 82600.8273922909,
+    "sum_recomputed_loglik_mu050": 82391.7883743866,
+    "sum_delta_loglik_mu045_minus_mu050": 209.03901790431337
+  }
+}

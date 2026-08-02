@@ -1,0 +1,14 @@
+dataset,transition,n_fixed_mut,n_tail,tail_autocorr,tail_autocorr_corr,tail_corr_vs_ceiling,frac_reverted,excluded
+Limdi control,REL606 -> REL607,0,129,0.6461,0.7918,1,0,
+Limdi Ara-1,REL606 -> Ara-1,1100,127,0.5558,0.6524,0.8239,0.02362,
+Limdi Ara-2,REL606 -> Ara-2,1000,127,0.3461,0.4311,0.5445,0.2598,sweeping mutants bias assay
+Limdi Ara-3,REL606 -> Ara-3,800,133,0.4736,0.5555,0.7016,0.05263,
+Limdi Ara-4,REL606 -> Ara-4,1300,125,0.3913,0.4673,0.5902,0.008,
+Limdi Ara-5,REL606 -> Ara-5,90,126,0.5273,0.6295,0.795,0.007937,
+Limdi Ara-6,REL606 -> Ara-6,90,126,0.1152,0.1332,0.1683,0.2619,
+Limdi Ara+1,REL607 -> Ara+1,125,146,0.4386,0.4963,0.6268,0.02055,
+Limdi Ara+2,REL607 -> Ara+2,70,157,0.5441,0.611,0.7717,0.03822,
+Limdi Ara+3,REL607 -> Ara+3,1800,157,0.3919,0.4503,0.5687,0.006369,
+Limdi Ara+4,REL607 -> Ara+4,70,157,0.4416,0.4986,0.6297,0.03185,poor technical replicates
+Limdi Ara+5,REL607 -> Ara+5,80,156,0.4603,0.5232,0.6608,0.01282,
+Limdi Ara+6,REL607 -> Ara+6,2600,152,0.3858,0.4444,0.5613,0.01974,

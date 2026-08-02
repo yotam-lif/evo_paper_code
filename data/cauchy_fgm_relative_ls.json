@@ -1,0 +1,146 @@
+{
+  "model": "shared_buffer_multivariate_cauchy_fgm",
+  "method": "binned_mean_squared_relative_density_residuals",
+  "config": {
+    "measurement_error_sd": 0.005,
+    "conditional_lower_cut": -0.4,
+    "upper_plot_and_bin_limit": 0.12,
+    "bin_width": 0.005,
+    "empty_bins_excluded": true,
+    "model_grid_dx": 0.0002,
+    "optimization_bounds": {
+      "n": [
+        2.0,
+        500.0
+      ],
+      "C": [
+        1e-06,
+        0.2
+      ],
+      "A": [
+        1e-05,
+        0.2
+      ]
+    },
+    "de_seeds": [
+      1729,
+      2718
+    ],
+    "de_maxiter": 70,
+    "de_popsize": 12
+  },
+  "per_dfe": {
+    "Couce 0K": {
+      "n": 4.480895901502261,
+      "r": 0.4754200074140664,
+      "sigma": 0.004155312062703331,
+      "C_n_sigma2": 7.736991934555456e-05,
+      "A_r_sigma": 0.001975518491658177,
+      "mean_relative_residual_sq": 0.27759067583439573,
+      "root_mean_relative_residual_sq": 0.5268687463063222,
+      "mean_density_residual_sq": 17.33119584657239,
+      "success": false,
+      "message": "ABNORMAL: ",
+      "bounds_hit": {
+        "n": false,
+        "C": false,
+        "A": false
+      },
+      "number_nonempty_bins": 65,
+      "number_empty_bins": 40,
+      "N": 13258,
+      "old_mle": {
+        "n": 6.358291495203669,
+        "r": 0.46100849200443594,
+        "sigma": 0.013684226197598237,
+        "mean_relative_residual_sq": 4.149820903057673,
+        "root_mean_relative_residual_sq": 2.0371109206564264,
+        "mean_density_residual_sq": 1.1208577638899084
+      }
+    },
+    "Couce 2K": {
+      "n": 2.000031964737136,
+      "r": 0.27422613655282785,
+      "sigma": 0.00567055520036962,
+      "C_n_sigma2": 6.431142039327454e-05,
+      "A_r_sigma": 0.0015550144447069075,
+      "mean_relative_residual_sq": 0.34346877661870595,
+      "root_mean_relative_residual_sq": 0.5860620928013567,
+      "mean_density_residual_sq": 24.75419136584138,
+      "success": false,
+      "message": "ABNORMAL: ",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "number_nonempty_bins": 51,
+      "number_empty_bins": 54,
+      "N": 13355,
+      "old_mle": {
+        "n": 6.664997360408484,
+        "r": 0.35449499445471894,
+        "sigma": 0.0158406523748818,
+        "mean_relative_residual_sq": 9.77268089124127,
+        "root_mean_relative_residual_sq": 3.1261287387504164,
+        "mean_density_residual_sq": 1.7093227749071283
+      }
+    },
+    "REL606": {
+      "n": 499.99999999999983,
+      "r": 2.632513343447814,
+      "sigma": 0.0017021594112329535,
+      "C_n_sigma2": 0.0014486733306244568,
+      "A_r_sigma": 0.004480957362746025,
+      "mean_relative_residual_sq": 0.27401304373919666,
+      "root_mean_relative_residual_sq": 0.523462552375236,
+      "mean_density_residual_sq": 2.342300349035781,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "number_nonempty_bins": 89,
+      "number_empty_bins": 16,
+      "N": 3421,
+      "old_mle": {
+        "n": 9.279206327352721,
+        "r": 0.3990472067750867,
+        "sigma": 0.014649854931575976,
+        "mean_relative_residual_sq": 0.32534450476029875,
+        "root_mean_relative_residual_sq": 0.5703897831836565,
+        "mean_density_residual_sq": 1.4997829287078845
+      }
+    },
+    "REL607": {
+      "n": 499.99999999999983,
+      "r": 3.5188751375759795,
+      "sigma": 0.0015908566153732913,
+      "C_n_sigma2": 0.0012654123853384817,
+      "A_r_sigma": 0.0055980257912853475,
+      "mean_relative_residual_sq": 0.31963009162661815,
+      "root_mean_relative_residual_sq": 0.5653583745082567,
+      "mean_density_residual_sq": 2.0846531886491633,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "bounds_hit": {
+        "n": true,
+        "C": false,
+        "A": false
+      },
+      "number_nonempty_bins": 98,
+      "number_empty_bins": 7,
+      "N": 3434,
+      "old_mle": {
+        "n": 11.923191885880948,
+        "r": 0.5690914293727503,
+        "sigma": 0.013344252093684623,
+        "mean_relative_residual_sq": 0.3992071156830036,
+        "root_mean_relative_residual_sq": 0.6318283910074028,
+        "mean_density_residual_sq": 1.411524072445123
+      }
+    }
+  }
+}

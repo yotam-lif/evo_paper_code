@@ -1,0 +1,87 @@
+We present here a simple derivation for the DFE of FGM for our needs,
+based on previous works in the field~\cite{fisher_isotropic, martin_general_2006}.
+By isotropy, we may choose without loss of generality \(\mathbf r = r \hat e_1\), where \(r=\|\mathbf r\|\).
+We then define
+\begin{equation}
+    U \coloneq \|\mathbf r+\boldsymbol\delta\|^2
+    =
+    (r+\delta_1)^2+\sum_{i=2}^n \delta_i^2.
+    \label{eq:U-def}
+\end{equation}
+Since \(\delta_i\sim \mathcal N(0,\sigma^2)\) are independent, the moment-generating function of \(U\) factorizes:
+\begin{equation}
+    M_U(t)
+    \coloneq
+    \mathbb E[e^{tU}]
+    =
+    \mathbb E[e^{t(r+\delta_1)^2}]
+    \prod_{i=2}^n \mathbb E[e^{t\delta_i^2}].
+\end{equation}
+Using the Gaussian identity
+\begin{equation}
+    \mathbb E[e^{tX^2}]
+    =
+    \frac{1}{\sqrt{1-2\sigma^2 t}}
+    \exp\!\left(\frac{\mu^2 t}{1-2\sigma^2 t}\right),
+    \qquad
+    X\sim\mathcal N(\mu,\sigma^2),
+\end{equation}
+we obtain
+\begin{equation}
+    M_U(t)
+    =
+    (1-2\sigma^2 t)^{-n/2}
+    \exp\!\left(\frac{r^2 t}{1-2\sigma^2 t}\right).
+    \label{eq:U-mgf}
+\end{equation}
+Equivalently, \(U/\sigma^2\) is non-central chi-squared with \(n\) degrees of freedom and non-centrality parameter \(r^2/\sigma^2\), so the density of \(U\) is
+\begin{equation}
+    f_U(u\mid r)
+    =
+    \frac{1}{2\sigma^2}
+    \exp\!\left(-\frac{u+r^2}{2\sigma^2}\right)
+    \left(\frac{u}{r^2}\right)^{\frac{n}{4}-\frac12}
+    I_{\frac n2-1}\!\left(\frac{r\sqrt u}{\sigma^2}\right),
+    \qquad u\ge 0,
+    \label{eq:U-density}
+\end{equation}
+where \(I_\nu\) is the modified Bessel function of the first kind.
+
+We have that
+\begin{equation}
+    \Delta = e^{-U/2}-e^{-r^2/2},
+\end{equation}
+so the inverse transformation is
+\begin{equation}
+    u(\Delta)=-2\ln\!\left(\Delta+e^{-r^2/2}\right),
+\end{equation}
+with Jacobian
+\begin{equation}
+    \left|\frac{du}{d\Delta}\right|
+    =
+    \frac{2}{\Delta+e^{-r^2/2}}.
+\end{equation}
+Therefore, the DFE is
+\begin{equation}
+    P(\Delta\mid r)
+    =
+    \frac{2}{\Delta+e^{-r^2/2}}
+    f_U\!\bigl(u(\Delta)\mid r\bigr),
+    \label{eq:fgm-dfe-compact}
+\end{equation}
+defined on
+\begin{equation}
+    -e^{-r^2/2}\le \Delta \le 1-e^{-r^2/2}.
+\end{equation}
+Substituting equation~\eqref{eq:U-density} into equation~\eqref{eq:fgm-dfe-compact} gives
+\begin{equation}
+\begin{aligned}
+    P(\Delta\mid r)
+    &=
+    \frac{1}{\sigma^2\left(\Delta+e^{-r^2/2}\right)}
+    \exp\!\left(-\frac{u(\Delta)+r^2}{2\sigma^2}\right)
+    \left(\frac{u(\Delta)}{r^2}\right)^{\frac{n}{4}-\frac12}
+    I_{\frac n2-1}\!\left(\frac{r\sqrt{u(\Delta)}}{\sigma^2}\right).
+\end{aligned}
+\label{eq:fgm-dfe-explicit}
+\end{equation}
