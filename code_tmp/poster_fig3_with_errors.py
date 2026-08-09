@@ -1019,18 +1019,24 @@ def plot_figure(
     heavy_error_intervals,
     path,
     heavy_parameter_text=None,
+    legend_heavy_first=False,
+    show_heavy=True,
+    x_axis_label=r"Absolute fitness effect $(s)$",
+    y_limits=None,
 ):
     canonical_curve = canonical_likelihood.canonical_predictive_pdf(
         canonical_fit.n,
         canonical_fit.r,
         canonical_fit.sigma,
     )
-    heavy_error_curve = heavy_error_likelihood.heavy_predictive_pdf(
-        heavy_error_fit.n,
-        heavy_error_fit.r,
-        heavy_error_fit.sigma,
-        heavy_error_fit.mu,
-    )
+    heavy_error_curve = None
+    if show_heavy:
+        heavy_error_curve = heavy_error_likelihood.heavy_predictive_pdf(
+            heavy_error_fit.n,
+            heavy_error_fit.r,
+            heavy_error_fit.sigma,
+            heavy_error_fit.mu,
+        )
     tail_histogram = histogram(effects, TAIL_BIN_WIDTH)
     bulk_histogram = histogram(effects, BULK_BIN_WIDTH)
 
@@ -1054,10 +1060,6 @@ def plot_figure(
             (canonical_likelihood.x >= xlim[0])
             & (canonical_likelihood.x <= xlim[1])
         )
-        heavy_visible = (
-            (heavy_error_likelihood.x >= xlim[0])
-            & (heavy_error_likelihood.x <= xlim[1])
-        )
         ax.errorbar(
             centers[nonzero],
             density[nonzero],
@@ -1074,15 +1076,20 @@ def plot_figure(
             label="REL607 data",
             zorder=4,
         )
-        ax.plot(
-            heavy_error_likelihood.x[heavy_visible],
-            heavy_error_curve[heavy_visible],
-            color=HEAVY_COLOR,
-            lw=3.0,
-            ls="-",
-            label="Heavy-tailed",
-            zorder=3,
-        )
+        if show_heavy:
+            heavy_visible = (
+                (heavy_error_likelihood.x >= xlim[0])
+                & (heavy_error_likelihood.x <= xlim[1])
+            )
+            ax.plot(
+                heavy_error_likelihood.x[heavy_visible],
+                heavy_error_curve[heavy_visible],
+                color=HEAVY_COLOR,
+                lw=3.0,
+                ls="-",
+                label="Heavy-tailed",
+                zorder=3,
+            )
         ax.autoscale_view(scalex=False, scaley=True)
         ax.set_autoscaley_on(False)
         # Let the observed data and the full-data HT fit determine the automatic
@@ -1099,7 +1106,7 @@ def plot_figure(
             scaley=False,
         )
         ax.set_xlim(*xlim)
-        ax.set_xlabel(r"Absolute fitness effect $(s)$")
+        ax.set_xlabel(x_axis_label)
         ax.set_ylabel("Probability density")
         ax.tick_params(direction="out", length=4.5, width=0.9)
         for spine in ("top", "right"):
@@ -1108,7 +1115,11 @@ def plot_figure(
     draw_common(axes[0], tail_histogram, TAIL_XLIM)
     draw_common(axes[1], bulk_histogram, BULK_XLIM)
 
-    axes[0].set_ylim(bottom=1.0e-2)
+    if y_limits is None:
+        axes[0].set_ylim(bottom=1.0e-2)
+    else:
+        for ax, limits in zip(axes, y_limits):
+            ax.set_ylim(*limits)
 
     axes[1].set_ylabel("")
 
@@ -1141,7 +1152,7 @@ def plot_figure(
         ),
     ])
     heavy_error_lines = heavy_parameter_text
-    if heavy_error_lines is None:
+    if show_heavy and heavy_error_lines is None:
         heavy_error_lines = "\n".join([
             interval_line(
                 "n",
@@ -1183,30 +1194,38 @@ def plot_figure(
         zorder=1,
     )
 
-    axes[1].text(
-        0.975,
-        0.965,
-        heavy_error_lines,
-        transform=axes[1].transAxes,
-        ha="right",
-        va="top",
-        fontsize=17.3,
-        linespacing=1.00,
-        color=HEAVY_COLOR,
-        zorder=1,
-    )
+    if show_heavy:
+        axes[1].text(
+            0.975,
+            0.965,
+            heavy_error_lines,
+            transform=axes[1].transAxes,
+            ha="right",
+            va="top",
+            fontsize=17.3,
+            linespacing=1.00,
+            color=HEAVY_COLOR,
+            zorder=1,
+        )
     handles, labels = axes[0].get_legend_handles_labels()
     handles_by_label = dict(zip(labels, handles))
-    semantic_handles = [
+    canonical_legend_item = (
         Line2D([], [], color=CANONICAL_COLOR, lw=2.8, ls="-"),
-        Line2D([], [], color=HEAVY_COLOR, lw=3.0, ls="-"),
-        handles_by_label["REL607 data"],
-    ]
-    semantic_labels = [
         "Gaussian (canonical)",
+    )
+    heavy_legend_item = (
+        Line2D([], [], color=HEAVY_COLOR, lw=3.0, ls="-"),
         "Heavy-tailed",
-        "REL607 data",
+    )
+    fit_legend_items = [canonical_legend_item]
+    if show_heavy:
+        fit_legend_items.append(heavy_legend_item)
+        if legend_heavy_first:
+            fit_legend_items.reverse()
+    legend_items = fit_legend_items + [
+        (handles_by_label["REL607 data"], "REL607 data")
     ]
+    semantic_handles, semantic_labels = zip(*legend_items)
     axes[0].legend(
         semantic_handles,
         semantic_labels,

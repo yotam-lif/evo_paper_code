@@ -45,6 +45,7 @@ OUT_JSON = os.path.join(base.DATA_DIR, "poster_fig3_no_errors_fit.json")
 PLOT_DX = 2.0e-4
 CANONICAL_BOOTSTRAPS = 100
 CANONICAL_BOOTSTRAP_SEED = 260731
+SHARED_Y_LIMITS = ((1.0e-2, 1.45), (-2.0, 41.0))
 
 
 class CanonicalNoErrorLikelihood:
@@ -473,6 +474,9 @@ def main():
         canonical_intervals,
         heavy_intervals,
         OUT_PDF,
+        legend_heavy_first=True,
+        x_axis_label=r"Fitness effect $(s)$",
+        y_limits=SHARED_Y_LIMITS,
     )
 
     elapsed = time.perf_counter() - started
