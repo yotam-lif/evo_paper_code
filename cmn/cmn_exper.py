@@ -206,3 +206,19 @@ def limdi_gene_series(pop, errors=False):
     if not errors:
         return eff
     return eff, pd.Series(error[keep, k], index=keep, name=f"{pop}_sigma")
+
+
+def limdi_channel_series(pop):
+    """The two technical replicates of one Limdi population, unaveraged, as ``(green, red)``.
+
+    Same genes and same integer index as ``limdi_gene_series(pop)``, which is the mean of these
+    two -- the sentinel marks a gene missing in both channels at once, never in just one, so the
+    ``keep`` mask is identical.  Correlating green against red for a single library is a purely
+    technical control: one strain, one assay, no evolution and no separate mutagenesis, so it
+    measures the assay's own reproducibility and nothing else.
+    """
+    fitness, _, _ = load_limdi_arrays()
+    k = LIMDI_LIBRARIES.index(pop)
+    keep = np.where(fitness[:, k, 0] > LIMDI_MISSING)[0]
+    return (pd.Series(fitness[keep, k, 0], index=keep, name=f"{pop}_green"),
+            pd.Series(fitness[keep, k, 1], index=keep, name=f"{pop}_red"))
