@@ -146,6 +146,122 @@ def load_asencao_errors(exp, background):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Ascensao MONOCULTURES -- combined and per-replicate fits, keyed on gene_ID
+#
+# The .npy arrays above are the authors' COMBINED per-experiment fits, which carry no replicate
+# structure.  The release also publishes each biological replicate fit on its own, and replicate 1
+# vs replicate 2 of one strain in one experiment is a pure technical control: same genotype, same
+# library, same condition, nothing between the two numbers but assay noise.  Those tables are
+# cached as tidy CSVs by ``data/asencao_dfe_arrays/build_monoculture_from_repo.py``.
+#
+# Rows are keyed on ``gene_ID`` (ECB_#####), NOT on gene_symbol and never on row position.  The
+# build script verifies that gene_ID is unique and non-null in every file and that the
+# gene_ID -> gene_symbol map is identical across all 41 tables.  Gene sets differ substantially
+# between strains (E_SLR: 3021 for R, 3029 for S, but only 2361 for L), so callers MUST intersect
+# indices rather than assume alignment -- which is the whole reason these are Series, not arrays.
+# ══════════════════════════════════════════════════════════════════════════════
+ASENCAO_MONO_DIR = os.path.join(DATA_DIR, "asencao_monoculture")
+
+# Release strain letter -> (experiment folder, ecotype, media, description, n_replicates).
+# Letters are unique across the whole release.  "Ecotype" is the genotype: REL606 is the ancestor,
+# S and L are the two diversified Ara-2 ecotypes.  Media and description are split because they
+# are independent: DM25 is used by THREE different experiments (E_SLR daily batch, E_PQT
+# exponential, E_U the 8-day repeat), so the medium alone does not identify the condition and the
+# growth regime alone does not identify the medium.  Both come from the release's BarSeq_meta.csv.
+# ALL FIVE monoculture experiments are SERIAL DILUTION -- there is no chemostat and no continuous
+# culture anywhere in the release.  What differs between them is the dilution factor and the
+# transfer interval, and the physiological consequence of those two numbers is whether the culture
+# ever exhausts its carbon inside a cycle.  That is the whole content of "full cycle" vs "exp only"
+# below (Ascensao et al. 2023, Nat Commun 14:248, Methods "BarSeq experiments"):
+#
+#   E_SLR "Mono"     DM25 (25 mg/L glucose), 1:100 every 24 h, 5x50 mL flasks, 4 days.  The
+#                    standard LTEE regime: exactly log2(100) = 6.6439 gen/day, glucose gone after
+#                    a few hours, the rest of the day spent in stationary phase.
+#   E_U   "Mono 2"   the same regime, 3x50 mL flasks, 8 days, four biological replicates.
+#   E_MNO "1:10 dil" DM27.8, 1:10 every 24 h, 1 L flask (180 mL media + 20 mL culture), 8 days.
+#                    Still a full batch cycle, exactly log2(10) = 3.3219 gen/day.  27.8 mg/L is
+#                    chosen so 0.9 x 27.8 = 25 mg/L glucose after the transfer, i.e. the same
+#                    glucose as DM25; the authors' stated purpose is to LENGTHEN stationary phase
+#                    relative to exponential, since only 3.32 doublings are needed to refill.
+#   E_PQT "Glu exp"  DM25 again, and 1:100 again, but transferred every 4.5-5 h (S, L) or 7.5-8 h
+#                    (REL606) -- the measured length of DM25 exponential phase.  Same medium and
+#                    same dilution factor as E_SLR; the culture is simply harvested at the end of
+#                    exponential growth, so stationary phase is deleted.  Generations per transfer
+#                    from CFU counts, not assumed.  Only REL606's first two transfers survived
+#                    (the third bottlenecked), so T rests on 3 timepoints where P and Q have 5.
+#   E_GHI "Ac exp"   DM2000-acetate (2000 mg/L sodium acetate), 10 mL in a 50 mL flask, transferred
+#                    every 24 h by a VARIABLE volume: OD is measured and the culture diluted to a
+#                    target OD_0 so that 24 h later it is at OD ~ 0.6, still mid-exponential.  80x
+#                    the carbon of DM25 means it is never approached.  Generations per cycle =
+#                    log2(OD_f/OD_0), which is why they differ by strain and replicate: on acetate
+#                    REL606 grows at ~0.08/h against L 0.12/h and S 0.18/h.
+#
+# So "exp only" does NOT mean continuous culture -- it means serially diluted often enough (E_PQT)
+# or into enough carbon (E_GHI) that the cells never leave exponential phase.
+#
+# letter -> (release folder, ecotype, media, description, n_replicates)
+ASENCAO_MONO = {
+    "R": ("SLR", "REL606", "DM25", "1:100/24h full cycle", 2),
+    "S": ("SLR", "S",      "DM25", "1:100/24h full cycle", 2),
+    "L": ("SLR", "L",      "DM25", "1:100/24h full cycle", 2),
+    "I": ("GHI", "REL606", "DM2000-acetate", "variable/24h exp only", 2),
+    "G": ("GHI", "S",      "DM2000-acetate", "variable/24h exp only", 2),
+    "H": ("GHI", "L",      "DM2000-acetate", "variable/24h exp only", 2),
+    "O": ("MNO", "REL606", "DM27.8", "1:10/24h long stat", 2),
+    "M": ("MNO", "S",      "DM27.8", "1:10/24h long stat", 2),
+    "N": ("MNO", "L",      "DM27.8", "1:10/24h long stat", 2),
+    "T": ("PQT", "REL606", "DM25", "1:100/5-8h exp only", 2),
+    "P": ("PQT", "S",      "DM25", "1:100/5-8h exp only", 2),
+    "Q": ("PQT", "L",      "DM25", "1:100/5-8h exp only", 2),
+    # A second, standalone REL606 monoculture in the same medium and transfer regime as E_SLR's R,
+    # run for 8 days with four biological replicates instead of two.  No evolved partner, so it
+    # contributes controls only.
+    "U": ("U",   "REL606", "DM25", "1:100/24h full cycle 8d", 4),
+}
+
+# The four environments in which all three genotypes were assayed, as
+# (folder, media, description, ancestor letter, ((ecotype, letter), ...)).  These give the
+# ancestor -> evolved transitions; E_U has no evolved partner and appears only among the controls.
+ASENCAO_MONO_ENVIRONMENTS = (
+    ("SLR", "DM25",           "1:100/24h full cycle",  "R", (("S", "S"), ("L", "L"))),
+    ("GHI", "DM2000-acetate", "variable/24h exp only", "I", (("S", "G"), ("L", "H"))),
+    ("MNO", "DM27.8",         "1:10/24h long stat",    "O", (("S", "M"), ("L", "N"))),
+    ("PQT", "DM25",           "1:100/5-8h exp only",   "T", (("S", "P"), ("L", "Q"))),
+)
+
+def asencao_mono_series(letter, rep=None, errors=False):
+    """Selection coefficients for one Ascensao monoculture strain, indexed by ``gene_ID``.
+
+    ``rep=None`` gives the authors' COMBINED fit -- the same values as
+    :func:`load_asencao_array`, verified identical at build time.  ``rep=1``, ``rep=2`` (and 3, 4
+    for U) give the individual biological-replicate fits, which is what makes a within-experiment
+    technical control possible.  With ``errors=True`` returns ``(s, s_std)``.
+
+    The index is the gene identifier, so intersecting two of these matches genes correctly no
+    matter how the two strains' gene sets differ.
+    """
+    if letter not in ASENCAO_MONO:
+        raise KeyError(f"{letter!r} is not an Ascensao monoculture; expected one of "
+                       f"{sorted(ASENCAO_MONO)}")
+    n_rep = ASENCAO_MONO[letter][4]
+    if rep is not None and not 1 <= rep <= n_rep:
+        raise ValueError(f"strain {letter} has replicates 1..{n_rep}, got rep={rep}")
+    name = letter if rep is None else f"{letter}{rep}"
+    path = os.path.join(ASENCAO_MONO_DIR, f"{name}.csv")
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"{path} missing -- run data/asencao_dfe_arrays/build_monoculture_from_repo.py")
+    df = pd.read_csv(path)
+    if df["gene_ID"].duplicated().any():
+        raise ValueError(f"{path}: duplicated gene_ID; the cache is corrupt")
+    eff = pd.Series(df["s"].to_numpy(float), index=df["gene_ID"].to_numpy(), name=name)
+    if not errors:
+        return eff
+    return eff, pd.Series(df["s_std"].to_numpy(float), index=df["gene_ID"].to_numpy(),
+                          name=f"{name}_std")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Limdi et al. -- TnSeq gene-knockout DFEs across the LTEE panel
 #
 # We read the .npy matrices, NOT dfe_data_pandas.csv.  That CSV is built in the upstream

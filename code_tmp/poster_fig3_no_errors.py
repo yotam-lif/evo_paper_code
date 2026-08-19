@@ -1,14 +1,16 @@
 r"""Poster Figure 3 variant: full MLEs without measurement-error convolution.
 
-Both curves are fit directly to the individual REL607 effects:
+Both curves are fit independently to the individual REL607 and REL606 effects:
 
 * Gaussian FGM: exact absolute-fitness DFE, free n, r, and sigma;
 * heavy-tailed FGM: log-fitness DFE, free n, r, sigma, and mu.
 
-As in the poster figure, observations are restricted to s >= -0.5 and the
-Gaussian fit excludes the most deleterious 5% of the retained measurements.
-The heavy-tailed fit uses all retained measurements.  Neither likelihood nor
-either displayed predictive curve is convolved with measurement error.
+As in the poster figure, observations are restricted to s >= -0.5 and each
+Gaussian fit excludes the most deleterious 5% of its retained measurements.
+Each heavy-tailed fit uses all retained measurements.  Neither likelihood nor
+any displayed predictive curve is convolved with measurement error.  Figure
+rows correspond to REL607 and REL606; columns show the deleterious tail and
+central bulk, respectively.
 
 Outputs:
 
@@ -45,7 +47,8 @@ OUT_JSON = os.path.join(base.DATA_DIR, "poster_fig3_no_errors_fit.json")
 PLOT_DX = 2.0e-4
 CANONICAL_BOOTSTRAPS = 100
 CANONICAL_BOOTSTRAP_SEED = 260731
-SHARED_Y_LIMITS = ((1.0e-2, 1.45), (-2.0, 41.0))
+SHARED_Y_LIMITS = ((1.0e-2, 1.45), (-2.0, 47.0))
+POPULATIONS = ("REL607", "REL606")
 
 
 class CanonicalNoErrorLikelihood:
@@ -347,7 +350,11 @@ def wald_intervals(fit, diagnostics, heavy=False):
     }
 
 
-def canonical_bootstrap_intervals(effects, canonical_diagnostics):
+def canonical_bootstrap_intervals(
+    effects,
+    canonical_diagnostics,
+    seed=CANONICAL_BOOTSTRAP_SEED,
+):
     """Percentile intervals for the boundary-sensitive full Gaussian MLE."""
     bounds = [
         (np.log(base.N_BOUNDS[0]), np.log(base.N_BOUNDS[1])),
@@ -355,7 +362,7 @@ def canonical_bootstrap_intervals(effects, canonical_diagnostics):
         (np.log(base.A_BOUNDS[0]), np.log(base.A_BOUNDS[1])),
     ]
     start = np.asarray(canonical_diagnostics["_theta"], dtype=float)
-    rng = np.random.default_rng(CANONICAL_BOOTSTRAP_SEED)
+    rng = np.random.default_rng(seed)
     estimates = {"n": [], "r": [], "sigma": []}
     failures = 0
 
@@ -419,7 +426,7 @@ def canonical_bootstrap_intervals(effects, canonical_diagnostics):
         "replicates_requested": CANONICAL_BOOTSTRAPS,
         "replicates_retained": retained,
         "failures": failures,
-        "seed": CANONICAL_BOOTSTRAP_SEED,
+        "seed": seed,
         "canonical_tail_retrimmed_within_each_bootstrap": True,
     }
 
@@ -432,24 +439,258 @@ def clean_diagnostics(diagnostics):
     }
 
 
-def main():
-    started = time.perf_counter()
-    os.makedirs(base.FIG_DIR, exist_ok=True)
-    os.makedirs(base.DATA_DIR, exist_ok=True)
+def population_effects_and_errors(population):
+    """Aligned finite mean effects and positive reported errors."""
+    effect_series, error_series = base.limdi_gene_series(
+        population, errors=True
+    )
+    errors = error_series.reindex(effect_series.index).to_numpy(float)
+    effects = effect_series.to_numpy(float)
+    keep = (
+        np.isfinite(effects)
+        & np.isfinite(errors)
+        & (errors > 0.0)
+    )
+    return effects[keep], errors[keep]
 
-    all_effects, all_errors = base.rel607_effects_and_errors()
+
+def interval_line(symbol, estimate, interval, decimals):
+    return (
+        rf"${symbol}={estimate:.{decimals}f}$"
+        "\n"
+        rf"$[{interval[0]:.{decimals}f},"
+        rf"{interval[1]:.{decimals}f}]$"
+    )
+
+
+def parameter_text(fit, intervals, heavy=False):
+    specifications = [
+        ("n", "n", 2),
+        ("r", "r", 3),
+        ("sigma", r"\sigma", 3 if not heavy else 4),
+    ]
+    if heavy:
+        specifications.append(("mu", r"\mu", 2))
+    return "\n".join(
+        interval_line(
+            symbol,
+            getattr(fit, name),
+            intervals[name],
+            decimals,
+        )
+        for name, symbol, decimals in specifications
+    )
+
+
+def plot_two_row_figure(results, path):
+    """Plot tail/bulk columns for one independently fitted population per row."""
+    fig, axes = base.plt.subplots(
+        len(POPULATIONS),
+        2,
+        figsize=(11.4, 9.6),
+        sharex="col",
+        gridspec_kw={"wspace": 0.22, "hspace": 0.18},
+    )
+
+    for row, population in enumerate(POPULATIONS):
+        result = results[population]
+        effects = result["effects"]
+        canonical_likelihood = result["canonical_likelihood"]
+        heavy_likelihood = result["heavy_likelihood"]
+        canonical_fit = result["canonical_fit"]
+        heavy_fit = result["heavy_fit"]
+        canonical_curve = canonical_likelihood.canonical_predictive_pdf(
+            canonical_fit.n,
+            canonical_fit.r,
+            canonical_fit.sigma,
+        )
+        heavy_curve = heavy_likelihood.heavy_predictive_pdf(
+            heavy_fit.n,
+            heavy_fit.r,
+            heavy_fit.sigma,
+            heavy_fit.mu,
+        )
+        histograms = (
+            base.histogram(effects, base.TAIL_BIN_WIDTH),
+            base.histogram(effects, base.BULK_BIN_WIDTH),
+        )
+
+        for col, (empirical_histogram, xlim) in enumerate(zip(
+            histograms, (base.TAIL_XLIM, base.BULK_XLIM)
+        )):
+            ax = axes[row, col]
+            if col == 0:
+                ax.set_yscale("log")
+            centers, density, density_error, counts = empirical_histogram
+            nonzero = (
+                (counts > 0)
+                & (centers >= xlim[0])
+                & (centers <= xlim[1])
+            )
+            canonical_visible = (
+                (canonical_likelihood.x >= xlim[0])
+                & (canonical_likelihood.x <= xlim[1])
+            )
+            heavy_visible = (
+                (heavy_likelihood.x >= xlim[0])
+                & (heavy_likelihood.x <= xlim[1])
+            )
+            ax.errorbar(
+                centers[nonzero],
+                density[nonzero],
+                yerr=density_error[nonzero],
+                fmt="o",
+                ms=4.8,
+                mfc=base.DATA_COLOR,
+                mec=base.DATA_EDGE,
+                mew=0.45,
+                ecolor=base.DATA_COLOR,
+                elinewidth=0.75,
+                capsize=0,
+                alpha=0.88,
+                label="Data",
+                zorder=4,
+            )
+            ax.plot(
+                heavy_likelihood.x[heavy_visible],
+                heavy_curve[heavy_visible],
+                color=base.HEAVY_COLOR,
+                lw=3.0,
+                label="Heavy-tailed",
+                zorder=3,
+            )
+            ax.autoscale_view(scalex=False, scaley=True)
+            ax.set_autoscaley_on(False)
+            # The Gaussian tail is extrapolated beyond the trimmed fit range,
+            # so it must not determine the tail-panel scale.
+            ax.plot(
+                canonical_likelihood.x[canonical_visible],
+                canonical_curve[canonical_visible],
+                color=base.CANONICAL_COLOR,
+                lw=2.8,
+                label="Gaussian (canonical)",
+                zorder=2,
+                scaley=False,
+            )
+            ax.set_xlim(*xlim)
+            ax.set_ylim(*SHARED_Y_LIMITS[col])
+            ax.tick_params(direction="out", length=4.5, width=0.9)
+            for spine in ("top", "right"):
+                ax.spines[spine].set_visible(False)
+
+        axes[row, 0].set_ylabel("Probability density")
+        axes[row, 1].set_ylabel("")
+        axes[row, 0].text(
+            -0.205,
+            0.5,
+            population,
+            transform=axes[row, 0].transAxes,
+            ha="center",
+            va="center",
+            rotation=90,
+            fontsize=20,
+            fontweight="bold",
+        )
+        axes[row, 1].text(
+            0.025,
+            0.965,
+            parameter_text(
+                canonical_fit,
+                result["canonical_intervals"],
+            ),
+            transform=axes[row, 1].transAxes,
+            ha="left",
+            va="top",
+            fontsize=17.3,
+            linespacing=1.00,
+            color=base.CANONICAL_COLOR,
+            zorder=1,
+        )
+        axes[row, 1].text(
+            0.975,
+            0.965,
+            parameter_text(
+                heavy_fit,
+                result["heavy_intervals"],
+                heavy=True,
+            ),
+            transform=axes[row, 1].transAxes,
+            ha="right",
+            va="top",
+            fontsize=17.3,
+            linespacing=1.00,
+            color=base.HEAVY_COLOR,
+            zorder=1,
+        )
+
+    axes[0, 0].set_title("Deleterious tail", pad=9)
+    axes[0, 1].set_title("Central bulk", pad=9)
+    for ax in axes[-1, :]:
+        ax.set_xlabel(r"Fitness effect $(s)$")
+
+    handles = [
+        base.Line2D([], [], color=base.HEAVY_COLOR, lw=3.0),
+        base.Line2D([], [], color=base.CANONICAL_COLOR, lw=2.8),
+        base.Line2D(
+            [],
+            [],
+            marker="o",
+            linestyle="none",
+            ms=4.8,
+            mfc=base.DATA_COLOR,
+            mec=base.DATA_EDGE,
+        ),
+    ]
+    axes[0, 0].legend(
+        handles,
+        ("Heavy-tailed", "Gaussian (canonical)", "Data"),
+        loc="lower left",
+        bbox_to_anchor=(0.015, 0.02),
+        frameon=True,
+        facecolor="white",
+        edgecolor="none",
+        framealpha=0.90,
+        handlelength=2.5,
+        borderaxespad=0.3,
+        fontsize=17.5,
+    )
+
+    for label, ax in zip(("A", "B", "C", "D"), axes.ravel()):
+        ax.text(
+            -0.14,
+            1.08,
+            label,
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=25,
+            fontweight="bold",
+        )
+
+    fig.subplots_adjust(
+        left=0.11,
+        right=0.985,
+        bottom=0.10,
+        top=0.93,
+    )
+    fig.savefig(path, format="pdf", bbox_inches="tight", pad_inches=0.04)
+    base.plt.close(fig)
+
+
+def fit_population(population, saved_canonical, bootstrap_seed):
+    all_effects, all_errors = population_effects_and_errors(population)
     above_cut = all_effects >= base.LOWER_FIT_CUT
     effects = all_effects[above_cut]
     errors = all_errors[above_cut]
     canonical_effects, _ = base.trim_canonical_tail(effects, errors)
 
-    with open(base.OUT_JSON, encoding="utf-8") as handle:
-        saved = json.load(handle)
-    saved_canonical = saved["canonical_moment_constrained_mle"]["fit"]
-
+    print(
+        f"{population}: N={effects.size}, "
+        f"range=({effects.min():.6f}, {effects.max():.6f})",
+        flush=True,
+    )
     canonical_likelihood = CanonicalNoErrorLikelihood(canonical_effects)
     heavy_likelihood = HeavyNoErrorLikelihood(effects)
-
     canonical_fit, canonical_diagnostics = fit_canonical_full_mle(
         canonical_likelihood, saved_canonical
     )
@@ -458,37 +699,94 @@ def main():
     )
     canonical_intervals, canonical_ci_diagnostics = (
         canonical_bootstrap_intervals(
-            effects, canonical_diagnostics
+            effects,
+            canonical_diagnostics,
+            seed=bootstrap_seed,
         )
     )
     heavy_intervals, heavy_ci_diagnostics = wald_intervals(
         heavy_fit, heavy_diagnostics, heavy=True
     )
+    return {
+        "effects": effects,
+        "canonical_effects": canonical_effects,
+        "canonical_likelihood": canonical_likelihood,
+        "heavy_likelihood": heavy_likelihood,
+        "canonical_fit": canonical_fit,
+        "heavy_fit": heavy_fit,
+        "canonical_intervals": canonical_intervals,
+        "heavy_intervals": heavy_intervals,
+        "canonical_diagnostics": canonical_diagnostics,
+        "heavy_diagnostics": heavy_diagnostics,
+        "canonical_ci_diagnostics": canonical_ci_diagnostics,
+        "heavy_ci_diagnostics": heavy_ci_diagnostics,
+    }
 
-    base.plot_figure(
-        effects,
-        canonical_likelihood,
-        heavy_likelihood,
-        canonical_fit,
-        heavy_fit,
-        canonical_intervals,
-        heavy_intervals,
-        OUT_PDF,
-        legend_heavy_first=True,
-        x_axis_label=r"Fitness effect $(s)$",
-        y_limits=SHARED_Y_LIMITS,
-    )
 
-    elapsed = time.perf_counter() - started
-    output = {
+def serializable_population_result(population, result):
+    return {
         "dataset": {
-            "name": "REL607",
+            "name": population,
             "observed_lower_cut": base.LOWER_FIT_CUT,
-            "N_heavy": int(effects.size),
+            "N_heavy": int(result["effects"].size),
             "N_canonical_after_5_percent_trim": int(
-                canonical_effects.size
+                result["canonical_effects"].size
             ),
         },
+        "canonical_full_mle": {
+            "fit": result["canonical_fit"].serializable(),
+            "confidence_intervals_95": result["canonical_intervals"],
+            "confidence_interval_diagnostics": result[
+                "canonical_ci_diagnostics"
+            ],
+            "diagnostics": clean_diagnostics(
+                result["canonical_diagnostics"]
+            ),
+        },
+        "heavy_tailed_full_mle": {
+            "fit": result["heavy_fit"].serializable(),
+            "confidence_intervals_95": result["heavy_intervals"],
+            "confidence_interval_diagnostics": result[
+                "heavy_ci_diagnostics"
+            ],
+            "diagnostics": clean_diagnostics(
+                result["heavy_diagnostics"]
+            ),
+        },
+    }
+
+
+def main():
+    started = time.perf_counter()
+    os.makedirs(base.FIG_DIR, exist_ok=True)
+    os.makedirs(base.DATA_DIR, exist_ok=True)
+
+    with open(base.OUT_JSON, encoding="utf-8") as handle:
+        saved = json.load(handle)
+    saved_canonical = saved["canonical_moment_constrained_mle"]["fit"]
+
+    results = {
+        population: fit_population(
+            population,
+            saved_canonical,
+            bootstrap_seed=CANONICAL_BOOTSTRAP_SEED + index,
+        )
+        for index, population in enumerate(POPULATIONS)
+    }
+    plot_two_row_figure(results, OUT_PDF)
+
+    elapsed = time.perf_counter() - started
+    populations_output = {
+        population: serializable_population_result(
+            population, results[population]
+        )
+        for population in POPULATIONS
+    }
+    # Keep the original REL607 top-level entries as compatibility aliases for
+    # consumers such as poster_fig5.py, while exposing both fits explicitly.
+    rel607_output = populations_output["REL607"]
+    output = {
+        "dataset": rel607_output["dataset"],
         "likelihood": {
             "measurement_error_convolution": False,
             "canonical": (
@@ -500,36 +798,32 @@ def main():
             "conditional_on_s_at_least": base.LOWER_FIT_CUT,
             "canonical_lower_tail_trim": base.CANONICAL_LOWER_TRIM,
         },
-        "canonical_full_mle": {
-            "fit": canonical_fit.serializable(),
-            "confidence_intervals_95": canonical_intervals,
-            "confidence_interval_diagnostics": canonical_ci_diagnostics,
-            "diagnostics": clean_diagnostics(canonical_diagnostics),
-        },
-        "heavy_tailed_full_mle": {
-            "fit": heavy_fit.serializable(),
-            "confidence_intervals_95": heavy_intervals,
-            "confidence_interval_diagnostics": heavy_ci_diagnostics,
-            "diagnostics": clean_diagnostics(heavy_diagnostics),
-        },
+        "canonical_full_mle": rel607_output["canonical_full_mle"],
+        "heavy_tailed_full_mle": rel607_output[
+            "heavy_tailed_full_mle"
+        ],
+        "populations": populations_output,
         "elapsed_seconds": elapsed,
     }
     with open(OUT_JSON, "w", encoding="utf-8") as handle:
         json.dump(output, handle, indent=2)
         handle.write("\n")
 
-    print(
-        "Canonical no-error full MLE: "
-        f"n={canonical_fit.n:.8g}, r={canonical_fit.r:.8g}, "
-        f"sigma={canonical_fit.sigma:.8g}, "
-        f"logL={canonical_fit.loglik:.8f}"
-    )
-    print(
-        "Heavy-tailed no-error full MLE: "
-        f"n={heavy_fit.n:.8g}, r={heavy_fit.r:.8g}, "
-        f"sigma={heavy_fit.sigma:.8g}, mu={heavy_fit.mu:.8g}, "
-        f"logL={heavy_fit.loglik:.8f}"
-    )
+    for population in POPULATIONS:
+        canonical_fit = results[population]["canonical_fit"]
+        heavy_fit = results[population]["heavy_fit"]
+        print(
+            f"{population} canonical no-error full MLE: "
+            f"n={canonical_fit.n:.8g}, r={canonical_fit.r:.8g}, "
+            f"sigma={canonical_fit.sigma:.8g}, "
+            f"logL={canonical_fit.loglik:.8f}"
+        )
+        print(
+            f"{population} heavy-tailed no-error full MLE: "
+            f"n={heavy_fit.n:.8g}, r={heavy_fit.r:.8g}, "
+            f"sigma={heavy_fit.sigma:.8g}, mu={heavy_fit.mu:.8g}, "
+            f"logL={heavy_fit.loglik:.8f}"
+        )
     print(f"Elapsed: {elapsed:.1f} s")
     print(f"Saved {OUT_JSON}")
     print(f"Saved {OUT_PDF}")

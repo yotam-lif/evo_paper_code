@@ -107,5 +107,213 @@
       "A_r_sigma": 0.006967702983448745
     }
   },
-  "elapsed_seconds": 9.524397458008025
+  "populations": {
+    "REL607": {
+      "dataset": {
+        "name": "REL607",
+        "observed_lower_cut": -0.5,
+        "N_heavy": 3496,
+        "N_canonical_after_5_percent_trim": 3321
+      },
+      "canonical_full_mle": {
+        "fit": {
+          "n": 4.093612641132217,
+          "r": 0.4640420926936822,
+          "sigma": 0.08854624721804938,
+          "loglik": 6262.52082288065
+        },
+        "confidence_intervals_95": {
+          "n": [
+            3.8806261781137317,
+            4.093612641132217
+          ],
+          "r": [
+            0.4640380614679689,
+            0.4748854978183944
+          ],
+          "sigma": [
+            0.08854624721804938,
+            0.09736717569001914
+          ]
+        },
+        "confidence_interval_diagnostics": {
+          "method": "gene_bootstrap_percentile",
+          "replicates_requested": 100,
+          "replicates_retained": 100,
+          "failures": 0,
+          "seed": 260731,
+          "canonical_tail_retrimmed_within_each_bootstrap": true
+        },
+        "diagnostics": {
+          "success": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "selection_rule": "highest finite local maximum from multistart",
+          "number_starts": 7,
+          "number_interior_bounded_candidates": 7,
+          "final_polish": "unconstrained log-coordinate polish of an interior basin",
+          "C_n_sigma2": 0.032095715684714796,
+          "A_r_sigma": 0.041089185859235766
+        }
+      },
+      "heavy_tailed_full_mle": {
+        "fit": {
+          "n": 6.804480856610882,
+          "r": 0.4799954343914827,
+          "sigma": 0.014516185955564549,
+          "loglik": 7737.737265920676,
+          "mu": 0.3430736843017324,
+          "C_n_sigma2": 0.0014338378564941897,
+          "A_r_sigma": 0.006967702983448745
+        },
+        "confidence_intervals_95": {
+          "n": [
+            5.584791699833704,
+            8.290543715240561
+          ],
+          "r": [
+            0.4431847848606263,
+            0.5198635533237529
+          ],
+          "sigma": [
+            0.01294797433319076,
+            0.01627433367367526
+          ],
+          "mu": [
+            0.3111280195877261,
+            0.37829943126410703
+          ]
+        },
+        "confidence_interval_diagnostics": {
+          "method": "observed_information_log_scale_wald",
+          "finite_difference_step": 0.0002,
+          "hessian_eigenvalues": [
+            68.30530767475896,
+            120.48652640540342,
+            989.5539871998681,
+            4312.883350359101
+          ]
+        },
+        "diagnostics": {
+          "success": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "selection_rule": "highest converged interior local maximum from multistart; final polish has no parameter bounds",
+          "number_local_starts": 8,
+          "number_interior_bounded_candidates": 8,
+          "number_interior_unbounded_candidates": 8,
+          "bounds_hit": {
+            "n": false,
+            "C": false,
+            "A": false,
+            "mu": false
+          },
+          "C_n_sigma2": 0.00143383785649419,
+          "A_r_sigma": 0.006967702983448745
+        }
+      }
+    },
+    "REL606": {
+      "dataset": {
+        "name": "REL606",
+        "observed_lower_cut": -0.5,
+        "N_heavy": 3488,
+        "N_canonical_after_5_percent_trim": 3313
+      },
+      "canonical_full_mle": {
+        "fit": {
+          "n": 4.0525144002348705,
+          "r": 0.37802877490600584,
+          "sigma": 0.08218106683181446,
+          "loglik": 7037.022826221108
+        },
+        "confidence_intervals_95": {
+          "n": [
+            3.8833110070160233,
+            4.0525144002348705
+          ],
+          "r": [
+            0.37802877490600584,
+            0.38921119732315373
+          ],
+          "sigma": [
+            0.08218106683181446,
+            0.08899652751201846
+          ]
+        },
+        "confidence_interval_diagnostics": {
+          "method": "gene_bootstrap_percentile",
+          "replicates_requested": 100,
+          "replicates_retained": 100,
+          "failures": 0,
+          "seed": 260732,
+          "canonical_tail_retrimmed_within_each_bootstrap": true
+        },
+        "diagnostics": {
+          "success": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "selection_rule": "highest finite local maximum from multistart",
+          "number_starts": 7,
+          "number_interior_bounded_candidates": 7,
+          "final_polish": "unconstrained log-coordinate polish of an interior basin",
+          "C_n_sigma2": 0.0273695789443712,
+          "A_r_sigma": 0.03106680801489941
+        }
+      },
+      "heavy_tailed_full_mle": {
+        "fit": {
+          "n": 6.311070765326476,
+          "r": 0.38212148519830297,
+          "sigma": 0.016875364853005736,
+          "loglik": 8327.081193593576,
+          "mu": 0.3885681871780772,
+          "C_n_sigma2": 0.00179725372494095,
+          "A_r_sigma": 0.006448439480893794
+        },
+        "confidence_intervals_95": {
+          "n": [
+            5.490647872278016,
+            7.254082784302392
+          ],
+          "r": [
+            0.3660814959802412,
+            0.3988642721729862
+          ],
+          "sigma": [
+            0.015310584342660858,
+            0.01860006989599778
+          ],
+          "mu": [
+            0.3503861849554339,
+            0.43091092791247254
+          ]
+        },
+        "confidence_interval_diagnostics": {
+          "method": "observed_information_log_scale_wald",
+          "finite_difference_step": 0.0002,
+          "hessian_eigenvalues": [
+            55.46723325222831,
+            250.44367602415056,
+            1319.1861948632957,
+            6648.04955498159
+          ]
+        },
+        "diagnostics": {
+          "success": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "selection_rule": "highest converged interior local maximum from multistart; final polish has no parameter bounds",
+          "number_local_starts": 8,
+          "number_interior_bounded_candidates": 8,
+          "number_interior_unbounded_candidates": 8,
+          "bounds_hit": {
+            "n": false,
+            "C": false,
+            "A": false,
+            "mu": false
+          },
+          "C_n_sigma2": 0.0017972537249409495,
+          "A_r_sigma": 0.006448439480893794
+        }
+      }
+    }
+  },
+  "elapsed_seconds": 23.472790458938107
 }

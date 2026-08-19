@@ -15,23 +15,38 @@ Genes are matched on the metadata row index of the .npy fitness matrices.
   12 EVOLVED transitions -- each 50K clone against its own founder: REL606 -> Ara-N and
       REL607 -> Ara+N, twelve independent 0 -> 50K comparisons.
 
-  TWO CONTROL TIERS, and the difference between them is the point of having both.
+  TWO KINDS OF CONTROL (the ``kind`` column), and the difference between them is the point of
+  having both.
 
-    Technical: REL606 green -> red and REL607 green -> red.  The two barcode channels of ONE
-      library, unaveraged -- same strain, same mutagenesis, same assay, correlated against each
-      other.  Nothing separates the two numbers but measurement noise, so this is the assay's
-      own reproducibility and the hardest ceiling there is.  These are the rows the poster
-      figure shows as its control panel (``code_tmp/poster_fig1.py``, panel C).
+    Technical, ONE PER LIBRARY -- 14 rows, "<pop> green -> red".  The two barcode channels of a
+      single library, unaveraged: same strain, same mutagenesis, same assay, correlated against
+      each other.  Nothing separates the two numbers but measurement noise, so each is the
+      reproducibility of that one measurement and the hardest ceiling there is.  Both ancestors
+      have one (these are the rows the poster figure shows as its control panel,
+      ``code_tmp/poster_fig1.py`` panel C) and so does every 50K clone, printed directly above
+      its own transition.
 
-    Isogenic: REL606 -> REL607.  The two LTEE ancestors are isogenic apart from the araA
-      marker, but they are separately mutagenised libraries measured as separate samples, so
-      this row carries the technical noise PLUS whatever library-to-library and batch effects
-      come with comparing two libraries.  That is exactly the situation every evolved row is
-      in, which is why THIS is the ceiling f95/f90 divide by: it is the like-for-like zero, and
-      the gap between it and the green/red rows is the price of the comparison itself.
+      The per-clone rows are there because the twelve 50K measurements are NOT equally good, and
+      a single shared ceiling hides that.  Their r_90 runs 0.650 to 0.893.  The printed block
+      ``evolved r_90 against its OWN 50K technical control`` puts each transition next to the
+      reproducibility of the very measurement it depends on: an evolved row can only be read as
+      scrambling where its own control is high.  Two rows are worth reading that way.  Ara-2
+      reproduces BETTER than almost anything in the panel (control r_90 = 0.848) yet its
+      transition is -0.081, which is the cleanest possible demonstration that its problem is
+      systematic bias and not noise -- exactly what Limdi et al. excluded it for.  Ara+6, a
+      mutator with 2600 fixed mutations, has a fine control (0.833) and the lowest genuine
+      transition (0.132), so there the collapse IS the landscape.
 
-  All three control rows carry ``n_fixed_mut = 0`` -- the araA marker is a single neutral point
-  mutation -- so on the scrambling axis they are the origin.
+    Isogenic: REL606 -> REL607, one row.  The two LTEE ancestors are isogenic apart from the araA
+      marker, but they are separately mutagenised libraries measured as separate samples, so this
+      row carries the technical noise PLUS whatever library-to-library and batch effects come with
+      comparing two libraries.  That is exactly the situation every evolved row is in, which is
+      why THIS is the ceiling f95/f90 divide by: it is the like-for-like zero, and the gap between
+      it and the green/red rows is the price of the comparison itself.
+
+  All 15 control rows carry ``n_fixed_mut = 0`` -- the araA marker is a single neutral point
+  mutation, and a green -> red pair is one library against itself -- so on the scrambling axis
+  they are the origin.
 
     A NOTE ON MATCHING (this is what the previous version of this table got wrong).  The
     Limdi pairs used to be matched on the ``Genes`` column of ``dfe_data_pandas.csv``.  That
@@ -84,15 +99,17 @@ table is the raw ``r_obs``; NOTHING is disattenuated, and that is deliberate.  T
 needs the reliability of each side, and stripping the deleterious tail strips most of the signal
 variance with it: the ancestor reliability falls from ~0.98 at r_100 to ~0.49-0.67 at r_90, which
 is exactly where the classical formula stops being trustworthy.  The control rows answer the
-question empirically instead, and the two tiers separate the two sources.  The green/red rows are
-pure assay noise -- one library against itself -- and they land at r_90 = 0.650 and 0.707.  The
-isogenic row adds the library-to-library term and drops to 0.550.  So roughly a fifth of the
-control's own decorrelation at r_90 is the cost of comparing two separately mutagenised libraries
-rather than measurement noise, and since every evolved row pays that same cost, ``f95``/``f90``
-divide by the isogenic row and are already normalised for both.
+question empirically instead, and the two kinds separate the two sources.  The 14 green/red rows
+are pure assay noise -- one library against itself -- and they land at r_90 = 0.650 to 0.893, the
+two ancestors at 0.650 and 0.707.  The isogenic row adds the library-to-library term and drops to
+0.550.  So roughly a fifth of the control's own decorrelation at r_90 is the cost of comparing two
+separately mutagenised libraries rather than measurement noise, and since every evolved row pays
+that same cost, ``f95``/``f90`` divide by the isogenic row and are already normalised for both.
+The per-clone green/red rows do not enter that normalisation; they are the diagnostic that says
+whether a given evolved row is worth interpreting at all.
 
     data/TableS1_autocorr.csv
-    columns: dataset, transition, n_fixed_mut, n_100, r_100, n_95, cut_95, r_95,
+    columns: dataset, transition, kind, n_fixed_mut, n_100, r_100, n_95, cut_95, r_95,
              n_90, cut_90, r_90, excluded
 
 ANCESTOR-DEFINED NESTED SUBSETS (the ``r_100 / r_95 / r_90`` columns).  The autocorrelation r
@@ -133,11 +150,18 @@ fraction of the control retained (``f95``, ``f90`` in the printed table), not th
 not comparable across ranges, only within one.
 
     A percentile is not a fixed value of s, so ``cut_95`` and ``cut_90`` are reported for every
-    row.  Within this panel they barely move -- the 5% quantile of the ancestor sits at
-    s = -0.23 to -0.29 and the 10% quantile at s = -0.07 to -0.11 across all fifteen rows -- so
-    the subsets are near-identical in absolute terms as well as in size, and r_90 really is
-    row-to-row comparable.  That would NOT hold against a library with a different lethal
-    fraction; see the note on the removed Couce rows above.
+    row.  Across the twelve EVOLVED rows they barely move -- the 5% quantile of the ancestor sits
+    at s = -0.233 to -0.286 and the 10% quantile at s = -0.071 to -0.098 -- which is unsurprising,
+    since all twelve rank on one of only two founders.  So those subsets are near-identical in
+    absolute terms as well as in size, and r_90 really is row-to-row comparable among them.
+
+    The green/red CONTROL rows are the exception and must not be read that way.  Each ranks on its
+    own library's green channel, and a single unaveraged channel has both more noise and a
+    library-specific tail, so their cuts spread over s = -0.072 to -0.402 (5%) and -0.029 to
+    -0.282 (10%).  Ara-2 sits at the shallow end and Ara+4 at the deep end.  Compare a control
+    with its own evolved row, which is what the per-strain pairing is for, and do not compare two
+    controls' raw r to each other.  The same caution applies to any library with a different
+    lethal fraction; see the note on the removed Couce rows above.
 
 TAIL DECORRELATION.  The complementary question -- does the conserved tail *also* scramble? --
 has its own table, code_tmp/Table_tail_autocorr.py, because it must be conditioned differently:
@@ -165,7 +189,9 @@ REPO_DIR = os.path.dirname(SCRIPT_DIR)
 if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
 from cmn import cmn_exper  # noqa: E402  (shared experimental-data loaders + structure)
-from cmn.cmn_exper import DATA_DIR, LIMDI_ANCESTORS, LIMDI_EVOLVED  # noqa: E402
+from cmn.cmn_exper import (  # noqa: E402
+    DATA_DIR, LIMDI_ANCESTORS, LIMDI_EVOLVED, LIMDI_PANEL,
+)
 
 OUT_CSV = os.path.join(DATA_DIR, "TableS1_autocorr.csv")
 # Every r column is the poster-figure ladder: r on nested subsets defined by removing a fraction
@@ -173,7 +199,7 @@ OUT_CSV = os.path.join(DATA_DIR, "TableS1_autocorr.csv")
 # ``n / autocorr / autocorr_corr`` block -- r at a fixed ``s > -0.3`` cut applied to BOTH sides,
 # plus its disattenuated value -- is gone: cutting the late side conditions on the outcome, and
 # with no fixed cut left there is no range where disattenuation is trustworthy.
-COLUMNS = ["dataset", "transition", "n_fixed_mut", "n_100", "r_100",
+COLUMNS = ["dataset", "transition", "kind", "n_fixed_mut", "n_100", "r_100",
            "n_95", "cut_95", "r_95", "n_90", "cut_90", "r_90", "excluded"]
 
 # Fractions of the EARLY (ancestor) side removed, lowest effect first, for the nested-subset
@@ -182,17 +208,19 @@ COLUMNS = ["dataset", "transition", "n_fixed_mut", "n_100", "r_100",
 TAIL_EXCLUSIONS = (0.00, 0.05, 0.10)
 
 # Mutations fixed during each transition, keyed by the (unique) transition label: the full
-# 0 -> 50K complement of each population.  All three control rows sit at 0, the origin of the
+# 0 -> 50K complement of each population.  Every control row sits at 0, the origin of the
 # scrambling axis -- the araA marker separating REL606 from REL607 is a single neutral point
-# mutation, and the green/red rows are one library against itself.
+# mutation, and a green -> red row is one library against itself.
 N_FIXED_MUT = {
-    "REL606 green -> red": 0, "REL607 green -> red": 0,   # technical (replicate) controls
     "REL606 -> REL607": 0,                                # isogenic (library-to-library) control
     "REL606 -> Ara-1": 1100, "REL606 -> Ara-2": 1000, "REL606 -> Ara-3": 800,
     "REL606 -> Ara-4": 1300, "REL606 -> Ara-5": 90,   "REL606 -> Ara-6": 90,
     "REL607 -> Ara+1": 125,  "REL607 -> Ara+2": 70,   "REL607 -> Ara+3": 1800,
     "REL607 -> Ara+4": 70,   "REL607 -> Ara+5": 80,   "REL607 -> Ara+6": 2600,
 }
+# One green -> red technical control per library -- the two ancestors AND all twelve 50K clones.
+# Zero evolution separates the two channels of a single measurement, whichever library it is.
+N_FIXED_MUT.update({f"{pop} green -> red": 0 for pop in LIMDI_PANEL})
 
 # Populations Limdi et al. themselves exclude, on measurement-quality grounds stated before any
 # cross-background comparison -- so dropping them here is their criterion, not ours.  Flagged
@@ -254,8 +282,14 @@ def ancestor_exclusion_ladder(a, b):
     return ladder
 
 
-def make_row(dataset, transition, a, b):
+def make_row(dataset, transition, a, b, population, kind):
     """One output row for a matched pair of backgrounds.
+
+    ``population`` is the library the row is ABOUT -- the late background of a transition, or the
+    single library of a green -> red control.  It is passed explicitly rather than parsed back out
+    of ``transition`` so that a control row carries the same quality flag as its evolved row: for
+    "Ara+4 green -> red" the old string-splitting would have looked up "red" and found nothing,
+    silently un-flagging the one row that is the direct evidence for the exclusion.
 
     ``r_100 / r_95 / r_90`` is the poster-figure ladder: r on nested subsets with 0%, 5% and 10%
     of the most deleterious ANCESTOR effects removed, which never conditions on the outcome and
@@ -267,8 +301,9 @@ def make_row(dataset, transition, a, b):
     row = {
         "dataset": dataset,
         "transition": transition,
+        "kind": kind,
         "n_fixed_mut": N_FIXED_MUT[transition],
-        "excluded": LIMDI_EXCLUDED.get(transition.split(" -> ")[1], ""),
+        "excluded": LIMDI_EXCLUDED.get(population, ""),
     }
     for step in ancestor_exclusion_ladder(a, b):     # r_100 / r_95 / r_90 and their subset sizes
         row[f"r_{step['pct']}"] = step["r"]
@@ -294,22 +329,35 @@ def replicate_pair(pop):
     return green.to_numpy(), red.to_numpy()
 
 
-def build_rows():
-    """Technical controls, then the isogenic control, then one row per evolved population.
+def replicate_row(pop):
+    """The green -> red technical control row for one library."""
+    return make_row("Limdi rep", f"{pop} green -> red", *replicate_pair(pop),
+                    population=pop, kind="control")
 
-    The order is deliberate: the two green/red rows bound what the assay can do at all, the
-    isogenic row bounds what a two-library comparison can do, and only then do the evolved rows
-    have a scale to be read against.  ``green`` is the ancestor side of a replicate row, so the
-    nested subsets are defined from it exactly as they are from the founder elsewhere -- which
-    channel plays that part is arbitrary, and it changes r by less than 0.001.
+
+def build_rows():
+    """The panel-level controls, then each evolved population preceded by its OWN control.
+
+    The order is deliberate.  First the two ancestors' green -> red rows and the isogenic
+    REL606 -> REL607 row, which between them bound what the assay can do at all and what a
+    two-library comparison costs.  Then, for each 50K population, its own green -> red control at
+    50K immediately before its transition, so the evolved r is read against the reproducibility of
+    that very measurement rather than against a panel average.  That adjacency is the point: the
+    twelve 50K clones do NOT measure equally well, and a single shared ceiling hides it.
+
+    ``green`` is the early side of a replicate row, so the nested subsets are defined from it
+    exactly as they are from the founder elsewhere -- which channel plays that part is arbitrary,
+    and it changes r by less than 0.001.
     """
-    rows = [make_row("Limdi rep", f"{pop} green -> red", *replicate_pair(pop))
-            for pop in LIMDI_ANCESTORS]
     anc_a, anc_b = LIMDI_ANCESTORS
-    rows.append(make_row("Limdi control", f"{anc_a} -> {anc_b}", *limdi_pair(anc_a, anc_b)))
+    rows = [replicate_row(pop) for pop in LIMDI_ANCESTORS]
+    rows.append(make_row("Limdi control", f"{anc_a} -> {anc_b}", *limdi_pair(anc_a, anc_b),
+                         population=anc_b, kind="control"))
     for anc in LIMDI_ANCESTORS:
         for evo in LIMDI_EVOLVED[anc]:
-            rows.append(make_row(f"Limdi {evo}", f"{anc} -> {evo}", *limdi_pair(anc, evo)))
+            rows.append(replicate_row(evo))
+            rows.append(make_row(f"Limdi {evo}", f"{anc} -> {evo}", *limdi_pair(anc, evo),
+                                 population=evo, kind="evolved"))
     return rows
 
 
@@ -319,7 +367,7 @@ def write_table(rows, out_csv):
         writer = csv.writer(fh)
         writer.writerow(COLUMNS)
         for row in rows:
-            writer.writerow([row["dataset"], row["transition"], row["n_fixed_mut"],
+            writer.writerow([row["dataset"], row["transition"], row["kind"], row["n_fixed_mut"],
                              row["n_100"], f"{row['r_100']:.4g}",
                              row["n_95"], f"{row['cut_95']:.4g}", f"{row['r_95']:.4g}",
                              row["n_90"], f"{row['cut_90']:.4g}", f"{row['r_90']:.4g}",
@@ -347,8 +395,9 @@ def main(argv=None):
     # ---- the poster-figure ladder: nested subsets defined from the ancestor side only --------
     print("\nnested subsets: the lowest 0% / 5% / 10% of ANCESTOR effects removed, evolved side free")
     print("cut = largest excluded ancestor effect; f95, f90 = fraction of the ISOGENIC control's r")
-    print("rows: 2 technical (green vs red, one library) + 1 isogenic (606 vs 607) + 12 evolved")
-    header = (f"{'dataset':<15}{'transition':<18}{'n_fix':>6}"
+    print("rows: 14 green/red technical controls (one per library) + 1 isogenic (606 vs 607)")
+    print("      + 12 evolved, each printed directly under its own 50K green/red control")
+    header = (f"{'dataset':<15}{'transition':<20}{'kind':<9}{'n_fix':>6}"
               f"{'n_100':>7}{'r_100':>8}"
               f"{'n_95':>7}{'cut_95':>8}{'r_95':>8}{'f95':>7}"
               f"{'n_90':>7}{'cut_90':>8}{'r_90':>8}{'f90':>7}")
@@ -356,7 +405,8 @@ def main(argv=None):
     print("-" * len(header))
     for row in rows:
         f95, f90 = row["r_95"] / ceil["r_95"], row["r_90"] / ceil["r_90"]
-        print(f"{row['dataset']:<15}{row['transition']:<18}{row['n_fixed_mut']:>6}"
+        print(f"{row['dataset']:<15}{row['transition']:<20}{row['kind']:<9}"
+              f"{row['n_fixed_mut']:>6}"
               f"{row['n_100']:>7}{row['r_100']:>8.3f}"
               f"{row['n_95']:>7}{row['cut_95']:>8.3f}{row['r_95']:>8.3f}{f95:>7.3f}"
               f"{row['n_90']:>7}{row['cut_90']:>8.3f}{row['r_90']:>8.3f}{f90:>7.3f}"
@@ -376,6 +426,25 @@ def main(argv=None):
             print(f"decay of {label:<6} with log10(n_fixed_mut), {tag:<12} "
                   f"r = {rr:+.3f}  p = {pp:.3f}")
 
+    # With a control per strain, the obvious question is whether an evolved row is low because the
+    # landscape scrambled or because that clone simply measured badly.  Print them side by side:
+    # ``own`` is the strain's green -> red r_90, ``anc`` its founder's, and ``r/own`` the evolved
+    # r_90 over its own control.  A row can only be trusted as scrambling where ``own`` is high.
+    print("\nevolved r_90 against its OWN 50K technical control (green vs red of that clone):")
+    hdr = (f"  {'population':<10}{'own_r90':>9}{'anc_r90':>9}{'evo_r90':>9}{'r/own':>8}"
+           f"   excluded")
+    print(hdr)
+    print("  " + "-" * (len(hdr) - 2))
+    own = {r["transition"].split(" ")[0]: r for r in rows if r["kind"] == "control"}
+    for row in rows:
+        if row["kind"] != "evolved":
+            continue
+        pop = row["transition"].split(" -> ")[1]
+        anc = row["transition"].split(" -> ")[0]
+        ratio = row["r_90"] / own[pop]["r_90"] if own[pop]["r_90"] > 0 else np.nan
+        print(f"  {pop:<10}{own[pop]['r_90']:>9.3f}{own[anc]['r_90']:>9.3f}"
+              f"{row['r_90']:>9.3f}{ratio:>8.3f}   {row['excluded']}")
+
     # TAIL DECORRELATION lives in its own table, code_tmp/Table_tail_autocorr.py.  It must
     # condition on the ANCESTOR tail only (evolved side free), not on both sides: requiring the
     # gene to stay deleterious at 50K discards the initially-essential knockouts that became
@@ -391,6 +460,9 @@ def main(argv=None):
     print("f95 / f90      = r_95, r_90 as a fraction of the ISOGENIC control's -- QUOTE THESE,")
     print("                 since raw r is comparable only within one range.  The two green/red")
     print("                 rows exceed 1 by construction: they carry no library-to-library term")
+    print("kind           = control (one library against itself, or the isogenic pair) or evolved")
+    print("own_r90        = that clone's OWN green/red control at 50K -- the reproducibility of")
+    print("                 the very measurement the evolved row depends on")
     print("excluded       = non-empty for the two populations Limdi et al. drop as unreliable")
     print(f"\nSaved {args.out}")
 
