@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 r"""Table: DFE autocorrelation across evolution for the Ascensao experiments.
 
-The Ascensao analog of the Limdi block of TableS1_autocorr.py.  Each experiment (GHI, MNO, PQT,
+The Ascensao analog of the Limdi block of TableS1_couce_autocorr.py.  Each experiment (GHI, MNO, PQT,
 SLR) is one ANCESTOR ``R`` and two evolved offspring ``L`` and ``S``; the three arrays are
 index-aligned within an experiment (``genes.npy`` is the shared gene identity), so a transition
 ``R -> L`` or ``R -> S`` is matched by row.  For each we report the Pearson r of the matched

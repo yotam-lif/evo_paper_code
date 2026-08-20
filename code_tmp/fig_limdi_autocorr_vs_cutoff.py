@@ -1,6 +1,6 @@
 r"""How the Limdi DFE autocorrelation depends on where the deleterious tail is cut.
 
-TableS1_autocorr.py keeps a gene pair only where both sides exceed NONLETHAL_CUT = -0.3, then
+TableS1_couce_autocorr.py keeps a gene pair only where both sides exceed NONLETHAL_CUT = -0.3, then
 reports the Pearson r of the surviving cloud.  That -0.3 is a single choice, and this figure
 asks how much the reported autocorrelation depends on it: instead of one cut we sweep the lower
 cutoff continuously, from "keep everything measured" (c ~ -0.75, nothing removed) up to c = -0.05
@@ -28,7 +28,7 @@ control's correction runs past 1.  Use the control as the empirical bulk floor i
 The sweep stops at -0.05 on purpose: past there the cut eats into the dense near-zero bulk, the
 kept count crashes (from ~85% to ~30% of genes between -0.05 and 0), and what remains is the
 winner's-curse regime of genes beneficial in both backgrounds -- a different question from tail
-autocorrelation.  Conventions otherwise match TableS1_autocorr.py exactly (genes matched on
+autocorrelation.  Conventions otherwise match TableS1_couce_autocorr.py exactly (genes matched on
 metadata row index, both sides above the cutoff, Pearson r over the survivors).
 """
 import os
@@ -60,7 +60,7 @@ CTRL_COLOR = "black"
 
 # ─────────────────────────────────── Parameters ──────────────────────────────────
 EXCLUDED = ("Ara-2", "Ara+4")
-ANALYSIS_CUT = -0.3                                  # the cut TableS1_autocorr.py uses
+ANALYSIS_CUT = -0.3                                  # the cut TableS1_couce_autocorr.py uses
 CUTS = np.round(np.arange(-0.75, -0.049, 0.01), 3)  # sweep: keep-everything -> tail-removed
 MIN_N = 200                                          # do not report r on fewer pairs than this
 

@@ -3,7 +3,7 @@ r"""Shared loaders for the experimental DFE datasets (Couce, Ascensao, Limdi).
 One place to read and clean the raw experimental data, so every analysis script uses the
 same conventions instead of copy-pasting the file parsing:
 
-    code_figs/TableS1_autocorr.py         DFE autocorrelation across consecutive transitions
+    code_figs/TableS1_couce_autocorr.py         DFE autocorrelation across consecutive transitions
     cmn/cmn_fgm_exper.py                  FGM sigma-profile fit (adds tail-trimming on top)
 
 The loaders return the data in the minimal cleaned form each analysis builds on; analysis-
