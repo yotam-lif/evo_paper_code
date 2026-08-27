@@ -14,8 +14,8 @@ The final Science article combines two projects that were initially separate:
 
 | Project | Local directory | Assay | Genetic backgrounds | Natural analysis unit | Main strength |
 |---|---|---|---|---|---|
-| Limdi | `data/anurag_data` | UMI-TnSeq | REL606, REL607, and one 50,000-generation clone from each of the 12 LTEE populations | protein-coding gene, after averaging interior TA insertions | deleterious effects, essentiality, parallel changes across all LTEE lines |
-| Couce | `data/alex_code` | INSeq | locally: REL606 and Ara+2 clones at 2,000 and 15,000 generations | equal-length subgenic segment, including ORFs and intergenic loci | beneficial tail, sign epistasis, early-versus-late predictability |
+| Limdi | `../data/data_limdi` | UMI-TnSeq | REL606, REL607, and one 50,000-generation clone from each of the 12 LTEE populations | protein-coding gene, after averaging interior TA insertions | deleterious effects, essentiality, parallel changes across all LTEE lines |
+| Couce | `../data/data_couce` | INSeq | locally: REL606 and Ara+2 clones at 2,000 and 15,000 generations | equal-length subgenic segment, including ORFs and intergenic loci | beneficial tail, sign epistasis, early-versus-late predictability |
 
 Both assays used mariner-family transposons, measured abundance changes in pooled competitions in the LTEE environment, and reported slopes on the same approximate selection-coefficient scale. They differ in library construction, sequencing, normalization, time course, background sampling, quality filters, and aggregation level. Do not concatenate their rows and call the result one DFE.
 
@@ -36,7 +36,7 @@ Use the Couce/INSeq data when the question concerns:
 - the beneficial tail in the ancestor, 2K, and 15K Ara+2 backgrounds;
 - exact subgenic segments, intergenic regions, polar effects, or C-terminal effects;
 - the same segment changing sign or magnitude through the Ara+2 lineage;
-- the local plotting scripts in `data/alex_code`.
+- the local plotting scripts in `../data/data_couce`.
 
 The local Couce directory is **not** the complete Couce dataset. It contains only the three filtered Ara+2 segment tables. The paper also analyzed Ara-1, but the Ara-1 tables, raw reads, full processing pipeline, operon/predictability inputs, and metagenomic inputs are absent locally.
 
@@ -89,7 +89,7 @@ Analysis/Part_3_TnSeq_analysis/generate_figures_main.ipynb
 Analysis/Part_3_TnSeq_analysis/generate_figures.ipynb
 ```
 
-Those paths are relative to `data/anurag_data`. `generate_figures_main.ipynb` is the merged-paper version. `generate_figures.ipynb` is older but internally useful and still contains some supplementary analyses. Saved plot PDFs and PNGs are evidence of prior runs, not authoritative data objects.
+Those paths are relative to `../data/data_limdi`. `generate_figures_main.ipynb` is the merged-paper version. `generate_figures.ipynb` is older but internally useful and still contains some supplementary analyses. Saved plot PDFs and PNGs are evidence of prior runs, not authoritative data objects.
 
 ## Shared biological and measurement framework
 
@@ -275,7 +275,7 @@ The notebook calls the common initial input `tm1`, and calls the four later samp
 
 ### Raw-data availability in this checkout
 
-The large trajectory and WGS inputs are not checked in under `data/anurag_data/Data`. Its `README.md` instructs the user to download `Mutant_Trajectories` and `WGS_Data` from Zenodo and place them there.
+The large trajectory and WGS inputs are not checked in under `../data/data_limdi/Data`. Its `README.md` instructs the user to download `Mutant_Trajectories` and `WGS_Data` from Zenodo and place them there.
 
 Consequences:
 
@@ -563,7 +563,7 @@ Ara+6 is absent because that RNA library was contaminated. The conversion notebo
 
 ### Supplementary tables
 
-`data/anurag_data/Analysis/Supplementary_tables` contains human-readable result summaries:
+`../data/data_limdi/Analysis/Supplementary_tables` contains human-readable result summaries:
 
 | File | Content / caution |
 |---|---|
@@ -613,9 +613,9 @@ Only the Ara+2 filtered tables are checked in:
 
 | Local file | Background |
 |---|---|
-| `data/alex_code/Rfitted_fil.txt` | REL606 ancestor |
-| `data/alex_code/2Kfitted_fil.txt` | Ara+2 REL1159A |
-| `data/alex_code/15Kfitted_fil.txt` | Ara+2 REL7184A |
+| `../data/data_couce/Rfitted_fil.txt` | REL606 ancestor |
+| `../data/data_couce/2Kfitted_fil.txt` | Ara+2 REL1159A |
+| `../data/data_couce/15Kfitted_fil.txt` | Ara+2 REL7184A |
 
 Do not generalize a local result to both Couce lineages. Full raw reads are under NCBI BioProject [PRJNA979973](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA979973); processed data are archived at [Zenodo 10.5281/zenodo.7985455](https://doi.org/10.5281/zenodo.7985455); upstream source is [ACouce/LTEE2022](https://github.com/ACouce/LTEE2022).
 
@@ -747,7 +747,7 @@ COUCE_COLUMNS = [
 ]
 
 df = pd.read_csv(
-    Path("data/alex_code/Rfitted_fil.txt"),
+    Path("data/data_couce/Rfitted_fil.txt"),
     sep="\t",
     header=None,
     skiprows=1,
@@ -898,7 +898,7 @@ Make the transformation explicit:
 
 Exact Couce segment boundaries are not stored in the three local filtered tables: `site` and `pos` describe only the first retained insertion. A rigorous coordinate remap requires the upstream divided-annotation file, named `parsed_R606genoscope_IUD.txt` for Ara+2, or an equivalent reconstruction from the same reference annotation. Do not infer a segment interval from `site` alone.
 
-For the paper's predictability analysis, Couce effects were eventually aggregated at the operon level, often taking the maximum fitness among relevant constituents and using summed target length. The required operon and metagenomic inputs are not present in `data/alex_code`; the local three files alone cannot reproduce that result.
+For the paper's predictability analysis, Couce effects were eventually aggregated at the operon level, often taking the maximum fitness among relevant constituents and using summed target length. The required operon and metagenomic inputs are not present in `../data/data_couce`; the local three files alone cannot reproduce that result.
 
 ## Minimal safe loading recipe for Limdi arrays
 
@@ -907,7 +907,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path("data/anurag_data")
+ROOT = Path("data/data_limdi")
 META = ROOT / "Metadata" / "all_metadata_REL606.txt"
 PROC = ROOT / "Analysis" / "Part_3_TnSeq_analysis" / "Processed_data_for_plotting"
 

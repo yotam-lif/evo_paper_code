@@ -1,9 +1,0 @@
-dataset,experiment,transition,n_tail_03,tail_autocorr_03,tail_autocorr_corr_03,frac_reverted_03,n_tail_05,tail_autocorr_05,tail_autocorr_corr_05,frac_reverted_05
-Ascensao,GHI,R -> L,53,0.613,0.6252,0.2453,24,0.5504,0.5642,0.1667
-Ascensao,GHI,R -> S,88,0.3657,0.3833,0.3977,43,0.3232,0.3421,0.3023
-Ascensao,MNO,R -> L,49,0.1975,0.2021,0.3265,16,0.2826,0.2944,0.1875
-Ascensao,MNO,R -> S,80,0.3153,0.3259,0.2375,27,0.0646,0.06813,0.1111
-Ascensao,PQT,R -> L,129,0.2239,0.2784,0.6977,56,0.1497,0.1958,0.6429
-Ascensao,PQT,R -> S,217,0.7101,0.7929,0.7327,105,0.7355,0.8163,0.5905
-Ascensao,SLR,R -> L,67,0.5053,0.5729,0.4328,33,0.6274,0.7448,0.3333
-Ascensao,SLR,R -> S,113,0.2103,0.2414,0.3628,53,0.1684,0.2066,0.3208

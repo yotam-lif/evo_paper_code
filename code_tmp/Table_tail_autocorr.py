@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 r"""Table: autocorrelation of the INITIALLY-DELETERIOUS tail across evolution, noise-corrected.
 
-Companion to TableS1_couce_autocorr.py.  TableS1 removes the deleterious tail (keeps ``s > -0.3`` on
+Companion to TableS1_limdi_autocorr.py.  TableS1 removes the deleterious tail (keeps ``s > -0.3`` on
 both sides) to measure how the near-neutral landscape scrambles.  This table does the opposite
 and asks whether the tail itself scrambles: of the knockouts that start strongly deleterious in
 the ANCESTOR, how well does the ancestral effect predict the effect in the evolved clone?
@@ -79,7 +79,7 @@ TAIL_CUT = -0.3
 # ~neutral (the essential -> non-essential switch).  The control's frac_reverted ~ 0 anchors it.
 REVERT_CUT = -0.1
 
-# Mutations fixed during each 0 -> 50K transition (as in TableS1_couce_autocorr.py; Limdi rows only).
+# Mutations fixed during each 0 -> 50K transition (as in TableS1_limdi_autocorr.py; Limdi rows only).
 # Re-declared here rather than imported -- figure/table scripts do not import one another.
 N_FIXED_MUT = {
     "REL606 -> REL607": 0,                          # isogenic control (araA marker only)

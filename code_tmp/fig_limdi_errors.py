@@ -1,6 +1,6 @@
 r"""The measurement error on the Limdi knockout fitness effects, plotted two ways.
 
-TableS1_couce_autocorr.py disattenuates every autocorrelation with the per-gene 1-sigma errors
+TableS1_limdi_autocorr.py disattenuates every autocorrelation with the per-gene 1-sigma errors
 (errors_genes_inv.npy).  This figure just shows those errors, so the size of the correction is
 something you can see rather than take on trust.
 
@@ -21,7 +21,7 @@ error bars (~0.005) are a large fraction of the gene's own effect (~0.02) and of
 spread, so the bulk points scatter about the diagonal mostly from noise and contribute little
 real correlation.  Absolutely larger errors in the tail, but far smaller *relative* to signal.
 
-Conventions match TableS1_couce_autocorr.py: genes matched on metadata row index, sigma is the
+Conventions match TableS1_limdi_autocorr.py: genes matched on metadata row index, sigma is the
 inverse-variance SEM the source paper reports, and effects are the Green/Red average.  The
 right panel keeps the pair only where both sides exceed NONLETHAL_CUT = -0.3, as the table does.
 """
@@ -71,7 +71,7 @@ def clone_effects_errors(pop):
 
 
 def matched_pair(early, late):
-    """Matched (a, b, sig_a, sig_b) over the kept range, exactly as TableS1_couce_autocorr.py does."""
+    """Matched (a, b, sig_a, sig_b) over the kept range, exactly as TableS1_limdi_autocorr.py does."""
     a_eff, a_sig = clone_effects_errors(early)
     b_eff, b_sig = clone_effects_errors(late)
     idx = a_eff.index.intersection(b_eff.index)

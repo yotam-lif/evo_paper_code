@@ -1,9 +1,0 @@
-dataset,experiment,transition,n,autocorr,autocorr_corr,reliability_anc,reliability_evo
-Ascensao,GHI,R -> L,2211,0.5658,0.5926,0.9345,0.9753
-Ascensao,GHI,R -> S,2790,0.366,0.3942,0.9128,0.9444
-Ascensao,MNO,R -> L,2288,0.3792,0.3967,0.9636,0.9487
-Ascensao,MNO,R -> S,2842,0.4735,0.4929,0.9601,0.9611
-Ascensao,PQT,R -> L,2238,0.1217,0.1419,0.812,0.9065
-Ascensao,PQT,R -> S,2818,0.4317,0.4985,0.8165,0.9186
-Ascensao,SLR,R -> L,2329,0.2902,0.3322,0.917,0.8321
-Ascensao,SLR,R -> S,2914,0.3144,0.3502,0.9034,0.892

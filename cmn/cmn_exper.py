@@ -3,7 +3,7 @@ r"""Shared loaders for the experimental DFE datasets (Couce, Ascensao, Limdi).
 One place to read and clean the raw experimental data, so every analysis script uses the
 same conventions instead of copy-pasting the file parsing:
 
-    code_figs/TableS1_couce_autocorr.py         DFE autocorrelation across consecutive transitions
+    code_figs/TableS1_limdi_autocorr.py         DFE autocorrelation across consecutive transitions
     cmn/cmn_fgm_exper.py                  FGM sigma-profile fit (adds tail-trimming on top)
 
 The loaders return the data in the minimal cleaned form each analysis builds on; analysis-
@@ -18,13 +18,13 @@ import pandas as pd
 
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(REPO_DIR, "data")
-ASENCAO_DIR = os.path.join(DATA_DIR, "asencao_dfe_arrays")
-COUCE_DIR = os.path.join(DATA_DIR, "alex_code")
+ASENCAO_DIR = os.path.join(DATA_DIR, "data_ascensao_2")
+COUCE_DIR = os.path.join(DATA_DIR, "data_couce")
 LIMDI_DIR = os.path.join(
-    DATA_DIR, "anurag_data", "Analysis", "Part_3_TnSeq_analysis",
+    DATA_DIR, "data_limdi", "Analysis", "Part_3_TnSeq_analysis",
     "Processed_data_for_plotting",
 )
-LIMDI_META = os.path.join(DATA_DIR, "anurag_data", "Metadata", "all_metadata_REL606.txt")
+LIMDI_META = os.path.join(DATA_DIR, "data_limdi", "Metadata", "all_metadata_REL606.txt")
 
 # ── dataset structure ─────────────────────────────────────────────────────────
 # Couce Ara+2 lineage: three sequenced timepoints (0K == the REL607 ancestor).
@@ -86,22 +86,41 @@ def _couce_clean(name):
     return tab
 
 
-def load_couce_segment_series(name):
+# The release publishes THREE fits of the same five read-count timepoints per segment --
+# ``fitted`` / ``fitted1`` / ``fitted2``, each with its own ``sterr`` / ``pval`` / ``rmse``.
+# ``fitted`` is the plain log-frequency slope: regressing log(count / library total) on the
+# timepoint index reproduces it at r = 0.9999, with a scale of 0.150 = 1/6.644 that identifies
+# the units as per-generation at log2(100) generations per daily 1:100 transfer.  ``fitted1``
+# (which the authors' own scripts and every analysis here use) and ``fitted2`` are variants of
+# that same regression; the release documents neither, and no subset of the five timepoints
+# reproduces either one better than the full set does.
+#
+# THEY ARE NOT INDEPENDENT REPLICATES.  If they were, ``fitted1 - fitted2`` would have spread
+# sqrt(sterr1^2 + sterr2^2); it is 0.37-0.45 times that at all three timepoints, because the two
+# fits read the same counts.  (The genuinely independent Limdi green/red channels give 1.5-1.8
+# on the same test.)  So a fitted1-against-fitted2 correlation bounds the assay ceiling from
+# ABOVE and is not a technical control -- see ``code_figs/TableS2_couce_autocorr.py``.
+COUCE_FITS = {1: ("fitted1", "sterr1"), 2: ("fitted2", "sterr2"), None: ("fitted", "sterr")}
+
+
+def load_couce_segment_series(name, fit=1):
     """Couce timepoint as a Series indexed by ``alle`` (= "<ORF>-<segment 1..5>").
 
     ``alle`` is the sub-genic segment the authors' own scripts match on, and the only key
     that is comparable across independently mutagenised libraries -- see the block comment.
+    ``fit`` selects which of the three published fits to read; the default, 1, is the one the
+    authors use and the one every figure and table in this repo is built on.
     """
-    return _couce_clean(name).set_index("alle")["fitted1"]
+    return _couce_clean(name).set_index("alle")[COUCE_FITS[fit][0]]
 
 
-def load_couce_segment_errors(name):
-    """Couce per-segment standard errors (``sterr1``), indexed by ``alle``.
+def load_couce_segment_errors(name, fit=1):
+    """Couce per-segment standard errors, indexed by ``alle``.
 
-    Built from the same cleaned frame as :func:`load_couce_segment_series`, so the two are
-    row-aligned and share an index.
+    Built from the same cleaned frame as :func:`load_couce_segment_series`, so for a given
+    ``fit`` the two are row-aligned and share an index.
     """
-    return _couce_clean(name).set_index("alle")["sterr1"]
+    return _couce_clean(name).set_index("alle")[COUCE_FITS[fit][1]]
 
 
 def load_couce_effects(name):
@@ -136,7 +155,7 @@ def load_asencao_errors(exp, background):
     The published per-gene standard error from the authors' data release
     (github.com/joaoascensao/S-L-REL606-BarSeq), aligned row-for-row to
     :func:`load_asencao_array` (NaN where the effect is unmeasured).  These ``*_std.npy`` arrays
-    are built by ``data/asencao_dfe_arrays/build_stds_from_repo.py``; the value-match that fixes
+    are built by ``data/data_ascensao_2/build_stds_from_repo.py``; the value-match that fixes
     the strain mapping (each experiment's files are S/L/R in order) is verified there.
     """
     path = os.path.join(ASENCAO_DIR, exp, f"{background}_std.npy")
@@ -152,7 +171,7 @@ def load_asencao_errors(exp, background):
 # structure.  The release also publishes each biological replicate fit on its own, and replicate 1
 # vs replicate 2 of one strain in one experiment is a pure technical control: same genotype, same
 # library, same condition, nothing between the two numbers but assay noise.  Those tables are
-# cached as tidy CSVs by ``data/asencao_dfe_arrays/build_monoculture_from_repo.py``.
+# cached as tidy CSVs by ``data/data_ascensao_2/build_monoculture_from_repo.py``.
 #
 # Rows are keyed on ``gene_ID`` (ECB_#####), NOT on gene_symbol and never on row position.  The
 # build script verifies that gene_ID is unique and non-null in every file and that the
@@ -160,7 +179,7 @@ def load_asencao_errors(exp, background):
 # between strains (E_SLR: 3021 for R, 3029 for S, but only 2361 for L), so callers MUST intersect
 # indices rather than assume alignment -- which is the whole reason these are Series, not arrays.
 # ══════════════════════════════════════════════════════════════════════════════
-ASENCAO_MONO_DIR = os.path.join(DATA_DIR, "asencao_monoculture")
+ASENCAO_MONO_DIR = os.path.join(DATA_DIR, "data_ascensao")
 
 # Release strain letter -> (experiment folder, ecotype, media, description, n_replicates).
 # Letters are unique across the whole release.  "Ecotype" is the genotype: REL606 is the ancestor,
@@ -250,7 +269,7 @@ def asencao_mono_series(letter, rep=None, errors=False):
     path = os.path.join(ASENCAO_MONO_DIR, f"{name}.csv")
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"{path} missing -- run data/asencao_dfe_arrays/build_monoculture_from_repo.py")
+            f"{path} missing -- run data/data_ascensao_2/build_monoculture_from_repo.py")
     df = pd.read_csv(path)
     if df["gene_ID"].duplicated().any():
         raise ValueError(f"{path}: duplicated gene_ID; the cache is corrupt")

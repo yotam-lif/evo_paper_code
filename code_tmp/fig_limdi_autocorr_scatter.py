@@ -1,6 +1,6 @@
 r"""Ancestor-vs-evolved scatter of knockout fitness effects for the 10 usable Limdi clones.
 
-Two 2x5 panel grids showing the raw material behind the Limdi block of TableS1_couce_autocorr.py.
+Two 2x5 panel grids showing the raw material behind the Limdi block of TableS1_limdi_autocorr.py.
 The top row of each is the five REL606 (Ara-) descendants, the bottom row the five REL607
 (Ara+) descendants -- dropping the two flagged populations leaves exactly five of each.
 
@@ -24,12 +24,12 @@ a rank correlation would not mean anything.  The isogenic REL606 -> REL607 contr
 honest noise reference for the Spearman figure: it is the rho this assay returns when nothing
 has evolved, and it is only 0.554.
 
-Ara-2 and Ara+4 are excluded, for the reasons recorded in TableS1_couce_autocorr.py: sweeping
+Ara-2 and Ara+4 are excluded, for the reasons recorded in TableS1_limdi_autocorr.py: sweeping
 mutants bias the Ara-2 assay, and Ara+4's technical replicates are poor (its per-gene error is
 0.023, about 2.5x every other population).  They are the two lowest autocorrelations in the
 table, and both are measurement artefacts rather than biology.
 
-Conventions follow TableS1_couce_autocorr.py exactly, so the r printed in each panel reproduces the
+Conventions follow TableS1_limdi_autocorr.py exactly, so the r printed in each panel reproduces the
 table: genes matched on metadata row index, a pair kept only if both sides are above
 NONLETHAL_CUT = -0.3, Pearson r over that set, and r_corr the same r disattenuated for
 measurement error by the classical formula r / sqrt(rel_anc * rel_evo), with the reliability
@@ -66,7 +66,7 @@ PT_COLOR = color[1]
 DIAG_COLOR = color[2]
 
 # ─────────────────────────────────── Parameters ──────────────────────────────────
-NONLETHAL_CUT = -0.3        # same cut as TableS1_couce_autocorr.py
+NONLETHAL_CUT = -0.3        # same cut as TableS1_limdi_autocorr.py
 EXCLUDED = ("Ara-2", "Ara+4")
 NROWS, NCOLS = 2, 5
 AXIS_LIM = (-0.32, 0.14)    # covers every kept pair in the ten panels
@@ -93,7 +93,7 @@ def limdi_pair(early, late):
 
 
 def autocorr(a, b, sig_a, sig_b):
-    """``(r, r_disattenuated, n)`` -- the two numbers TableS1_couce_autocorr.py reports.
+    """``(r, r_disattenuated, n)`` -- the two numbers TableS1_limdi_autocorr.py reports.
 
     The reliability of a side is the fraction of its observed variance that is real signal,
     ``(V - mean(sigma^2)) / V``, and ``r_true = r_obs / sqrt(rel_a * rel_b)``.

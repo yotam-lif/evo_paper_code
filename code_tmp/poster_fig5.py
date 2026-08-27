@@ -32,7 +32,7 @@ Outputs:
 
     data/FGM_HEAVY_TAILED/poster_fig5_rel607_<mode>_m3500.npz
     data/FGM_HEAVY_TAILED/poster_fig5_rel607_<mode>_m3500_summary.json
-    figs_paper/poster_fig5_<mode>.pdf
+    code_tmp/out_tmp/poster_fig5_<mode>.pdf
 
 With ``--poster``, the selected result is also copied to
 ``../PhD/Posters/GRC_evo_26/poster_fig5.pdf``.
@@ -54,6 +54,11 @@ from matplotlib.lines import Line2D
 from matplotlib.ticker import FixedLocator
 import numpy as np
 
+# All figures from code_tmp are scratch output; they go to code_tmp/out_tmp,
+# never to figs_paper (which holds only the paper figures built by code_figs).
+_OUT_TMP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tmp")
+
+
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -62,7 +67,7 @@ import numpy as np
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 DATA_DIR = os.path.join(REPO_ROOT, "data", "FGM_HEAVY_TAILED")
-FIG_DIR = os.path.join(REPO_ROOT, "figs_paper")
+FIG_DIR = _OUT_TMP
 POSTER_PDF = (
     "/Users/yotamlifschytz/Desktop/PhD/Posters/"
     "GRC_evo_26/poster_fig5.pdf"

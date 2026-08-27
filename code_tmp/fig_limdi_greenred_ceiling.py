@@ -2,7 +2,7 @@ r"""The Limdi assay's noise ceiling, from the Green/Red reference replicates.
 
 Each Limdi library is assayed against two fluorescent references, a green- and a red-marked
 competitor, giving two independent fitness estimates per gene from the *same* library -- the
-last axis of ``fitness_corrected_genes.npy``.  The main analysis (TableS1_couce_autocorr.py,
+last axis of ``fitness_corrected_genes.npy``.  The main analysis (TableS1_limdi_autocorr.py,
 fig1_limdi_clones.py) averages them.  Correlating them against each other instead measures the
 pure technical noise of the assay: there is no genetic difference between a clone's green and
 red measurement, so their correlation is the highest this assay can report for two things that
@@ -30,7 +30,7 @@ measurement, not just on trusting the error bars.
 The 0/1 order of the last array axis is taken as green/red; the correlation is symmetric in the
 two, so the panel r does not depend on which is which.  Genes are matched on metadata row index
 and a pair is kept only where both sides exceed NONLETHAL_CUT = -0.3, exactly as in
-TableS1_couce_autocorr.py, so the evolved-panel r values reproduce that table.
+TableS1_limdi_autocorr.py, so the evolved-panel r values reproduce that table.
 """
 import os
 import sys
@@ -86,7 +86,7 @@ def channel_pair(pop):
 def clone_pair(early, late, errors=False):
     """Two-channel-averaged effects for two clones, matched on gene row index, over the range.
 
-    This is what TableS1_couce_autocorr.py and fig1_limdi_clones.py use, so its r reproduces the
+    This is what TableS1_limdi_autocorr.py and fig1_limdi_clones.py use, so its r reproduces the
     table.  With ``errors`` it also returns the paired 1-sigma errors for disattenuation.
     """
     a_eff, a_sig = cmn_exper.limdi_gene_series(early, errors=True)

@@ -22,7 +22,7 @@ by the Limdi DFE having a real deleterious tail where the Couce one has none:
 
   NONLETHAL_CUT   The Couce library has no lethal tail (its deepest segment is -0.23); Limdi
                   measures knockouts down to -0.75.  Pairs where either side is below -0.3 are
-                  dropped, the same cut TableS1_couce_autocorr.py uses, so these figures show the
+                  dropped, the same cut TableS1_limdi_autocorr.py uses, so these figures show the
                   same range of effects the reported autocorrelations are computed on.
   dfe_histogram   B and C are clipped to the plotted window before binning, and fig1's
                   sparse-bin threshold is rescaled to sample size -- see that function.
@@ -32,7 +32,7 @@ Coverage of the +-0.06 window is therefore lower here than in fig1: 93% of Limdi
 beneficial knockouts these panels are about are inside it -- and panel A is not clipped at
 all, so the full paired range including that tail is visible there.
 
-Two populations carry the quality flags recorded in TableS1_couce_autocorr.py and are labelled as
+Two populations carry the quality flags recorded in TableS1_limdi_autocorr.py and are labelled as
 such in the figure: Ara-2 (sweeping mutants bias the assay) and Ara+4 (poor technical
 replicates).  They are plotted anyway, since the point of a per-clone panel is to see them.
 
@@ -72,7 +72,7 @@ UPPER_BEN_LIMIT = 0.3       # arrows are drawn for LOWER < s < UPPER ...
 LOWER_BEN_LIMIT = 0.005     # ... same cut as fig1 (median measurement error is 0.008)
 NONLETHAL_CUT = -0.3        # drop a pair if either side is below this
 
-# Quality flags from code_figs/TableS1_couce_autocorr.py.
+# Quality flags from code_figs/TableS1_limdi_autocorr.py.
 FLAGGED = {"Ara-2": "sweeping mutants bias assay", "Ara+4": "poor technical replicates"}
 
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tmp")
