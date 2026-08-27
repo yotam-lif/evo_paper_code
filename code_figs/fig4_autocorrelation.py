@@ -8,16 +8,16 @@ Two panels stacked vertically, sharing an x-axis of fixed background mutations.
 Each panel shows SSWM adaptive walks in a heavy-tailed (radial beta-prime) FGM whose
 parameters were fitted to that ancestor's DFE *without* measurement-error convolution --
 data/fig3_fgm_fits.json for Couce, the REL606 no-error MLE for Limdi.  Two probe subsets are
-drawn: all probes (r100) and the probes surviving a 10% cut of the most deleterious ancestral
-effects (r90), defined once from the noisy ancestral measurement and then held fixed.  The
-caches also carry a 5% cut, which the figure no longer shows.
+drawn per panel: all probes (r100) and the probes surviving a cut of the largest-|s| ancestral
+effects, defined once from the noisy ancestral measurement and then held fixed.
 
-    NOTE, on comparing r90 here with r90 in fig1 and figs S1-S4.  Those panels now rank on
-    |s| and drop the largest-magnitude 10%, so their retained subset is symmetric about zero.
-    This figure still ranks on the SIGNED effect and drops the most deleterious 10%, because
-    that is the rule the cached walks in data/FGM_HEAVY_TAILED were simulated under and the
-    measured dots have to use the same rule as the curves they sit on.  Switching this figure
-    over means re-running those walks, not editing this script.
+The cut follows cmn_scatter, so each panel matches its own scatter panels in fig1 and figs
+S1-S4: 2% for the Couce data, whose effects are compact enough that a 10% cut would reach
+inside the bulk, and 10% for the Limdi data, whose effects run out to |s| = 0.65.  Hence r98
+in panel A and r90 in panel B.  Both rank on |s| and drop the LARGEST-magnitude fraction, not
+on the signed effect -- the caches used here (``*_absmag.npz``) were regenerated under that
+rule so the measured dots and the curves they sit on share one definition.  The caches carry
+a third, unused 10% cut for Couce and 2% for Limdi.
 
 Curves are smoothed for display with a Gaussian filter (sigma = 1.6 steps), with BOTH
 endpoints pinned to their raw values -- t = 0 because r = 1 there by construction, and the
@@ -93,10 +93,9 @@ mpl.rcParams['legend.fontsize'] = 14
 # The two band colours of fig1's row 2, with the same meaning: the all-pairs r in the colour
 # of the points its subset adds, the retained-subset r in the colour of the bulk it covers.
 CURVE_COLORS = (cmn_scatter.EXCLUDED_COLOR, cmn_scatter.RETAINED_COLOR)
-RETAINED_FRACTIONS = (1.00, 0.90)
-TAIL_EXCLUSIONS = (0.00, 0.10)
-# The cached cut axis is (r100, r95, r90); r95 is loaded but not drawn.
-CUT_INDICES = (0, 2)
+# The cached cut axis is (0%, 2%, 10%) of the largest |s| dropped.  Each panel names the two
+# columns it draws as (cache index, dropped fraction); the third is loaded but not shown.
+CACHED_EXCLUSIONS = (0.00, 0.02, 0.10)
 
 # Measured markers: triangles, area in points^2.  Line2D takes a diameter instead, so the
 # legend handle is sized as sqrt(area) to match what the panels draw.
@@ -134,8 +133,10 @@ OUT_DIR = os.path.join(_REPO_ROOT, "figs_paper")
 PANELS = (
     {
         "cache": ("poster_fig5_couce_0K_to_15K_beta_prime_observed_window_"
-                  "rank_noise_k1_w500_e10_m8429.npz"),
+                  "rank_noise_k1_w500_e10_m8429_absmag.npz"),
         "title": "ARA+2 (DM25)",
+        # Couce effects are compact, so cmn_scatter drops 2% -- see SHALLOW_MAGNITUDE_EXCLUSIONS.
+        "cuts": ((0, 0.00), (1, 0.02)),
         # Terminated walks are held at their peak, so all 500 contribute throughout.
         "display_steps": 25,
         # The fixed-mutation count the 0K -> 15K cache was built around.
@@ -143,8 +144,10 @@ PANELS = (
     },
     {
         "cache": ("poster_fig5_limdi_REL606_to_Ara_minus_1_without_errors_"
-                  "rank_noise_k1_w500_e10_m3441_noerr.npz"),
+                  "rank_noise_k1_w500_e10_m3441_absmag.npz"),
         "title": "ARA-1 (LB)",
+        # Limdi effects run out to |s| = 0.65, so cmn_scatter drops 10%.
+        "cuts": ((0, 0.00), (2, 0.10)),
         # These walks peak after a median of 19 steps; past 15 the median runs
         # out of surviving walks and becomes noise.
         "display_steps": 15,
@@ -166,11 +169,13 @@ def couce_pair(ancestor, evolved):
     return early.loc[shared].to_numpy(float), late.loc[shared].to_numpy(float)
 
 
-def empirical_ladder(pair):
-    """Measured r100/r90, with the subsets ranked on the SIGNED ancestral effects.
+def empirical_ladder(pair, exclusions):
+    """Measured r for each retained fraction, ranked on |ancestral effect| as in fig1.
 
-    Signed, not |signed|, so the dots match the rule the cached walks were simulated under --
-    see the note in the module docstring on why this differs from fig1.
+    The largest-|s| ``exclusions`` fraction is dropped, defined from the ancestor side only so
+    the retained subset is not conditioned on the outcome whose correlation is reported.  This
+    is the same rule cmn_scatter applies, and the same rule the cached walks were simulated
+    under, so a dot and the curve it sits on mean the same thing.
     """
     if pair.startswith("couce_"):
         ancestor, evolved = couce_pair(*pair.split("_")[1:3])
@@ -179,11 +184,11 @@ def empirical_ladder(pair):
         ancestor, _, evolved, _ = table_s1.limdi_pair(founder, clone)
     finite = np.isfinite(ancestor) & np.isfinite(evolved)
     ancestor, evolved = ancestor[finite], evolved[finite]
-    order = np.argsort(ancestor, kind="stable")
+    order = np.argsort(np.abs(ancestor), kind="stable")
     ladder = {}
-    for excluded, retained in zip(TAIL_EXCLUSIONS, RETAINED_FRACTIONS):
-        kept = order[int(np.floor(excluded * ancestor.size)):]
-        ladder[f"r{int(round(100 * retained))}"] = float(
+    for excluded in exclusions:
+        kept = order[: ancestor.size - int(np.floor(excluded * ancestor.size))]
+        ladder[f"r{int(round(100 * (1.0 - excluded)))}"] = float(
             np.corrcoef(ancestor[kept], evolved[kept])[0, 1])
     return ladder
 
@@ -225,18 +230,19 @@ def load_curves(name, last_time):
 
 
 # ──────────────────────────────────── Plotting ────────────────────────────────────
-def draw_panel(axis, curves, ladders, last_time):
+def draw_panel(axis, curves, ladders, last_time, cuts):
     times = curves["times"]
-    for cut, color in zip(CUT_INDICES, CURVE_COLORS):
+    columns = [column for column, _ in cuts]
+    keys = tuple(f"r{int(round(100 * (1.0 - excluded)))}" for _, excluded in cuts)
+    for cut, color in zip(columns, CURVE_COLORS):
         axis.fill_between(times, curves["lower"][:, cut], curves["upper"][:, cut],
                           color=color, alpha=0.12, linewidth=0)
         axis.plot(times, curves["latent"][:, cut], color=color, linewidth=2.7)
         axis.plot(times, curves["observed"][:, cut], color=color, linewidth=2.5,
                   linestyle=(0, (4.0, 2.4)))
 
-    keys = tuple(f"r{int(round(100 * fraction))}" for fraction in RETAINED_FRACTIONS)
-    # Only the drawn cuts set the y floor; r95 is in the cache but not on the figure.
-    drawn = np.asarray(CUT_INDICES)
+    # Only the drawn cuts set the y floor; the third cached cut is not on the figure.
+    drawn = np.asarray(columns)
     floor = min(float(np.nanmin(curves["lower"][:, drawn])),
                 float(np.nanmin(curves["latent"][:, drawn])))
     for time, ladder, note in ladders:
@@ -262,13 +268,16 @@ def build(path):
     figure, axes = plt.subplots(2, 1, figsize=(8.0, 9.6),
                                 gridspec_kw={"hspace": 0.30})
     floor = 1.0
+    cut_legends = []
     for axis, panel in zip(axes, PANELS):
         curves = load_curves(panel["cache"], panel["display_steps"])
-        ladders = [(marker["time"], empirical_ladder(marker["pair"]),
+        exclusions = tuple(excluded for _, excluded in panel["cuts"])
+        ladders = [(marker["time"], empirical_ladder(marker["pair"], exclusions),
                     marker.get("note"))
                    for marker in panel["markers"]]
         last_time = int(curves["times"][-1])
-        floor = min(floor, draw_panel(axis, curves, ladders, last_time))
+        floor = min(floor,
+                    draw_panel(axis, curves, ladders, last_time, panel["cuts"]))
         axis.set_title(panel["title"], pad=8)
         axis.set_ylabel("Pearson autocorrelation")
         axis.set_xlim(0, last_time)
@@ -289,20 +298,30 @@ def build(path):
             print(f"{panel['title']} {marker['pair']} at t={time}: measured "
                   + ", ".join(f"{key}={value:+.3f}" for key, value in ladder.items())
                   + "   simulated observed "
-                  + ", ".join(f"{value:+.3f}"
-                              for value in curves["observed"][time][list(CUT_INDICES)]))
+                  + ", ".join(f"{value:+.3f}" for value in
+                              curves["observed"][time][[c for c, _ in panel["cuts"]]]))
         print(f"  walks alive at t={last_time}: "
               f"{curves['surviving'][-1]}/{curves['walks']}")
+        # Panel A sets this legend aside for the style key beside it; panel B has the
+        # corner to itself.
+        cut_legends.append(axis.legend(
+            [Line2D([], [], color=color, linewidth=2.7) for color in CURVE_COLORS],
+            [rf"$r_{{{int(round(100 * (1.0 - excluded)))}\%}}$"
+             for _, excluded in panel["cuts"]],
+            loc="lower left", frameon=False, handlelength=2.0, labelspacing=0.35,
+            **({"bbox_to_anchor": (0.34, 0.0), "bbox_transform": axis.transAxes}
+               if panel is PANELS[0] else {})))
 
     axes[-1].set_xlabel("Fixed background mutations")
     for axis in axes:
         axis.set_ylim(min(-0.05, np.floor(20.0 * (floor - 0.02)) / 20.0), 1.04)
 
-    # Both keys live in panel A, side by side in its empty lower-left corner: what the line
-    # styles mean on the left, what the colours mean immediately to their right.  Panel A has
-    # to hold the first legend as an artist explicitly, since the second ``legend`` call on the
-    # same axes would otherwise replace it.
-    styles = axes[0].legend(
+    # The style key -- what solid, dashed and the triangles mean -- is shown once, in panel A's
+    # empty lower-left corner with panel A's colour key immediately to its right.  Panel B needs
+    # only its own colour key, because its cut is 10% where panel A's is 2%.  Re-adding panel
+    # A's colour key as an artist keeps this second ``legend`` call from replacing it.
+    axes[0].add_artist(cut_legends[0])
+    axes[0].legend(
         [Line2D([], [], color="#555555", linewidth=2.7),
          Line2D([], [], color="#555555", linewidth=2.5, linestyle=(0, (4.0, 2.4))),
          Line2D([], [], marker="^", linestyle="none",
@@ -310,12 +329,6 @@ def build(path):
                 markerfacecolor="#777777", markeredgecolor="white")],
         ["Latent", "Noisy", "Measured"],
         loc="lower left", frameon=False, handlelength=2.4, labelspacing=0.35)
-    axes[0].add_artist(styles)
-    axes[0].legend(
-        [Line2D([], [], color=color, linewidth=2.7) for color in CURVE_COLORS],
-        [rf"$r_{{{int(100 * fraction)}\%}}$" for fraction in RETAINED_FRACTIONS],
-        loc="lower left", bbox_to_anchor=(0.34, 0.0), bbox_transform=axes[0].transAxes,
-        frameon=False, handlelength=2.0, labelspacing=0.35)
 
     for axis, tag in zip(axes, "AB"):
         axis.text(-0.13, 1.13, tag, transform=axis.transAxes, ha="left", va="top",
