@@ -7,10 +7,27 @@ Two panels stacked vertically, sharing an x-axis of fixed background mutations.
 
 Each panel shows SSWM adaptive walks in a heavy-tailed (radial beta-prime) FGM whose
 parameters were fitted to that ancestor's DFE *without* measurement-error convolution --
-data/fig3_fgm_fits.json for Couce, the REL606 no-error MLE for Limdi.  Three probe subsets
-are tracked: all probes (r100) and the probes surviving a 5% or 10% cut of the most
-deleterious ancestral effects (r95, r90), defined once from the noisy ancestral measurement
-and then held fixed.
+data/fig3_fgm_fits.json for Couce, the REL606 no-error MLE for Limdi.  Two probe subsets are
+drawn: all probes (r100) and the probes surviving a 10% cut of the most deleterious ancestral
+effects (r90), defined once from the noisy ancestral measurement and then held fixed.  The
+caches also carry a 5% cut, which the figure no longer shows.
+
+    NOTE, on comparing r90 here with r90 in fig1 and figs S1-S4.  Those panels now rank on
+    |s| and drop the largest-magnitude 10%, so their retained subset is symmetric about zero.
+    This figure still ranks on the SIGNED effect and drops the most deleterious 10%, because
+    that is the rule the cached walks in data/FGM_HEAVY_TAILED were simulated under and the
+    measured dots have to use the same rule as the curves they sit on.  Switching this figure
+    over means re-running those walks, not editing this script.
+
+Curves are smoothed for display with a Gaussian filter (sigma = 1.6 steps), with BOTH
+endpoints pinned to their raw values -- t = 0 because r = 1 there by construction, and the
+last step because that is where the measured dots sit and where the plateau is read off.
+This is cosmetic and rounds the corners of the steep stretch around t = 10-16.  It is defensible because the step-to-step wiggle it removes is
+Monte-Carlo noise and nothing else: splitting the 500 walks into two disjoint halves gives
+medians that disagree by 0.01-0.02 at exactly the steps where the kinks appear, and the rms
+second difference of the raw curves (0.005 for r100, 0.015 for r90) is BELOW what sampling
+noise in the median alone would produce (0.011 and 0.022).  The honest fix is more walks --
+the noise falls as 1/sqrt(N) -- which means regenerating the caches, not editing this script.
 
 Solid curves are the latent correlation -- the model's own effects, with no measurement
 error anywhere.  Dashed curves add rank-matched measurement noise: each simulated mutation
@@ -54,11 +71,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.ticker import FixedLocator
+from scipy.ndimage import gaussian_filter1d
 
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
-from cmn import cmn_exper  # noqa: E402
+from cmn import cmn_exper, cmn_scatter  # noqa: E402
 from code_figs import TableS1_limdi_autocorr as table_s1  # noqa: E402
 
 # ───────────────────────────────────── Style ─────────────────────────────────────
@@ -72,9 +90,43 @@ mpl.rcParams['xtick.labelsize'] = 16
 mpl.rcParams['ytick.labelsize'] = 16
 mpl.rcParams['legend.fontsize'] = 14
 
-CURVE_COLORS = ("#211b34", "#2572e0", "#abd9dc")
-RETAINED_FRACTIONS = (1.00, 0.95, 0.90)
-TAIL_EXCLUSIONS = (0.00, 0.05, 0.10)
+# The two band colours of fig1's row 2, with the same meaning: the all-pairs r in the colour
+# of the points its subset adds, the retained-subset r in the colour of the bulk it covers.
+CURVE_COLORS = (cmn_scatter.EXCLUDED_COLOR, cmn_scatter.RETAINED_COLOR)
+RETAINED_FRACTIONS = (1.00, 0.90)
+TAIL_EXCLUSIONS = (0.00, 0.10)
+# The cached cut axis is (r100, r95, r90); r95 is loaded but not drawn.
+CUT_INDICES = (0, 2)
+
+# Measured markers: triangles, area in points^2.  Line2D takes a diameter instead, so the
+# legend handle is sized as sqrt(area) to match what the panels draw.
+MEASURED_MARKER_AREA = 210.0
+
+# Display smoothing -- see the note in the module docstring on why this is cosmetic only.
+# A Gaussian kernel rather than a Savitzky-Golay fit: it has no polynomial to overshoot with
+# and gives a visibly cleaner line, at the cost of rounding the corners of the steep stretch
+# around t = 10-16 rather than tracking them.  Lower SMOOTH_SIGMA to about 1.0 to stay closer
+# to the raw medians.
+SMOOTH_SIGMA = 1.6
+
+
+def smooth(trace):
+    """Gaussian filter along the step axis, per cut, with BOTH endpoints held exact.
+
+    The kernel has no data past either end of the trace, so both endpoints are where it is
+    least trustworthy -- and both are where the figure makes a claim: t = 0 is r = 1 by
+    construction, and the last step is where the measured dots sit and where the plateau is
+    read off.
+
+    Left alone when the trace carries a NaN, which is what a cache whose walks have run out
+    of survivors looks like; the filter would spread that NaN across the whole kernel.
+    """
+    if not np.isfinite(trace).all():
+        return trace
+    smoothed = gaussian_filter1d(trace, SMOOTH_SIGMA, axis=0, mode="nearest")
+    smoothed[0] = trace[0]
+    smoothed[-1] = trace[-1]
+    return smoothed
 
 DATA_DIR = os.path.join(_REPO_ROOT, "data", "FGM_HEAVY_TAILED")
 OUT_DIR = os.path.join(_REPO_ROOT, "figs_paper")
@@ -115,7 +167,11 @@ def couce_pair(ancestor, evolved):
 
 
 def empirical_ladder(pair):
-    """Measured r100/r95/r90, with the subsets ranked on the ancestral effects."""
+    """Measured r100/r90, with the subsets ranked on the SIGNED ancestral effects.
+
+    Signed, not |signed|, so the dots match the rule the cached walks were simulated under --
+    see the note in the module docstring on why this differs from fig1.
+    """
     if pair.startswith("couce_"):
         ancestor, evolved = couce_pair(*pair.split("_")[1:3])
     else:
@@ -161,17 +217,17 @@ def load_curves(name, last_time):
             "times": np.arange(steps + 1),
             "surviving": np.isfinite(latent[:, :, 0]).sum(axis=0),
             "walks": latent.shape[0],
-            "latent": np.nanmedian(latent, axis=0),
-            "observed": np.nanmedian(pooled, axis=0),
-            "lower": np.nanquantile(pooled, 0.16, axis=0),
-            "upper": np.nanquantile(pooled, 0.84, axis=0),
+            "latent": smooth(np.nanmedian(latent, axis=0)),
+            "observed": smooth(np.nanmedian(pooled, axis=0)),
+            "lower": smooth(np.nanquantile(pooled, 0.16, axis=0)),
+            "upper": smooth(np.nanquantile(pooled, 0.84, axis=0)),
         }
 
 
 # ──────────────────────────────────── Plotting ────────────────────────────────────
 def draw_panel(axis, curves, ladders, last_time):
     times = curves["times"]
-    for cut, color in enumerate(CURVE_COLORS):
+    for cut, color in zip(CUT_INDICES, CURVE_COLORS):
         axis.fill_between(times, curves["lower"][:, cut], curves["upper"][:, cut],
                           color=color, alpha=0.12, linewidth=0)
         axis.plot(times, curves["latent"][:, cut], color=color, linewidth=2.7)
@@ -179,7 +235,10 @@ def draw_panel(axis, curves, ladders, last_time):
                   linestyle=(0, (4.0, 2.4)))
 
     keys = tuple(f"r{int(round(100 * fraction))}" for fraction in RETAINED_FRACTIONS)
-    floor = min(float(np.nanmin(curves["lower"])), float(np.nanmin(curves["latent"])))
+    # Only the drawn cuts set the y floor; r95 is in the cache but not on the figure.
+    drawn = np.asarray(CUT_INDICES)
+    floor = min(float(np.nanmin(curves["lower"][:, drawn])),
+                float(np.nanmin(curves["latent"][:, drawn])))
     for time, ladder, note in ladders:
         if time > last_time:
             raise SystemExit(f"Measured marker at t={time} is outside the {last_time}-step frame")
@@ -187,8 +246,8 @@ def draw_panel(axis, curves, ladders, last_time):
                      linestyle=(0, (2.0, 2.5)), zorder=1)
         for key, color in zip(keys, CURVE_COLORS):
             # clip_on stays off so a marker sitting on the frame edge is drawn whole.
-            axis.scatter([time], [ladder[key]], s=58, marker="o",
-                         facecolor=color, edgecolor="white", linewidth=0.9,
+            axis.scatter([time], [ladder[key]], s=MEASURED_MARKER_AREA, marker="^",
+                         facecolor=color, edgecolor="white", linewidth=1.0,
                          zorder=7, clip_on=False)
         if note:
             axis.annotate(
@@ -231,7 +290,7 @@ def build(path):
                   + ", ".join(f"{key}={value:+.3f}" for key, value in ladder.items())
                   + "   simulated observed "
                   + ", ".join(f"{value:+.3f}"
-                              for value in curves["observed"][time]))
+                              for value in curves["observed"][time][list(CUT_INDICES)]))
         print(f"  walks alive at t={last_time}: "
               f"{curves['surviving'][-1]}/{curves['walks']}")
 
@@ -239,17 +298,24 @@ def build(path):
     for axis in axes:
         axis.set_ylim(min(-0.05, np.floor(20.0 * (floor - 0.02)) / 20.0), 1.04)
 
-    axes[0].legend(
-        [Line2D([], [], color=color, linewidth=2.7) for color in CURVE_COLORS],
-        [f"$r_{{{int(100 * fraction)}}}$" for fraction in RETAINED_FRACTIONS],
-        loc="lower left", frameon=False, handlelength=2.0, labelspacing=0.35)
-    axes[1].legend(
+    # Both keys live in panel A, side by side in its empty lower-left corner: what the line
+    # styles mean on the left, what the colours mean immediately to their right.  Panel A has
+    # to hold the first legend as an artist explicitly, since the second ``legend`` call on the
+    # same axes would otherwise replace it.
+    styles = axes[0].legend(
         [Line2D([], [], color="#555555", linewidth=2.7),
          Line2D([], [], color="#555555", linewidth=2.5, linestyle=(0, (4.0, 2.4))),
-         Line2D([], [], marker="o", linestyle="none", markersize=7.5,
+         Line2D([], [], marker="^", linestyle="none",
+                markersize=np.sqrt(MEASURED_MARKER_AREA),
                 markerfacecolor="#777777", markeredgecolor="white")],
         ["Latent", "Noisy", "Measured"],
         loc="lower left", frameon=False, handlelength=2.4, labelspacing=0.35)
+    axes[0].add_artist(styles)
+    axes[0].legend(
+        [Line2D([], [], color=color, linewidth=2.7) for color in CURVE_COLORS],
+        [rf"$r_{{{int(100 * fraction)}\%}}$" for fraction in RETAINED_FRACTIONS],
+        loc="lower left", bbox_to_anchor=(0.34, 0.0), bbox_transform=axes[0].transAxes,
+        frameon=False, handlelength=2.0, labelspacing=0.35)
 
     for axis, tag in zip(axes, "AB"):
         axis.text(-0.13, 1.13, tag, transform=axis.transAxes, ha="left", va="top",
