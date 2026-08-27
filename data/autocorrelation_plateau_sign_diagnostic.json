@@ -1,0 +1,175 @@
+{
+  "analysis": "When does the trimmed-subset autocorrelation plateau go negative?",
+  "models": {
+    "Limdi canonical, with errors": {
+      "n": 2,
+      "r0": 0.375537,
+      "sigma": 0.115738,
+      "mu": null,
+      "lower_cut": -0.5,
+      "critical_trim_fraction": 0.053810962319974884,
+      "plateau_by_subset": {
+        "r100": 0.29492493987318075,
+        "r95": 0.012388931736136645,
+        "r90": -0.12246390730758322
+      },
+      "s0_at_5th_percentile": -0.09797660970469106,
+      "s0_at_10th_percentile": -0.07474362987565138,
+      "s0_max": 0.07051385354599145,
+      "frozen_variance_share": 0.08659740361125898
+    },
+    "Limdi heavy-tailed, with errors": {
+      "n": 7,
+      "r0": 0.492747,
+      "sigma": 0.00403,
+      "mu": 0.210503,
+      "lower_cut": -0.5,
+      "critical_trim_fraction": 0.11087264702409283,
+      "plateau_by_subset": {
+        "r100": 0.8383637197635585,
+        "r95": 0.5053089707974813,
+        "r90": 0.08031491095235989
+      },
+      "s0_at_5th_percentile": -0.1399283110829896,
+      "s0_at_10th_percentile": -0.05359650346407842,
+      "s0_max": 0.1145751841365895,
+      "frozen_variance_share": 1.1717380186483362
+    },
+    "Limdi canonical, no errors": {
+      "n": 4,
+      "r0": 0.464042,
+      "sigma": 0.088546,
+      "mu": null,
+      "lower_cut": -0.5,
+      "critical_trim_fraction": 0.0845435452223312,
+      "plateau_by_subset": {
+        "r100": 0.2604875891466342,
+        "r95": 0.06682797378534129,
+        "r90": -0.024766560040073576
+      },
+      "s0_at_5th_percentile": -0.09173207735937218,
+      "s0_at_10th_percentile": -0.07225519015796888,
+      "s0_max": 0.10237896380788834,
+      "frozen_variance_share": 0.06786519730287974
+    },
+    "Limdi heavy-tailed, no errors": {
+      "n": 7,
+      "r0": 0.479995,
+      "sigma": 0.014516,
+      "mu": 0.343074,
+      "lower_cut": -0.5,
+      "critical_trim_fraction": 0.14508340704047018,
+      "plateau_by_subset": {
+        "r100": 0.8295981856676496,
+        "r95": 0.5403749002704435,
+        "r90": 0.2234507770725378
+      },
+      "s0_at_5th_percentile": -0.16192164140341422,
+      "s0_at_10th_percentile": -0.07479860634849947,
+      "s0_max": 0.10898814637499454,
+      "frozen_variance_share": 1.0901360911301705
+    },
+    "Ascensao GHI beta-prime, n=10": {
+      "n": 10,
+      "r0": 0.866038,
+      "sigma": 0.0017729,
+      "mu": 0.422792,
+      "lower_cut": -0.35,
+      "critical_trim_fraction": 0.011355223332997598,
+      "plateau_by_subset": {
+        "r100": 0.5430008039237756,
+        "r95": -0.41068798878363466,
+        "r90": -0.4726236698658553
+      },
+      "s0_at_5th_percentile": -0.017225295702264717,
+      "s0_at_10th_percentile": -0.007152200327212838,
+      "s0_max": 0.29734094134557376,
+      "frozen_variance_share": 1.1534991468268143
+    },
+    "Ascensao GHI beta-prime, n=24": {
+      "n": 24,
+      "r0": 1.1979,
+      "sigma": 0.0013019,
+      "mu": 0.425,
+      "lower_cut": -0.35,
+      "critical_trim_fraction": 0.014518747050024268,
+      "plateau_by_subset": {
+        "r100": 0.6110277419102409,
+        "r95": -0.3934743719945143,
+        "r90": -0.474999407757572
+      },
+      "s0_at_5th_percentile": -0.018331558228685853,
+      "s0_at_10th_percentile": -0.007505837847550784,
+      "s0_max": 0.3724357201688011,
+      "frozen_variance_share": 1.1119180059230462
+    },
+    "Ascensao PQT beta-prime, n=12": {
+      "n": 12,
+      "r0": 1.41984,
+      "sigma": 0.0019984,
+      "mu": 0.451909,
+      "lower_cut": -0.47,
+      "critical_trim_fraction": 0.005507180224702706,
+      "plateau_by_subset": {
+        "r100": 0.3362178211152418,
+        "r95": -0.4526694228312719,
+        "r90": -0.49060903501510517
+      },
+      "s0_at_5th_percentile": -0.02507454701911506,
+      "s0_at_10th_percentile": -0.01118675171078165,
+      "s0_max": 0.7441270990436503,
+      "frozen_variance_share": 1.115681159369542
+    },
+    "Ascensao PQT beta-prime, n=50": {
+      "n": 50,
+      "r0": 2.67501,
+      "sigma": 0.0010697,
+      "mu": 0.452235,
+      "lower_cut": -0.47,
+      "critical_trim_fraction": 0.007207184340948089,
+      "plateau_by_subset": {
+        "r100": 0.3901305985904329,
+        "r95": -0.4324099255630145,
+        "r90": -0.47650202932899394
+      },
+      "s0_at_5th_percentile": -0.026010875798501597,
+      "s0_at_10th_percentile": -0.011544311376597453,
+      "s0_max": 0.8648992627688245,
+      "frozen_variance_share": 1.1073781179396298
+    },
+    "Ascensao MNO beta-prime, n=200": {
+      "n": 200,
+      "r0": 1.60911,
+      "sigma": 0.0010978,
+      "mu": 0.47159,
+      "lower_cut": -0.16,
+      "critical_trim_fraction": 0.06211040868412252,
+      "plateau_by_subset": {
+        "r100": 0.783570488426231,
+        "r95": 0.10342320072582863,
+        "r90": -0.20168089583528018
+      },
+      "s0_at_5th_percentile": -0.022528586050287527,
+      "s0_at_10th_percentile": -0.00966543743925101,
+      "s0_max": 0.10935114710447179,
+      "frozen_variance_share": 1.0281532205081547
+    },
+    "Ascensao MNO beta-prime, n=400": {
+      "n": 400,
+      "r0": 2.25514,
+      "sigma": 0.00078668,
+      "mu": 0.47339,
+      "lower_cut": -0.16,
+      "critical_trim_fraction": 0.06306922874991192,
+      "plateau_by_subset": {
+        "r100": 0.7860668440415672,
+        "r95": 0.11084845763407998,
+        "r90": -0.1984569684103827
+      },
+      "s0_at_5th_percentile": -0.022606167978819803,
+      "s0_at_10th_percentile": -0.009700348150132829,
+      "s0_max": 0.11830326653145701,
+      "frozen_variance_share": 1.0272160941397224
+    }
+  }
+}

@@ -1,0 +1,656 @@
+{
+  "analysis": "Canonical Gaussian and heavy-tailed beta-prime FGM DFE fits, full unbinned MLE, no measurement-error convolution",
+  "likelihood": {
+    "measurement_error_convolution": false,
+    "conditional_on_s_at_least": -0.5,
+    "lower_tail_trim": null
+  },
+  "datasets": {
+    "limdi_REL607": {
+      "dataset": {
+        "name": "Limdi REL607 ancestor",
+        "N": 3497,
+        "observed_lower_cut": -0.5,
+        "minimum": -0.49933528522611026,
+        "maximum": 0.10183779193387929
+      },
+      "canonical_full_mle": {
+        "fit": {
+          "n": 3.0803848677540016,
+          "r": 0.46361598576624735,
+          "sigma": 0.17663696859081476,
+          "loglik": 4298.305534724598,
+          "C_n_sigma2": 0.09610991362472576,
+          "A_r_sigma": 0.08189172231599226
+        },
+        "diagnostics": {
+          "converged": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "starts": 8,
+          "interior_bounded_candidates": 7,
+          "interior_polished_candidates": 7,
+          "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+        }
+      },
+      "heavy_tailed_full_mle": {
+        "fit": {
+          "n": 6.808917872031238,
+          "r": 0.4800085013274176,
+          "sigma": 0.014501072034603223,
+          "mu": 0.3422991968003649,
+          "loglik": 7735.853008272161,
+          "C_n_sigma2": 0.001431786672891283,
+          "A_r_sigma": 0.00696063785497082
+        },
+        "diagnostics": {
+          "converged": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "starts": 11,
+          "interior_bounded_candidates": 11,
+          "interior_polished_candidates": 11,
+          "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+        }
+      },
+      "canonical_integer_n": {
+        "continuous_n": 3.0803848677540016,
+        "neighbours_of_continuous_n": [
+          3,
+          4
+        ],
+        "n_tested": [
+          2,
+          3,
+          4
+        ],
+        "chosen_n": 3,
+        "beat_continuous_mle": false,
+        "candidates": {
+          "3": {
+            "fit": {
+              "n": 3.0,
+              "r": 0.46360398542711534,
+              "sigma": 0.17724110693043466,
+              "loglik": 4297.928988063581,
+              "C_n_sigma2": 0.09424322995777731,
+              "A_r_sigma": 0.08216968355446302
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "4": {
+            "fit": {
+              "n": 4.0,
+              "r": 0.46379728265333325,
+              "sigma": 0.1683469672779066,
+              "loglik": 4253.709159481289,
+              "C_n_sigma2": 0.11336280556667422,
+              "A_r_sigma": 0.07807886596642269
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "2": {
+            "fit": {
+              "n": 2.0,
+              "r": 0.5229966959027648,
+              "sigma": 0.21921440831378505,
+              "loglik": 3865.5289685165126,
+              "C_n_sigma2": 0.09610991362472575,
+              "A_r_sigma": 0.11464841124238914
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          }
+        },
+        "fit": {
+          "n": 3.0,
+          "r": 0.46360398542711534,
+          "sigma": 0.17724110693043466,
+          "loglik": 4297.928988063581,
+          "C_n_sigma2": 0.09424322995777731,
+          "A_r_sigma": 0.08216968355446302
+        }
+      },
+      "heavy_tailed_integer_n": {
+        "continuous_n": 6.808917872031238,
+        "neighbours_of_continuous_n": [
+          6,
+          7
+        ],
+        "n_tested": [
+          6,
+          7,
+          8
+        ],
+        "chosen_n": 7,
+        "beat_continuous_mle": false,
+        "candidates": {
+          "6": {
+            "fit": {
+              "n": 6.0,
+              "r": 0.4640075575978726,
+              "sigma": 0.014973203808376587,
+              "mu": 0.3393732003519256,
+              "loglik": 7734.791495076533,
+              "C_n_sigma2": 0.0013451809937230987,
+              "A_r_sigma": 0.006947679728539984
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "7": {
+            "fit": {
+              "n": 7.0,
+              "r": 0.4848251698801748,
+              "sigma": 0.01435915787235499,
+              "mu": 0.3427924154886273,
+              "loglik": 7735.8177646273125,
+              "C_n_sigma2": 0.0014432979036224998,
+              "A_r_sigma": 0.006961681154800757
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "8": {
+            "fit": {
+              "n": 8.0,
+              "r": 0.5124611544532989,
+              "sigma": 0.013633077574900936,
+              "mu": 0.34576743548590794,
+              "loglik": 7734.994560268158,
+              "C_n_sigma2": 0.0014868864333061344,
+              "A_r_sigma": 0.006986422672785114
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          }
+        },
+        "fit": {
+          "n": 7.0,
+          "r": 0.4848251698801748,
+          "sigma": 0.01435915787235499,
+          "mu": 0.3427924154886273,
+          "loglik": 7735.8177646273125,
+          "C_n_sigma2": 0.0014432979036224998,
+          "A_r_sigma": 0.006961681154800757
+        }
+      },
+      "loglik_comparison": {
+        "sample": "all effects above the cut",
+        "N": 3497,
+        "canonical_loglik": 4297.928988063581,
+        "heavy_loglik": 7735.8177646273125,
+        "continuous_n_canonical_loglik": 4298.305534724598,
+        "continuous_n_heavy_loglik": 7735.853008272161,
+        "heavy_minus_canonical": 3437.888776563732
+      }
+    },
+    "couce_0K": {
+      "dataset": {
+        "name": "Couce 0K ancestor",
+        "N": 13258,
+        "observed_lower_cut": -0.5,
+        "minimum": -0.230408952174628,
+        "maximum": 0.0969917164590145
+      },
+      "canonical_full_mle": {
+        "fit": {
+          "n": 5.53286528542526,
+          "r": 0.45241403624343907,
+          "sigma": 0.05015444242360595,
+          "loglik": 32723.878488684626,
+          "C_n_sigma2": 0.013917746098439909,
+          "A_r_sigma": 0.02269057373240274
+        },
+        "diagnostics": {
+          "converged": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "starts": 8,
+          "interior_bounded_candidates": 6,
+          "interior_polished_candidates": 6,
+          "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+        }
+      },
+      "heavy_tailed_full_mle": {
+        "fit": {
+          "n": 10.286486304827848,
+          "r": 0.5414215082459467,
+          "sigma": 0.03038959332465428,
+          "mu": 1.298255288949651,
+          "loglik": 36142.36914811811,
+          "C_n_sigma2": 0.00949985177158068,
+          "A_r_sigma": 0.016453579452815274
+        },
+        "diagnostics": {
+          "converged": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "starts": 11,
+          "interior_bounded_candidates": 11,
+          "interior_polished_candidates": 11,
+          "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+        }
+      },
+      "canonical_integer_n": {
+        "continuous_n": 5.53286528542526,
+        "neighbours_of_continuous_n": [
+          5,
+          6
+        ],
+        "n_tested": [
+          5,
+          6,
+          7
+        ],
+        "chosen_n": 6,
+        "beat_continuous_mle": false,
+        "candidates": {
+          "5": {
+            "fit": {
+              "n": 5.0,
+              "r": 0.45227411906069054,
+              "sigma": 0.050419029856867206,
+              "loglik": 32718.553991904737,
+              "C_n_sigma2": 0.012710392858538333,
+              "A_r_sigma": 0.02280322231240927
+            },
+            "diagnostics": {
+              "converged": true,
+              "message": "Optimization terminated successfully.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "6": {
+            "fit": {
+              "n": 6.0,
+              "r": 0.45257773415009067,
+              "sigma": 0.04989497636527122,
+              "loglik": 32719.87915149391,
+              "C_n_sigma2": 0.014937051998945839,
+              "A_r_sigma": 0.022581355348866773
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "7": {
+            "fit": {
+              "n": 7.0,
+              "r": 0.45318695137880854,
+              "sigma": 0.04925892763457366,
+              "loglik": 32685.449841223843,
+              "C_n_sigma2": 0.016985093661957152,
+              "A_r_sigma": 0.02232350324290178
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          }
+        },
+        "fit": {
+          "n": 6.0,
+          "r": 0.45257773415009067,
+          "sigma": 0.04989497636527122,
+          "loglik": 32719.87915149391,
+          "C_n_sigma2": 0.014937051998945839,
+          "A_r_sigma": 0.022581355348866773
+        }
+      },
+      "heavy_tailed_integer_n": {
+        "continuous_n": 10.286486304827848,
+        "neighbours_of_continuous_n": [
+          10,
+          11
+        ],
+        "n_tested": [
+          9,
+          10,
+          11
+        ],
+        "chosen_n": 10,
+        "beat_continuous_mle": false,
+        "candidates": {
+          "10": {
+            "fit": {
+              "n": 10.0,
+              "r": 0.5342024575297897,
+              "sigma": 0.030807522136755108,
+              "mu": 1.2980910308881135,
+              "loglik": 36142.35645428728,
+              "C_n_sigma2": 0.00949103420206656,
+              "A_r_sigma": 0.016457454035857976
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "11": {
+            "fit": {
+              "n": 11.0,
+              "r": 0.5591467732846631,
+              "sigma": 0.029407786793789102,
+              "mu": 1.2984270568656302,
+              "loglik": 36142.30740645531,
+              "C_n_sigma2": 0.009512997165198524,
+              "A_r_sigma": 0.016443269095190505
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "9": {
+            "fit": {
+              "n": 9.0,
+              "r": 0.5086380930612379,
+              "sigma": 0.032376808212515165,
+              "mu": 1.2968140776518158,
+              "loglik": 36142.029991185926,
+              "C_n_sigma2": 0.009434319390269905,
+              "A_r_sigma": 0.01646807798862314
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          }
+        },
+        "fit": {
+          "n": 10.0,
+          "r": 0.5342024575297897,
+          "sigma": 0.030807522136755108,
+          "mu": 1.2980910308881135,
+          "loglik": 36142.35645428728,
+          "C_n_sigma2": 0.00949103420206656,
+          "A_r_sigma": 0.016457454035857976
+        }
+      },
+      "loglik_comparison": {
+        "sample": "all effects above the cut",
+        "N": 13258,
+        "canonical_loglik": 32719.87915149391,
+        "heavy_loglik": 36142.35645428728,
+        "continuous_n_canonical_loglik": 32723.878488684626,
+        "continuous_n_heavy_loglik": 36142.36914811811,
+        "heavy_minus_canonical": 3422.477302793366
+      }
+    },
+    "limdi_REL606": {
+      "dataset": {
+        "name": "Limdi REL606 ancestor",
+        "N": 3488,
+        "observed_lower_cut": -0.5,
+        "minimum": -0.49474639280656885,
+        "maximum": 0.06883040798037338
+      },
+      "canonical_full_mle": {
+        "fit": {
+          "n": 2.2995557780658307,
+          "r": 0.37772504423980174,
+          "sigma": 0.17863875674583035,
+          "loglik": 4856.4444974466505,
+          "C_n_sigma2": 0.07338297652297787,
+          "A_r_sigma": 0.06747633229476195
+        },
+        "diagnostics": {
+          "converged": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "starts": 8,
+          "interior_bounded_candidates": 6,
+          "interior_polished_candidates": 5,
+          "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+        }
+      },
+      "heavy_tailed_full_mle": {
+        "fit": {
+          "n": 6.311070765326476,
+          "r": 0.38212148519830297,
+          "sigma": 0.016875364853005736,
+          "mu": 0.3885681871780772,
+          "loglik": 8327.081193593576,
+          "C_n_sigma2": 0.00179725372494095,
+          "A_r_sigma": 0.006448439480893794
+        },
+        "diagnostics": {
+          "converged": false,
+          "message": "Desired error not necessarily achieved due to precision loss.",
+          "starts": 11,
+          "interior_bounded_candidates": 11,
+          "interior_polished_candidates": 11,
+          "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+        }
+      },
+      "canonical_integer_n": {
+        "continuous_n": 2.2995557780658307,
+        "neighbours_of_continuous_n": [
+          2,
+          3
+        ],
+        "n_tested": [
+          2,
+          3,
+          4
+        ],
+        "chosen_n": 3,
+        "beat_continuous_mle": true,
+        "candidates": {
+          "2": {
+            "fit": {
+              "n": 2.0,
+              "r": 0.4931702156654456,
+              "sigma": 0.19155022386175627,
+              "loglik": 4237.594503218435,
+              "C_n_sigma2": 0.07338297652297789,
+              "A_r_sigma": 0.09446686521266673
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "3": {
+            "fit": {
+              "n": 3.0,
+              "r": 0.37775516296114403,
+              "sigma": 0.1760041392300788,
+              "loglik": 4878.975078311614,
+              "C_n_sigma2": 0.09293237107836289,
+              "A_r_sigma": 0.0664864722966943
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "4": {
+            "fit": {
+              "n": 4.0,
+              "r": 0.3779238158297571,
+              "sigma": 0.16327461026701703,
+              "loglik": 4772.846969607153,
+              "C_n_sigma2": 0.10663439343138521,
+              "A_r_sigma": 0.06170536374022751
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 7,
+              "interior_bounded_candidates": 7,
+              "interior_polished_candidates": 7,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          }
+        },
+        "fit": {
+          "n": 3.0,
+          "r": 0.37775516296114403,
+          "sigma": 0.1760041392300788,
+          "loglik": 4878.975078311614,
+          "C_n_sigma2": 0.09293237107836289,
+          "A_r_sigma": 0.0664864722966943
+        }
+      },
+      "heavy_tailed_integer_n": {
+        "continuous_n": 6.311070765326476,
+        "neighbours_of_continuous_n": [
+          6,
+          7
+        ],
+        "n_tested": [
+          5,
+          6,
+          7
+        ],
+        "chosen_n": 6,
+        "beat_continuous_mle": false,
+        "candidates": {
+          "6": {
+            "fit": {
+              "n": 6.0,
+              "r": 0.3787137980364424,
+              "sigma": 0.01696283249399047,
+              "mu": 0.385292248050583,
+              "loglik": 8326.800267070861,
+              "C_n_sigma2": 0.0017264261173150738,
+              "A_r_sigma": 0.006424058719255109
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "7": {
+            "fit": {
+              "n": 7.0,
+              "r": 0.3942098166516215,
+              "sigma": 0.01650578318769986,
+              "mu": 0.39498252726567257,
+              "loglik": 8326.22933332029,
+              "C_n_sigma2": 0.0019070861504754872,
+              "A_r_sigma": 0.006506741764114578
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          },
+          "5": {
+            "fit": {
+              "n": 5.0,
+              "r": 0.373884338387036,
+              "sigma": 0.016909451357472936,
+              "mu": 0.3726786978088837,
+              "loglik": 8320.00196861563,
+              "C_n_sigma2": 0.0014296477260537163,
+              "A_r_sigma": 0.006322179033276536
+            },
+            "diagnostics": {
+              "converged": false,
+              "message": "Desired error not necessarily achieved due to precision loss.",
+              "starts": 13,
+              "interior_bounded_candidates": 13,
+              "interior_polished_candidates": 13,
+              "selection_rule": "highest interior local maximum from multistart; final polish has no parameter bounds"
+            }
+          }
+        },
+        "fit": {
+          "n": 6.0,
+          "r": 0.3787137980364424,
+          "sigma": 0.01696283249399047,
+          "mu": 0.385292248050583,
+          "loglik": 8326.800267070861,
+          "C_n_sigma2": 0.0017264261173150738,
+          "A_r_sigma": 0.006424058719255109
+        }
+      },
+      "loglik_comparison": {
+        "sample": "all effects above the cut",
+        "N": 3488,
+        "canonical_loglik": 4878.975078311614,
+        "heavy_loglik": 8326.800267070861,
+        "continuous_n_canonical_loglik": 4856.4444974466505,
+        "continuous_n_heavy_loglik": 8327.081193593576,
+        "heavy_minus_canonical": 3447.825188759247
+      }
+    }
+  },
+  "elapsed_seconds": 219.32874087477103
+}

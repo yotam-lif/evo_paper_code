@@ -1,0 +1,85 @@
+{
+  "analysis": "Couce 0K ancestor: radial beta-prime vs IID symmetric stable entries",
+  "config": {
+    "measurement_error_convolution": false,
+    "conditional_on_s_at_least": -0.5,
+    "tail_trimming": [
+      0.0,
+      0.0
+    ],
+    "beta_prime_n": "continuous effective dimension, bounded 2 to 500 during basin search",
+    "iid_stable_n": "integer dimension, searched 1 to 50",
+    "iid_stable_alpha_bounds": [
+      0.2,
+      2.0
+    ],
+    "stable_final_dx": 2.5e-05,
+    "ascertainment_caveat": "Couce lacks essential disruptions; this is not known to equal a sharp fitness-effect cutoff, so the fit describes the observed library.",
+    "elapsed_seconds": 66.07936974987388
+  },
+  "dataset": {
+    "name": "Couce 0K",
+    "N": 13258,
+    "minimum": -0.230408952174628,
+    "maximum": 0.0969917164590145,
+    "mean": -0.005869710403080456,
+    "standard_deviation": 0.022343324446278463
+  },
+  "radial_beta_prime_fit": {
+    "n": 10.286468995621599,
+    "r": 0.5414211554775716,
+    "sigma": 0.030389608041134157,
+    "loglik": 36142.36914811808,
+    "mu": 1.298255073837956,
+    "C_n_sigma2": 0.00949984498684756,
+    "A_r_sigma": 0.01645357670014136
+  },
+  "radial_beta_prime_diagnostics": {
+    "success": false,
+    "message": "Desired error not necessarily achieved due to precision loss.",
+    "selection_rule": "highest converged interior local maximum from multistart; final polish has no parameter bounds",
+    "number_local_starts": 8,
+    "number_interior_bounded_candidates": 8,
+    "number_interior_unbounded_candidates": 8,
+    "bounds_hit": {
+      "n": false,
+      "C": false,
+      "A": false,
+      "mu": false
+    },
+    "C_n_sigma2": 0.009499844986847562,
+    "A_r_sigma": 0.01645357670014136
+  },
+  "iid_symmetric_stable_fit": {
+    "n": 5,
+    "r": 0.3123290705994101,
+    "gamma": 0.012821057590531475,
+    "alpha": 1.586429101880864,
+    "loglik": 36060.31112745656
+  },
+  "iid_symmetric_stable_n_profile_loglik": {
+    "1": 35709.449059355844,
+    "2": 35872.641075803585,
+    "3": 35975.40980205617,
+    "5": 36060.31112745656,
+    "10": 36041.47301499162,
+    "20": 36034.36495110404,
+    "50": 36039.9518918849,
+    "4": 36037.545767543364,
+    "6": 36059.60080083241,
+    "7": 36043.75852663181,
+    "8": 36032.4454548871,
+    "9": 36045.168573165596
+  },
+  "iid_symmetric_stable_numerical_diagnostics": {
+    "valid": true,
+    "latent_probability_s_at_least_cutoff": 0.9968565300964743,
+    "s_min": -0.5
+  },
+  "delta_loglik_stable_minus_beta_prime": -82.05802066151955,
+  "aic_stable_minus_beta_prime": 164.1160413230391,
+  "parameter_count": {
+    "radial_beta_prime": 4,
+    "iid_stable": 4
+  }
+}
