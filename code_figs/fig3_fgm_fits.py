@@ -129,6 +129,20 @@ DATASETS = {
         "fine_bin_width": 0.0025,
         "min_count": 8,
     },
+    # Fitted but not plotted.  2K is an EVOLVED background, not an ancestor, so it does
+    # not belong in a figure of ancestral DFEs -- but the 2K -> 15K walk has to start
+    # from the landscape the population was actually on at 2K, and that means its own
+    # MLE rather than the 0K one.  It is also the only place in either dataset where the
+    # same lineage is fitted twice, so the pair 0K/2K is the one direct check on whether
+    # the fitted radius really falls as the population climbs.
+    "couce_2K": {
+        "title": "Couce 2K background",
+        "load": lambda: couce_effects("2K"),
+        "panel_title": "ARA+2 2K (DM25)",
+        "xlim": (-0.245, 0.102),
+        "fine_bin_width": 0.0020,
+        "min_count": 12,
+    },
 }
 
 
@@ -410,15 +424,31 @@ def fit_dataset(label, config):
 
 
 def load_or_fit(refit):
-    if not refit and os.path.exists(FIT_JSON):
+    """Return the stored fits, fitting only the datasets that are missing.
+
+    Fitting is INCREMENTAL rather than all-or-nothing.  Adding a dataset used to
+    invalidate the whole cache, so every already-published number was re-optimised
+    alongside the new one -- and a multistart search is not bit-reproducible across
+    SciPy versions, so figures and tables that quote these fits could move for a reason
+    that has nothing to do with the change being made.  Only ``--refit`` refits
+    everything now; otherwise a stored entry is kept exactly as it is.
+    """
+    stored = None
+    if os.path.exists(FIT_JSON):
         with open(FIT_JSON, encoding="utf-8") as handle:
             stored = json.load(handle)
-        entries = stored.get("datasets", {})
-        if all(label in entries and "canonical_integer_n" in entries[label]
-               for label in DATASETS):
-            print(f"Loaded cached fits from {FIT_JSON}")
-            return stored
+    entries = dict(stored.get("datasets", {})) if (stored and not refit) else {}
+    missing = [label for label in DATASETS
+               if label not in entries or "canonical_integer_n" not in entries[label]]
+    if not missing:
+        print(f"Loaded cached fits from {FIT_JSON}")
+        return stored
+    if entries:
+        print(f"Cached: {', '.join(sorted(entries))}; fitting: {', '.join(missing)}")
+
     started = time.perf_counter()
+    for label in missing:
+        entries[label] = fit_dataset(label, DATASETS[label])
     payload = {
         "analysis": ("Canonical Gaussian and heavy-tailed beta-prime FGM DFE fits, "
                      "full unbinned MLE, no measurement-error convolution"),
@@ -427,14 +457,13 @@ def load_or_fit(refit):
             "conditional_on_s_at_least": LOWER_CUT,
             "lower_tail_trim": None,
         },
-        "datasets": {label: fit_dataset(label, config)
-                     for label, config in DATASETS.items()},
+        "datasets": entries,
     }
     payload["elapsed_seconds"] = time.perf_counter() - started
     os.makedirs(os.path.dirname(FIT_JSON), exist_ok=True)
     with open(FIT_JSON, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)
-    print(f"Saved {FIT_JSON}")
+    print(f"Saved {FIT_JSON}  (fitted {len(missing)} of {len(DATASETS)} datasets)")
     return payload
 
 

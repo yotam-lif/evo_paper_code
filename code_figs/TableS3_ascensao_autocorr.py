@@ -105,19 +105,25 @@ conflicts across them, and value-checks every combined table against the existin
 (all match to max|diff| = 0).  Every row here prints the pair count it actually used.
 
 THE LADDER, AND WHAT ``cut`` MEANS.  Each row reports r three times, on nested subsets built by
-throwing away the most deleterious genes as measured in the EARLY background only:
+throwing away the largest-magnitude genes as measured in the EARLY background only:
 
   r_100   every matched gene, nothing removed
-  r_95    the lowest 5% of early-side effects removed
-  r_90    the lowest 10% of early-side effects removed
+  r_95    the largest 5% of |early-side effect| removed
+  r_90    the largest 10% removed
+
+    RANKED ON |s|, NOT ON s.  This ladder used to rank on the signed effect and drop the most
+    deleterious fraction, which kept the entire beneficial tail while trimming only the
+    deleterious one -- a one-sided subset.  Ranking on |s| drops the largest effects of either
+    sign, leaving a set symmetric about zero, and matches what ``cmn/cmn_scatter.py`` does in
+    fig1 and figs S1-S4 and what TableS1 and TableS2 now do.  Changing one and not the others
+    would have left three tables silently disagreeing about what "r_90" names.
 
 The removal is by RANK, so the subsets are nested and equally sized across rows.  ``cut_95`` and
-``cut_90`` translate that rank back onto the effect scale: each is the LARGEST (least negative)
-early-side ``s`` that the cut threw away, so the subset kept is everything above it.  Reading the
-E_SLR ancestor control, ``cut_95 = -0.0326`` means dropping the worst 5% amounted to discarding
-every gene with s <= -0.0326 per generation and keeping the rest.  There is no ``cut_100`` because
-nothing is removed at that rung.  The column exists so the knife's position is visible in physical
-units, since a percentile is not a fixed value of s and moves from row to row.
+``cut_90`` translate that rank back onto the effect scale: each is the ``|s|`` threshold AT OR
+ABOVE which the cut threw genes away, so the subset kept is everything strictly inside it.  There
+is no ``cut_100`` because nothing is removed at that rung.  The column exists so the knife's
+position is visible in physical units, since a percentile is not a fixed value of |s| and moves
+from row to row.
 
 THE WEIGHTED COLUMN, ``r_100_w``.  Exactly the pairs of ``r_100`` -- no gene is filtered out, by
 fitness effect or by anything else -- but each weighted by w = 1/(sigma_early^2 + sigma_late^2),
@@ -210,11 +216,32 @@ COLUMNS = ["experiment", "media", "description", "comparison",
            "n_95", "cut_95", "r_95", "r_95_null",
            "n_90", "cut_90", "r_90", "r_90_null", "f95", "f90"]
 
-# Fractions of the EARLY (ancestor) side removed, lowest effect first, for the nested-subset
+# Fractions of the EARLY (ancestor) side removed, LARGEST |effect| first, for the nested-subset
 # ladder.  Same rule and same fractions as TableS1_limdi_autocorr.py, so the two tables are read the
 # same way.  Deliberately duplicated rather than imported: figure/table scripts in this repo do
 # not import one another (shared loaders live in cmn/).
 TAIL_EXCLUSIONS = (0.00, 0.05, 0.10)
+# Rank on |s| and drop the largest, not on s dropping the most deleterious.  Changed together
+# with TableS1 and TableS2 so all three ladders, and the fig1/figs S1-S4 scatter panels they
+# annotate, partition identically; see RANKED ON |s| in TableS1_limdi_autocorr.py.
+EXCLUSION_MODE = "magnitude"
+
+
+def kept_indices(values, fraction):
+    """Indices surviving a ``fraction`` cut of the largest-|value| entries."""
+    values = np.asarray(values, dtype=float)
+    order = np.argsort(np.abs(values), kind="stable")
+    return order[: values.size - int(np.floor(fraction * values.size))]
+
+
+def magnitude_cut(values, fraction):
+    """The |value| threshold at or above which entries were dropped; inf when none were."""
+    values = np.asarray(values, dtype=float)
+    removed = int(np.floor(fraction * values.size))
+    if removed == 0:
+        return np.inf
+    order = np.argsort(np.abs(values), kind="stable")
+    return float(np.abs(values[order[values.size - removed]]))
 
 # Forward, two-ended noise-only null.  A fixed seed plus a row-specific stable hash makes every
 # value bit-for-bit reproducible while keeping random streams independent of row order.
@@ -266,10 +293,8 @@ def noise_only_null_ladder(a, a_err, b, b_err, seed):
     for simulation in range(NULL_SIMULATIONS):
         sim_a = shared_effect + rng.normal(size=n) * a_err
         sim_b = shared_effect + rng.normal(size=n) * b_err
-        order = np.argsort(sim_a, kind="stable")
         for column, frac in enumerate(TAIL_EXCLUSIONS):
-            n_removed = int(np.floor(frac * n))
-            kept = order[n_removed:]
+            kept = kept_indices(sim_a, frac)
             simulated_r[simulation, column], _ = pearson(sim_a[kept], sim_b[kept])
 
     medians = np.nanmedian(simulated_r, axis=0)
@@ -315,26 +340,25 @@ def inverse_variance_pearson(a, a_err, b, b_err):
 
 
 def ancestor_exclusion_ladder(a, a_err, b, b_err, null_seed=None):
-    """``r`` on nested subsets built by removing the lowest EARLY-side effects.
+    """``r`` on nested subsets built by removing the largest-|EARLY effect| pairs.
 
     For each fraction in ``TAIL_EXCLUSIONS`` the ``floor(frac * n)`` matched pairs with the
-    smallest early effect are dropped and r is recomputed on the rest.  Only ``a`` enters the
-    exclusion -- never ``b``, the side being predicted -- so the subsets never condition on the
-    outcome, and because a fixed fraction is removed by rank they are nested and equally sized
-    across rows regardless of how different the two experiments' effect scales are.
+    largest ``|early effect|`` are dropped and r is recomputed on the rest.  Only ``a`` enters
+    the exclusion -- never ``b``, the side being predicted -- so the subsets never condition on
+    the outcome, and because a fixed fraction is removed by rank they are nested and equally
+    sized across rows regardless of how different the two experiments' effect scales are.
+    ``cut`` is the ``|s|`` threshold at or above which pairs were dropped.
     """
     a, a_err, b, b_err = (np.asarray(v, dtype=float) for v in (a, a_err, b, b_err))
     m = np.isfinite(a) & np.isfinite(b)
     a, a_err, b, b_err = a[m], a_err[m], b[m], b_err[m]
-    order = np.argsort(a, kind="stable")
     if null_seed is None:
         null_results = [(np.nan, 0) for _ in TAIL_EXCLUSIONS]
     else:
         null_results = noise_only_null_ladder(a, a_err, b, b_err, null_seed)
     ladder = []
     for null_column, frac in enumerate(TAIL_EXCLUSIONS):
-        n_removed = int(np.floor(frac * a.size))
-        kept = order[n_removed:]
+        kept = kept_indices(a, frac)
         r, n = pearson(a[kept], b[kept])
         r_null, n_null = null_results[null_column]
         ladder.append({
@@ -343,7 +367,7 @@ def ancestor_exclusion_ladder(a, a_err, b, b_err, null_seed=None):
             "r": r,
             "r_null": r_null,
             "n_null": n_null,
-            "cut": -np.inf if n_removed == 0 else float(a[order[n_removed - 1]]),
+            "cut": magnitude_cut(a, frac),
         })
     return ladder
 
@@ -457,7 +481,9 @@ def main(argv=None):
     rows = attach_ceilings(build_rows())
     write_table(rows, args.out)
 
-    print("\nnested subsets: the lowest 0% / 5% / 10% of EARLY-side effects removed, late side free")
+    print("\nnested subsets: the largest 0% / 5% / 10% of |EARLY-side effect| removed, "
+          "late side free")
+    print("cut = the |s| threshold at or above which early-side genes were dropped")
     print("controls are replicate 1 vs replicate 2 of one strain in ONE experiment -- zero")
     print("evolution, so f95/f90 divide by the ANCESTOR's control in that same experiment")
     print("effects are per GENERATION (x6.64 for per-cycle); genes matched on gene_ID")
@@ -520,11 +546,11 @@ def main(argv=None):
     print("                 w = 1/(sigma_early^2 + sigma_late^2), the authors' own weight")
     print("                 (analyses/corr_bw_envs/). Compare Fig 1E, which ALSO drops every")
     print("                 gene with sigma_s > 0.3%; that filter is not applied here")
-    print("r_95 / r_90    = same, after removing the lowest 5% / 10% of EARLY-side effects only;")
+    print("r_95 / r_90    = same, after removing the largest 5% / 10% of |EARLY-side effect|;")
     print("                 the late side is never used to define the subset")
-    print("cut_95/cut_90  = the rank cut put back on the effect scale: the LARGEST (least")
-    print("                 negative) early-side s that was thrown away, so the kept subset is")
-    print("                 everything above it.  Per generation.  No cut_100: nothing is cut")
+    print("cut_95/cut_90  = the rank cut put back on the effect scale: the |s| threshold at or")
+    print("                 above which early-side genes were thrown away, so the kept subset")
+    print("                 is everything strictly inside it.  Per generation.  No cut_100")
     print("description    = (dilution factor)/(transfer interval), and what that does to the")
     print("                 growth cycle.  ALL FIVE experiments are serial dilutions -- none is")
     print("                 a chemostat.  'full cycle' = carbon runs out and the culture sits in")

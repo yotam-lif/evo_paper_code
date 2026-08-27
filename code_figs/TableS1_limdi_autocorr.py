@@ -47,10 +47,10 @@ Genes are matched on the metadata row index of the .npy fitness matrices.
     paper's central finding that the landscape is largely conserved.  Matching on the row
     index of the .npy matrices is exact and gives r ~ 0.85-0.9.
 
-THE LETHAL TAIL DOMINATES r, which is why the table reports more than one subset.  The 3.7% of
-genes with |s| > 0.3 carry 71% of the total DFE variance, and a knockout lethal in the ancestor is
-still lethal at 50K, so the full-range r is largely a statement about essential genes rather than
-about the landscape.  Earlier versions of this table dealt with that by cutting both sides at
+THE LARGE-EFFECT TAIL DOMINATES r, which is why the table reports more than one subset.  The 3.7%
+of genes with |s| > 0.3 carry 71% of the total DFE variance, and a knockout lethal in the ancestor
+is still lethal at 50K, so the full-range r is largely a statement about essential genes rather
+than about the landscape.  Earlier versions of this table dealt with that by cutting both sides at
 Couce's ``s > -0.3`` essentiality threshold and reporting the disattenuated result as the primary
 number.  That column is gone: cutting the LATE side conditions on the outcome being predicted (see
 ANCESTOR-DEFINED NESTED SUBSETS below), which is the wrong thing to do to a scrambling
@@ -123,20 +123,74 @@ Read ``r_100_w`` against the controls in this table only.  The weights differ ro
 even less comparable across rows than r_100; the unweighted ladder remains the table's primary
 result.
 
+SIMULATED COLUMNS (``r_*_sim_latent`` and ``r_*_sim_noisy``), evolved rows only.  What the
+adaptive-walk model predicts for the same three subsets, from the walk caches written by
+``code_tmp/poster_fig5_limdi_noise.py`` under the SAME |s| subset rule as the measured columns
+beside them.  Each transition has its own cache: 500 SSWM walks in a heavy-tailed (radial
+beta-prime) FGM fitted to that row's own founder -- REL606 or REL607, from
+``data/fig3_fgm_fits.json`` -- with a probe library of the same size as the matched gene set.
+
+  r_*_sim_latent  the model's own effects, no measurement error anywhere
+  r_*_sim_noisy   the same walks re-measured with rank-matched published per-gene errors:
+                  each simulated mutation is assigned the error of the empirical gene at its own
+                  effect rank, drawn once per replicate for the ancestor and fresh at every step
+                  for the endpoint.  This is what the measured columns should be compared with.
+
+WHERE ALONG THE WALK THEY ARE READ (``sim_t``).  At the PEAK -- each walk at its own last step,
+where no beneficial mutation is left.  This is not a choice between equals.  Every Limdi row is a
+0 -> 50K comparison carrying 70 to 2,600 fixed mutations, while an SSWM walk in these fitted
+landscapes exhausts its beneficial mutations after a median of about 19, so there is no step at
+which the model and the experiment carry the same number of substitutions and a fixed-``t`` read
+would be an arbitrary point on the way there.  The plateau is what the model has to say about a
+background that has finished adapting, which is the regime all twelve rows are in.  It is also the
+only summary that uses all 500 walks: this driver writes NaN past a walk's terminal step, so a
+fixed-time median past ~19 runs over a shrinking and increasingly atypical set of survivors.
+``sim_walk_len`` reports the median walk length so the reader can see how far that plateau is.
+
+    THE SIX ROWS SHARING A FOUNDER SHARE ALMOST THE WHOLE SIMULATION, and the columns show it:
+    every REL606 row lands within 0.002 of the others at ``r_100_sim_latent`` and every REL607
+    row within 0.001.  That is not a coincidence to be read as agreement -- those six walks are
+    the same landscape, the same fitted parameters and the same seed stream, differing only in
+    the probe-library size (the matched gene count, which varies by a few percent) and, for the
+    noisy column, in which clone's published errors are assigned.  The model has no per-population
+    input beyond that; it does not know that Ara-1 is a mutator and Ara+2 is not.  So the simulated
+    columns are one prediction per founder against six measurements, not twelve independent
+    predictions, and the spread across the measured rows is the thing being explained rather than
+    something the simulation reproduces.  The noisy column does move a little between clones,
+    because the error profiles genuinely differ -- Ara+4, the clone Limdi et al. flag for poor
+    replicates, has the largest errors and the lowest simulated value of its group.
+
+Control rows carry no simulated columns.  A green -> red pair is one library against itself with
+nothing evolving between the two channels, so there is no walk to run.
+
     data/TableS1_limdi_autocorr.csv
-    columns: dataset, transition, kind, n_fixed_mut, n_100, r_100, r_100_null, r_100_w,
-             n_95, cut_95, r_95, r_95_null, n_90, cut_90, r_90, r_90_null, excluded
+    columns: dataset, transition, kind, n_fixed_mut,
+             n_100, r_100, r_100_null, r_100_sim_latent, r_100_sim_noisy, r_100_w,
+             n_95, cut_95, r_95, r_95_null, r_95_sim_latent, r_95_sim_noisy,
+             n_90, cut_90, r_90, r_90_null, r_90_sim_latent, r_90_sim_noisy,
+             sim_t, sim_walks, sim_walk_len, excluded
 
 ANCESTOR-DEFINED NESTED SUBSETS (the ``r_100 / r_95 / r_90`` columns).  The autocorrelation r
 measures how much of the DFE is *preserved*; scrambling is its complement, roughly 1 - r.
-Because r is a Pearson correlation it is dominated by the points farthest from the origin -- the
-conserved deleterious tail -- so where the tail is cut changes r a great deal, and reporting one
-cut hides that.  Each row therefore carries r on three nested subsets, obtained by removing
-exactly 0%, 5% and 10% of the most deleterious effects:
+Because r is a Pearson correlation it is dominated by the points farthest from the origin, so
+where the subset is cut changes r a great deal, and reporting one cut hides that.  Each row
+therefore carries r on three nested subsets, obtained by removing exactly 0%, 5% and 10% of the
+LARGEST-MAGNITUDE ancestor effects:
 
-  r_100   every matched pair, nothing removed (the lethal tail included)
-  r_95    the lowest 5% of ANCESTOR effects removed   (``cut_95`` = largest excluded effect)
-  r_90    the lowest 10% of ANCESTOR effects removed  (``cut_90`` likewise)
+  r_100   every matched pair, nothing removed (the large-effect tail included)
+  r_95    the largest 5% of |ANCESTOR effect| removed  (``cut_95`` = the |s| threshold)
+  r_90    the largest 10% removed                      (``cut_90`` likewise)
+
+    RANKED ON |s|, NOT ON s.  Earlier versions of this table ranked on the signed effect and
+    dropped the most deleterious fraction, so the retained subset was one-sided: it kept the whole
+    beneficial tail while trimming only the deleterious one, and the two rungs therefore differed
+    in what kind of mutation they contained as well as in how many.  Ranking on |s| removes the
+    largest effects of EITHER sign, which leaves a subset symmetric about zero and makes "r_90" a
+    statement about the near-neutral bulk rather than about the beneficial tail plus most of the
+    bulk.  It is also the rule ``cmn/cmn_scatter.py`` applies in fig1 and figs S1-S4 and the rule
+    the walk caches behind the simulated columns are generated under, so a measured number, its
+    scatter panel and its simulated counterpart now all mean the same thing.  Both effects are
+    large in this panel: the ten retained evolved rows move by roughly -0.03 to -0.08 at r_90.
 
 This is the exclusion rule of the poster figure (``code_tmp/poster_fig1.py``, panels C-D), here
 applied to every transition.  Two properties are why it replaced the fixed two-sided cutoffs the
@@ -149,31 +203,32 @@ table used to report:
     of the covariance, and dropping them takes r from 0.296 down to 0.223.  Those genes ARE the
     change being measured, so conditioning them away is exactly wrong here.  This is the same
     trap as in the tail table below, mirrored: there two-sided conditioning hides essential
-    knockouts that became dispensable, here it hides neutral ones that became costly.
+    knockouts that became dispensable, here it hides neutral ones that became costly.  Note this
+    survives the move to |s|: what is forbidden is using the LATE effect, not using both signs of
+    the early one.
   * Removing a fixed FRACTION by rank keeps the subsets nested (90% inside 95% inside 100%) and
     the sample sizes equal across rows, so r_90 of one population is comparable to r_90 of
     another and of the control, which fixed absolute cutoffs do not guarantee.
 
-Reading down the ladder: the high full-range r is carried by the preserved tail, and stripping it
-exposes the scrambling in the near-neutral bulk.  Removing a tenth of the genes takes the ten
-RETAINED evolved Limdi rows from r_100 ~ 0.82-0.91 to r_90 ~ 0.13-0.34.  The two flagged
-populations start lower and fall further still -- Ara+4 0.729 -> 0.129 and Ara-2 0.532 -> -0.081
--- which is the measurement problem the source paper excluded them for, not extra scrambling.
-Compare r only within the same retained fraction; r is not comparable across ranges.
+Reading down the ladder: the high full-range r is carried by the preserved large-effect tail, and
+stripping it exposes the scrambling in the near-neutral bulk.  Removing a tenth of the genes takes
+the ten RETAINED evolved Limdi rows from r_100 ~ 0.82-0.91 down into the low hundredths, and the
+two flagged populations start lower and fall further still -- which is the measurement problem the
+source paper excluded them for, not extra scrambling.  Compare r only within the same retained
+fraction; r is not comparable across ranges.
 
-    A percentile is not a fixed value of s, so ``cut_95`` and ``cut_90`` are reported for every
-    row.  Across the twelve EVOLVED rows they barely move -- the 5% quantile of the ancestor sits
-    at s = -0.233 to -0.286 and the 10% quantile at s = -0.071 to -0.098 -- which is unsurprising,
-    since all twelve rank on one of only two founders.  So those subsets are near-identical in
-    absolute terms as well as in size, and r_90 really is row-to-row comparable among them.
+    A percentile is not a fixed value of |s|, so ``cut_95`` and ``cut_90`` are reported for every
+    row: each is the |s| ABOVE WHICH genes were dropped.  Across the twelve EVOLVED rows they
+    barely move, which is unsurprising, since all twelve rank on one of only two founders.  So
+    those subsets are near-identical in absolute terms as well as in size, and r_90 really is
+    row-to-row comparable among them.
 
     The green/red CONTROL rows are the exception and must not be read that way.  Each ranks on its
     own library's green channel, and a single unaveraged channel has both more noise and a
-    library-specific tail, so their cuts spread over s = -0.072 to -0.402 (5%) and -0.029 to
-    -0.282 (10%).  Ara-2 sits at the shallow end and Ara+4 at the deep end.  Compare a control
-    with its own evolved row, which is what the per-strain pairing is for, and do not compare two
-    controls' raw r to each other.  The same caution applies to any library with a different
-    lethal fraction; see the note on the removed Couce rows above.
+    library-specific tail, so their cuts spread much more widely.  Compare a control with its own
+    evolved row, which is what the per-strain pairing is for, and do not compare two controls' raw
+    r to each other.  The same caution applies to any library with a different lethal fraction;
+    see the note on the removed Couce rows above.
 
 TAIL DECORRELATION.  The complementary question -- does the conserved tail *also* scramble? --
 has its own table, code_tmp/Table_tail_autocorr.py, because it must be conditioned differently:
@@ -202,26 +257,58 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_DIR = os.path.dirname(SCRIPT_DIR)
 if REPO_DIR not in sys.path:
     sys.path.insert(0, REPO_DIR)
-from cmn import cmn_exper  # noqa: E402  (shared experimental-data loaders + structure)
+from cmn import cmn_exper, cmn_walkcache  # noqa: E402  (shared loaders + walk-cache reader)
 from cmn.cmn_exper import (  # noqa: E402
     DATA_DIR, LIMDI_ANCESTORS, LIMDI_EVOLVED, LIMDI_PANEL,
 )
 
 OUT_CSV = os.path.join(DATA_DIR, "TableS1_limdi_autocorr.csv")
+WALK_DIR = os.path.join(DATA_DIR, "FGM_HEAVY_TAILED")
+# Tag of the walk runs written for this table.  Kept distinct from the caches Figure 4
+# reads so that regenerating one cannot silently move the other.
+WALK_TAG = "tbl"
 # Every r column is the poster-figure ladder: r on nested subsets defined by removing a fraction
 # of the ANCESTOR side only (see ANCESTOR-DEFINED NESTED SUBSETS in the docstring).  The earlier
 # ``n / autocorr / autocorr_corr`` block -- r at a fixed ``s > -0.3`` cut applied to BOTH sides,
 # plus its disattenuated value -- is gone: cutting the late side conditions on the outcome, and
 # with no fixed cut left there is no range where disattenuation is trustworthy.
 COLUMNS = ["dataset", "transition", "kind", "n_fixed_mut",
-           "n_100", "r_100", "r_100_null", "r_100_w",
-           "n_95", "cut_95", "r_95", "r_95_null",
-           "n_90", "cut_90", "r_90", "r_90_null", "excluded"]
+           "n_100", "r_100", "r_100_null", "r_100_sim_latent", "r_100_sim_noisy",
+           "r_100_w",
+           "n_95", "cut_95", "r_95", "r_95_null", "r_95_sim_latent", "r_95_sim_noisy",
+           "n_90", "cut_90", "r_90", "r_90_null", "r_90_sim_latent", "r_90_sim_noisy",
+           "sim_t", "sim_walks", "sim_walk_len", "excluded"]
 
-# Fractions of the EARLY (ancestor) side removed, lowest effect first, for the nested-subset
+# Fractions of the EARLY (ancestor) side removed, LARGEST |effect| first, for the nested-subset
 # ladder.  0.00 keeps every matched pair, so the subsets are nested: 90% inside 95% inside 100%.
 # Same rule and same fractions as code_tmp/poster_fig1.py, which shows two of these rows.
 TAIL_EXCLUSIONS = (0.00, 0.05, 0.10)
+# Rank on |s| and drop the largest, not on s dropping the most deleterious.  See RANKED ON |s|
+# in the docstring; the walk caches read for the simulated columns are built the same way, and
+# ``cmn_walkcache.require_mode`` refuses a cache that is not.
+EXCLUSION_MODE = "magnitude"
+
+
+def kept_indices(values, fraction):
+    """Indices surviving a ``fraction`` cut of the largest-|value| entries.
+
+    Ties at the threshold are broken by original order, which is what ``kind="stable"``
+    buys: the retained set is then a deterministic function of the input alone, so the
+    measured ladder and any simulation compared with it partition identically.
+    """
+    values = np.asarray(values, dtype=float)
+    order = np.argsort(np.abs(values), kind="stable")
+    return order[: values.size - int(np.floor(fraction * values.size))]
+
+
+def magnitude_cut(values, fraction):
+    """The |value| threshold at or above which entries were dropped; inf when none were."""
+    values = np.asarray(values, dtype=float)
+    removed = int(np.floor(fraction * values.size))
+    if removed == 0:
+        return np.inf
+    order = np.argsort(np.abs(values), kind="stable")
+    return float(np.abs(values[order[values.size - removed]]))
 
 # Forward, two-ended noise-only null.  A fixed seed plus a transition-specific stable hash makes
 # every row bit-for-bit reproducible while keeping its random stream independent of row order.
@@ -289,8 +376,9 @@ def noise_only_null_ladder(a, a_err, b, b_err, seed):
     inverse-variance weighted mean of the two observed measurements.  Each of
     ``NULL_SIMULATIONS`` simulations draws a new ancestor measurement around ``X_i`` using that
     gene's ancestor error and a new late measurement using its late error.  The 100/95/90 subsets
-    are then rebuilt from the SIMULATED ancestor, so the null includes noise in the endpoint used
-    for selection as well as noise in the endpoint being predicted.
+    are then rebuilt from the SIMULATED ancestor -- by |s|, exactly as the measured ladder does --
+    so the null includes noise in the endpoint used for selection as well as noise in the endpoint
+    being predicted.
 
     Returns the median simulated r and retained count for each fraction in ``TAIL_EXCLUSIONS``.
     """
@@ -313,10 +401,8 @@ def noise_only_null_ladder(a, a_err, b, b_err, seed):
     for simulation in range(NULL_SIMULATIONS):
         sim_a = shared_effect + rng.normal(size=n) * a_err
         sim_b = shared_effect + rng.normal(size=n) * b_err
-        order = np.argsort(sim_a, kind="stable")
         for column, frac in enumerate(TAIL_EXCLUSIONS):
-            n_removed = int(np.floor(frac * n))
-            kept = order[n_removed:]
+            kept = kept_indices(sim_a, frac)
             simulated_r[simulation, column], _ = pearson(sim_a[kept], sim_b[kept])
 
     medians = np.nanmedian(simulated_r, axis=0)
@@ -347,24 +433,23 @@ def inverse_variance_pearson(a, a_err, b, b_err):
 
 
 def ancestor_exclusion_ladder(a, a_err, b, b_err, null_seed):
-    """``r`` on nested subsets built by removing the lowest ANCESTOR effects.
+    """``r`` on nested subsets built by removing the largest-|ANCESTOR effect| pairs.
 
     For each fraction in ``TAIL_EXCLUSIONS`` the ``floor(frac * n)`` matched pairs with the
-    smallest EARLY-background effect are dropped and Pearson r is recomputed on what is left.
-    Only ``a`` enters the exclusion -- never ``b``, the side being predicted -- so the subsets do
-    not condition on the outcome, and because a fixed fraction is removed by rank they are nested
-    and equally sized across rows.  Returns one dict per fraction with the retained pair count,
-    the cutoff (the largest EXCLUDED ancestor effect; ``-inf`` when nothing is excluded) and r.
+    largest ``|EARLY-background effect|`` are dropped and Pearson r is recomputed on what is
+    left.  Only ``a`` enters the exclusion -- never ``b``, the side being predicted -- so the
+    subsets do not condition on the outcome, and because a fixed fraction is removed by rank
+    they are nested and equally sized across rows.  Returns one dict per fraction with the
+    retained pair count, the ``|s|`` threshold at or above which pairs were dropped (``inf``
+    when nothing is excluded) and r.
     """
     a, a_err, b, b_err = (np.asarray(v, dtype=float) for v in (a, a_err, b, b_err))
     m = np.isfinite(a) & np.isfinite(b)
     a, a_err, b, b_err = a[m], a_err[m], b[m], b_err[m]
-    order = np.argsort(a, kind="stable")
     null_results = noise_only_null_ladder(a, a_err, b, b_err, null_seed)
     ladder = []
     for null_column, frac in enumerate(TAIL_EXCLUSIONS):
-        n_removed = int(np.floor(frac * a.size))
-        kept = order[n_removed:]
+        kept = kept_indices(a, frac)
         r, n = pearson(a[kept], b[kept])
         r_null, n_null = null_results[null_column]
         ladder.append({
@@ -374,9 +459,39 @@ def ancestor_exclusion_ladder(a, a_err, b, b_err, null_seed):
             "r": r,
             "r_null": r_null,
             "n_null": n_null,
-            "cut": -np.inf if n_removed == 0 else float(a[order[n_removed - 1]]),
+            "cut": magnitude_cut(a, frac),
         })
     return ladder
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Simulated ladders -- what the fitted adaptive walk predicts for the same subsets
+# ══════════════════════════════════════════════════════════════════════════════
+def safe_label(value):
+    """The population spelling ``poster_fig5_limdi_noise.safe_label`` puts in a filename."""
+    return value.replace("+", "_plus_").replace("-", "_minus_")
+
+
+def simulated_ladder(ancestor, evolved):
+    """Median latent and noisy simulated r per subset, read at the walk's own peak.
+
+    Returns ``None`` when this transition has no walk cache, so the table still builds on a
+    machine where the walks have not been run; a missing cache leaves the simulated columns
+    empty rather than failing the whole run.  A cache that exists but was simulated under a
+    different subset rule is a hard error instead -- silently reporting a signed-rule
+    simulation beside an |s|-rule measurement is the one failure that would not look wrong.
+    """
+    pattern = (f"poster_fig5_limdi_{safe_label(ancestor)}_to_{safe_label(evolved)}_"
+               f"without_errors_rank_noise_k1_w*_e*_m*_{WALK_TAG}.npz")
+    try:
+        path = cmn_walkcache.locate(WALK_DIR, pattern)
+    except FileNotFoundError:
+        return None
+    cache = cmn_walkcache.read(path)
+    cmn_walkcache.require_mode(cache, EXCLUSION_MODE, TAIL_EXCLUSIONS)
+    # time=None reads each walk at its own terminal step -- see WHERE ALONG THE WALK in the
+    # docstring for why a fixed t is not available for a 0 -> 50K row.
+    return cmn_walkcache.ladder(cache, time=None)
 
 
 def make_row(dataset, transition, pairs, population, kind):
@@ -403,13 +518,32 @@ def make_row(dataset, transition, pairs, population, kind):
         "excluded": LIMDI_EXCLUDED.get(population, ""),
         "r_100_w": r_w,
         "n_100_w": n_w,
+        "sim_t": "",
+        "sim_walks": "",
+        "sim_walk_len": "",
     }
-    for step in ancestor_exclusion_ladder(a, a_err, b, b_err, _null_seed(transition)):
+    steps = ancestor_exclusion_ladder(a, a_err, b, b_err, _null_seed(transition))
+    for step in steps:
         row[f"r_{step['pct']}"] = step["r"]
         row[f"r_{step['pct']}_null"] = step["r_null"]
         row[f"n_{step['pct']}"] = step["n"]
         row[f"n_{step['pct']}_null"] = step["n_null"]
         row[f"cut_{step['pct']}"] = step["cut"]
+        row[f"r_{step['pct']}_sim_latent"] = np.nan
+        row[f"r_{step['pct']}_sim_noisy"] = np.nan
+
+    # Evolved rows only; a green -> red control has nothing evolving between its two channels.
+    simulated = simulated_ladder(*transition.split(" -> ")) if kind == "evolved" else None
+    if simulated is not None:
+        if len(simulated["latent"]) != len(steps):
+            raise RuntimeError(f"{transition}: cache has {len(simulated['latent'])} subsets, "
+                               f"table has {len(steps)}")
+        for step, latent, noisy in zip(steps, simulated["latent"], simulated["noisy"]):
+            row[f"r_{step['pct']}_sim_latent"] = float(latent)
+            row[f"r_{step['pct']}_sim_noisy"] = float(noisy)
+        row["sim_t"] = "peak"
+        row["sim_walks"] = simulated["total_walks"]
+        row["sim_walk_len"] = simulated["walk_length_median"]
     return row
 
 
@@ -473,21 +607,28 @@ def build_rows():
     return rows
 
 
+def _number(value):
+    """Format a float for the CSV, leaving an absent simulated value as an empty cell."""
+    return "" if value is None or not np.isfinite(value) else f"{value:.4g}"
+
+
 def write_table(rows, out_csv):
     os.makedirs(os.path.dirname(os.path.abspath(out_csv)), exist_ok=True)
     with open(out_csv, "w", newline="") as fh:
         writer = csv.writer(fh)
         writer.writerow(COLUMNS)
         for row in rows:
-            writer.writerow([row["dataset"], row["transition"], row["kind"], row["n_fixed_mut"],
-                             row["n_100"], f"{row['r_100']:.4g}",
-                             f"{row['r_100_null']:.4g}",
-                             f"{row['r_100_w']:.4g}",
-                             row["n_95"], f"{row['cut_95']:.4g}", f"{row['r_95']:.4g}",
-                             f"{row['r_95_null']:.4g}",
-                             row["n_90"], f"{row['cut_90']:.4g}", f"{row['r_90']:.4g}",
-                             f"{row['r_90_null']:.4g}",
-                             row["excluded"]])
+            record = [row["dataset"], row["transition"], row["kind"], row["n_fixed_mut"],
+                      row["n_100"], _number(row["r_100"]), _number(row["r_100_null"]),
+                      _number(row["r_100_sim_latent"]), _number(row["r_100_sim_noisy"]),
+                      _number(row["r_100_w"])]
+            for pct in (95, 90):
+                record += [row[f"n_{pct}"], _number(row[f"cut_{pct}"]),
+                           _number(row[f"r_{pct}"]), _number(row[f"r_{pct}_null"]),
+                           _number(row[f"r_{pct}_sim_latent"]),
+                           _number(row[f"r_{pct}_sim_noisy"])]
+            record += [row["sim_t"], row["sim_walks"], row["sim_walk_len"], row["excluded"]]
+            writer.writerow(record)
 
 
 def parse_args(argv):
@@ -502,26 +643,41 @@ def main(argv=None):
     write_table(rows, args.out)
 
     # ---- the poster-figure ladder: nested subsets defined from the ancestor side only --------
-    print("\nnested subsets: the lowest 0% / 5% / 10% of ANCESTOR effects removed, evolved side free")
-    print("cut = largest excluded ancestor effect")
+    print("\nnested subsets: the largest 0% / 5% / 10% of |ANCESTOR effect| removed, "
+          "evolved side free")
+    print("cut = the |s| threshold at or above which ancestor genes were dropped")
+    print("sim = the fitted adaptive walk read at its own peak; latent, then rank-matched noisy")
     print("rows: 14 green/red technical controls (one per library)")
     print("      + 12 evolved, each printed directly under its own 50K green/red control")
+
+    def cell(value, width=8):
+        return f"{value:>{width}.3f}" if np.isfinite(value) else f"{'-':>{width}}"
+
     header = (f"{'dataset':<15}{'transition':<20}{'kind':<9}{'n_fix':>6}"
-              f"{'n_100':>7}{'r_100':>8}{'null':>8}{'r_100_w':>9}"
-              f"{'n_95':>7}{'cut_95':>8}{'r_95':>8}{'null':>8}"
-              f"{'n_90':>7}{'cut_90':>8}{'r_90':>8}{'null':>8}")
+              f"{'n_100':>7}{'r_100':>8}{'null':>8}{'sim':>8}{'simN':>8}{'r_100_w':>9}"
+              f"{'n_95':>7}{'cut_95':>8}{'r_95':>8}{'null':>8}{'sim':>8}{'simN':>8}"
+              f"{'n_90':>7}{'cut_90':>8}{'r_90':>8}{'null':>8}{'sim':>8}{'simN':>8}")
     print(header)
     print("-" * len(header))
     for row in rows:
-        print(f"{row['dataset']:<15}{row['transition']:<20}{row['kind']:<9}"
-              f"{row['n_fixed_mut']:>6}"
-              f"{row['n_100']:>7}{row['r_100']:>8.3f}{row['r_100_null']:>8.3f}"
-              f"{row['r_100_w']:>9.3f}"
-              f"{row['n_95']:>7}{row['cut_95']:>8.3f}{row['r_95']:>8.3f}"
-              f"{row['r_95_null']:>8.3f}"
-              f"{row['n_90']:>7}{row['cut_90']:>8.3f}{row['r_90']:>8.3f}"
-              f"{row['r_90_null']:>8.3f}"
-              f"   {row['excluded']}")
+        line = (f"{row['dataset']:<15}{row['transition']:<20}{row['kind']:<9}"
+                f"{row['n_fixed_mut']:>6}"
+                f"{row['n_100']:>7}{cell(row['r_100'])}{cell(row['r_100_null'])}"
+                f"{cell(row['r_100_sim_latent'])}{cell(row['r_100_sim_noisy'])}"
+                f"{cell(row['r_100_w'], 9)}")
+        for pct in (95, 90):
+            line += (f"{row[f'n_{pct}']:>7}{cell(row[f'cut_{pct}'])}{cell(row[f'r_{pct}'])}"
+                     f"{cell(row[f'r_{pct}_null'])}{cell(row[f'r_{pct}_sim_latent'])}"
+                     f"{cell(row[f'r_{pct}_sim_noisy'])}")
+        print(line + f"   {row['excluded']}")
+
+    without_walks = [r["transition"] for r in rows
+                     if r["kind"] == "evolved" and not np.isfinite(r["r_100_sim_latent"])]
+    if without_walks:
+        print("\nNo walk cache found for: " + ", ".join(without_walks))
+        print("  run code_tmp/poster_fig5_limdi_noise.py with "
+              f"--exclusions {' '.join(str(f) for f in TAIL_EXCLUSIONS)} "
+              f"--exclusion-mode {EXCLUSION_MODE} --tag {WALK_TAG}")
 
     short = [r for r in rows if r["n_100_w"] < r["n_100"]]
     if short:
@@ -572,7 +728,23 @@ def main(argv=None):
     # gene to stay deleterious at 50K discards the initially-essential knockouts that became
     # dispensable, which are the tail's strongest decorrelation.
 
-    print("\nr_100          = Pearson r over every matched pair (the lethal tail included)")
+    # How far the model's plateau is from the measurement it is supposed to explain.
+    simulated = [r for r in rows
+                 if r["kind"] == "evolved" and np.isfinite(r["r_100_sim_noisy"])]
+    if simulated:
+        print("\nmeasured against the simulated NOISY plateau (the like-for-like comparison):")
+        hdr = (f"  {'transition':<20}" + "".join(
+            f"{f'r_{pct}':>9}{'sim':>9}{'diff':>9}" for pct in (100, 95, 90)))
+        print(hdr)
+        print("  " + "-" * (len(hdr) - 2))
+        for row in simulated:
+            line = f"  {row['transition']:<20}"
+            for pct in (100, 95, 90):
+                measured, sim = row[f"r_{pct}"], row[f"r_{pct}_sim_noisy"]
+                line += f"{measured:>9.3f}{sim:>9.3f}{measured - sim:>+9.3f}"
+            print(line + f"   {row['excluded']}")
+
+    print("\nr_100          = Pearson r over every matched pair (the large-effect tail included)")
     print(f"r_*_null       = median of {NULL_SIMULATIONS} forward simulations under Y_A = X + e_A and")
     print("                 Y_E = X + e_E, using independent published per-gene errors on BOTH sides")
     print("                 and rebuilding the ancestor-ranked subset inside every simulation")
@@ -581,10 +753,14 @@ def main(argv=None):
     print("                 errors.  Not disattenuation: it demotes badly measured genes")
     print("                 rather than dividing the noise out.  Controls hold, evolved rows")
     print("                 fall; Ara-2 goes 0.879 -> 0.982 control against 0.532 -> 0.179")
-    print("r_95 / r_90    = same, after removing the lowest 5% / 10% of ANCESTOR effects only;")
+    print("r_*_sim_*      = the fitted heavy-tailed FGM adaptive walk on the same subsets,")
+    print("                 read at each walk's own peak; _latent has no measurement error and")
+    print("                 _noisy re-measures it with rank-matched published per-gene errors.")
+    print("                 Evolved rows only, and only where a walk cache exists")
+    print("r_95 / r_90    = same, after removing the largest 5% / 10% of |ANCESTOR effect| only;")
     print("                 the evolved side is never used to define the subset")
-    print("cut_95/cut_90  = largest ancestor effect excluded; a PERCENTILE, but within this")
-    print("                 panel it barely moves (-0.23..-0.29 and -0.07..-0.11)")
+    print("cut_95/cut_90  = the |s| threshold at or above which ancestor genes were dropped;")
+    print("                 a PERCENTILE, but within the evolved rows it barely moves")
     print("kind           = control (one library against itself) or evolved")
     print("own_r90        = that clone's OWN green/red control at 50K -- the reproducibility of")
     print("                 the very measurement the evolved row depends on")
