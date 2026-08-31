@@ -1,6 +1,6 @@
 r"""Per-clone version of fig1 for the 12 Limdi LTEE populations -- one figure per clone.
 
-Same three panels as ``code_figs/fig1_scrambling_exper_res.py``, with the Couce Ara+2
+Same three panels as ``code_figs/fig2_scrambling_exper_res.py``, with the Couce Ara+2
 timepoint pair (0K -> 2K, 2K -> 15K) replaced by an ancestor -> evolved pair from the Limdi
 TnSeq panel.  Each population's founder is its own ancestor: REL606 for the six Ara- lines
 and REL607 for the six Ara+ lines.  Twelve figures are written to ``out_tmp/``.

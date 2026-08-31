@@ -42,8 +42,8 @@ counterpart of row 1, which needs a nonlethal cut and window-clipped histograms 
 its deleterious tail is real where Couce's is not, lives in
 ``code_tmp/fig1_limdi_clones.py``.
 
-Run from anywhere:  python code_figs/fig1_scrambling_exper_res.py
-Output:             figs_paper/fig1_scrambling_exper_res.pdf
+Run from anywhere:  python code_figs/fig2_scrambling_exper_res.py
+Output:             figs_paper/fig2_scrambling_exper_res.pdf
 """
 
 import os
@@ -335,7 +335,7 @@ def main():
             ax.tick_params(axis='both', which='minor', length=5, width=1.6)
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    out_path = os.path.join(OUT_DIR, "fig1_scrambling_exper_res.pdf")
+    out_path = os.path.join(OUT_DIR, "fig2_scrambling_exper_res.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches='tight')
     plt.close(fig)
 

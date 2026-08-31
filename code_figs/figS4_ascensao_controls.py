@@ -1,11 +1,11 @@
-r"""Figure S3: within-experiment Ascensao controls -- fig1 D in a second dataset.
+r"""Figure S4: within-experiment Ascensao controls -- fig1 D in a second dataset.
 
 Fig1 D is an isogenic control built from the Limdi assay's two reference channels.  The
 Ascensao release supports the same control by a different route: each strain in each
 experiment was fit twice, once per biological replicate, and replicate 1 against replicate 2
 is one genotype, one library and one condition with nothing between the two numbers but assay
 noise.  No evolution, so whatever decorrelation these panels show is measurement error, and it
-is what calibrates the ancestor-to-evolved panels of fig S4.
+is what calibrates the ancestor-to-evolved panels of fig S3.
 
     A  REL606, acetate (GHI)     B  REL606, DM27.8 (MNO)
     C  S, DM25 exp. (PQT)        D  S, DM27.8 (MNO)
@@ -25,8 +25,8 @@ Rows are keyed on ``gene_ID``, never on row position -- gene sets differ substan
 strains -- so the two indices are intersected per panel.  Nothing is clipped: each panel's
 limits are the envelope of its own data, which is why the four differ.
 
-Run from anywhere:  python code_figs/figS3_ascensao_controls.py
-Output:             figs_paper/figS3_ascensao_controls.pdf
+Run from anywhere:  python code_figs/figS4_ascensao_controls.py
+Output:             figs_paper/figS4_ascensao_controls.pdf
 """
 
 import os
@@ -91,7 +91,7 @@ def main():
         inset_limits=ASENCAO_INSET_LIMITS)
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    out_path = os.path.join(OUT_DIR, "figS3_ascensao_controls.pdf")
+    out_path = os.path.join(OUT_DIR, "figS4_ascensao_controls.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     plt.close(fig)
 

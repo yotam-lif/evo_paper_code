@@ -1,4 +1,4 @@
-r"""Figure S2: ancestor-to-evolved Limdi scatters -- four replicates of fig1 E.
+r"""Figure S1: ancestor-to-evolved Limdi scatters -- four replicates of fig1 E.
 
 Fig1 E pairs each knockout's effect in the REL607 ancestor against its effect in the 50K
 ARA+2 clone.  This figure repeats that comparison for four further LTEE populations, two from
@@ -10,7 +10,7 @@ each ancestor, so the collapse of the correlation is not read off a single linea
 Titles name the evolved population only, matching fig1 E.  The ancestor on the x axis is
 therefore NOT the same in both rows -- REL607 founds the Ara+ populations and REL606 the Ara- --
 so the panel key above is the record of which, and the caption should say so.  Read against fig
-S1, whose panels are the same libraries measured twice with no evolution in between, the drop
+S2, whose panels are the same libraries measured twice with no evolution in between, the drop
 from r ~ 0.95-0.98 there to what these panels show is epistasis rather than assay noise.
 
 Panels are drawn by the same code as fig1 row 2 (``cmn/cmn_scatter.py``): the raw cloud split
@@ -28,8 +28,8 @@ Nothing is clipped: each panel is on the envelope of its own data, with x and y 
 envelope so the identity line is the panel diagonal.  The four therefore differ slightly --
 ARA+6 alone carries a knockout at s = +0.125.
 
-Run from anywhere:  python code_figs/figS2_limdi_evolved.py
-Output:             figs_paper/figS2_limdi_evolved.pdf
+Run from anywhere:  python code_figs/figS1_limdi_evolved.py
+Output:             figs_paper/figS1_limdi_evolved.pdf
 """
 
 import os
@@ -85,7 +85,7 @@ def main():
     ladders = cmn_scatter.draw_panel_grid(axes, panels)
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    out_path = os.path.join(OUT_DIR, "figS2_limdi_evolved.pdf")
+    out_path = os.path.join(OUT_DIR, "figS1_limdi_evolved.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     plt.close(fig)
 

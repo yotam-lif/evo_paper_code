@@ -1,4 +1,4 @@
-r"""Figure S4: ancestor-to-evolved Ascensao scatters -- fig1 E in a second dataset.
+r"""Figure S3: ancestor-to-evolved Ascensao scatters -- fig1 E in a second dataset.
 
 Each panel pairs a knockout's effect in the REL606 ancestor against its effect in one of the
 two diversified Ara-2 ecotypes, both measured in the same condition, so the only difference
@@ -8,7 +8,7 @@ between the two axes is 6.5K generations of evolution:
     C  REL606 -> L, DM27.8 (MNO)      D  REL606 -> L, DM25 exp. (PQT)
 
 Both evolved ecotypes appear, each in two conditions, so the loss of correlation is not a
-property of one lineage or one medium.  Read against fig S3, whose panels are single strains
+property of one lineage or one medium.  Read against fig S4, whose panels are single strains
 fit twice in the same experiment with no evolution in between, the drop from r ~ 0.90-0.95
 there to what these panels show is epistasis rather than assay noise.  The experiment code in
 each title identifies the growth regime; the five monoculture regimes are documented in
@@ -25,8 +25,8 @@ panel.  Nothing is clipped: each panel's limits are the envelope of its own data
 the four differ.  D is the widest because REL606 carries a single, tightly measured knockout at
 s = +0.50 (ECB_01645, sigma = 0.0014) that reads +0.004 in L.
 
-Run from anywhere:  python code_figs/figS4_ascensao_evolved.py
-Output:             figs_paper/figS4_ascensao_evolved.pdf
+Run from anywhere:  python code_figs/figS3_ascensao_evolved.py
+Output:             figs_paper/figS3_ascensao_evolved.pdf
 """
 
 import os
@@ -90,7 +90,7 @@ def main():
         inset_limits=ASENCAO_INSET_LIMITS)
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    out_path = os.path.join(OUT_DIR, "figS4_ascensao_evolved.pdf")
+    out_path = os.path.join(OUT_DIR, "figS3_ascensao_evolved.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     plt.close(fig)
 

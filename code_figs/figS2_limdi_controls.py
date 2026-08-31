@@ -1,11 +1,11 @@
-r"""Figure S1: isogenic Limdi controls -- four replicates of fig1 D.
+r"""Figure S2: isogenic Limdi controls -- four replicates of fig1 D.
 
 Fig1 D shows one paired-effect scatter of a Limdi library measured twice, green- against
 red-reference, in a single background with zero evolution between the two numbers.  Whatever
 decorrelation it shows is therefore assay noise, not epistasis, and it is what calibrates the
 evolved panels beside it.  This figure repeats that control in four independent backgrounds --
-the REL606 ancestor and three 50K LTEE clones -- so the noise floor is not read off a single
-library.
+the REL606 ancestor and three 50K LTEE clones -- so the noise floor behind fig S1 is not read
+off a single library.
 
     A  REL606      B  ARA+2      C  ARA-3      D  ARA-6
 
@@ -24,8 +24,8 @@ gene absent from both at once, never from just one -- so no intersection is need
 Nothing is clipped: each panel is on the envelope of its own data, with x and y sharing that
 envelope so the identity line is the panel diagonal.
 
-Run from anywhere:  python code_figs/figS1_limdi_controls.py
-Output:             figs_paper/figS1_limdi_controls.pdf
+Run from anywhere:  python code_figs/figS2_limdi_controls.py
+Output:             figs_paper/figS2_limdi_controls.pdf
 """
 
 import os
@@ -78,7 +78,7 @@ def main():
     ladders = cmn_scatter.draw_panel_grid(axes, panels)
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    out_path = os.path.join(OUT_DIR, "figS1_limdi_controls.pdf")
+    out_path = os.path.join(OUT_DIR, "figS2_limdi_controls.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     plt.close(fig)
 

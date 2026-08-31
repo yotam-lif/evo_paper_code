@@ -78,7 +78,7 @@ def main():
 
     out_dir = os.path.join(REPO_DIR, "figs_paper")
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "fig2_scrambling_explanation.pdf")
+    out_path = os.path.join(out_dir, "fig3_scrambling_explanation.pdf")
     fig.savefig(out_path, format="pdf", bbox_inches="tight")
     print(f"Saved: {out_path}")
 
