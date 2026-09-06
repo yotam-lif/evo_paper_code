@@ -3,8 +3,8 @@ r"""Figure 4: ancestral DFEs and the autocorrelation of the walks that leave the
 Six panels on a 2 x 3 grid.  Every COLUMN is one ancestor: its whole measured DFE on top,
 and below it the DFE autocorrelation along an adaptive walk started from that same ancestor.
 
-    A  REL606        -- Limdi ancestor, 3488 genes above the cut.
-    B  REL607        -- Limdi ancestor, 3497 genes above the cut.
+    A  REL606 (LB)   -- Limdi ancestor, 3488 genes above the cut.
+    B  REL607 (LB)   -- Limdi ancestor, 3497 genes above the cut.
     C  REL607 (DM25) -- Couce 0K ancestor, 13258 segments above the cut.
 
     D  ARA-1  (LB)   -- Limdi REL606 -> Ara-1 at 50K, assayed in LB.
@@ -92,10 +92,12 @@ correlations.
 
 Where the dots sit
 ------------------
-Panel F's dots sit at 22 fixed mutations, the count the 0K -> 15K walk cache was built
-around.  (The main text quotes roughly 8 fixed mutations for the 0-2K interval and 22 for
-2K-15K, so this is the later interval rather than the cumulative total; keep the two
-consistent when the caption is written.)
+Panel F carries two sets of dots.  The right-hand set sits at 22 fixed mutations, the count
+the 0K -> 15K walk cache was built around; the left-hand set at 9 is the short 0K -> 2K leg.
+(The main text quotes roughly 8 fixed mutations for the 0-2K interval and 22 for 2K-15K, so
+the right-hand dots are the later interval rather than the cumulative total; keep the two
+consistent when the caption is written.)  The t = 9 correlations are stated in ``PANELS``
+rather than recomputed here -- see the comment on that marker.
 
 Panels D and E instead put their dots at the right-hand edge, labelled with the substitution
 count they really correspond to, so that their position is not read as a claim about how many
@@ -215,7 +217,7 @@ DATASETS = {
     "limdi_REL607": {
         "title": "Limdi REL607 ancestor",
         "load": limdi_effects,
-        "panel_title": "REL607",
+        "panel_title": "REL607 (LB)",
         "xlim": (-0.52, 0.106),
         "fine_bin_width": 0.0025,
         "min_count": 8,
@@ -233,7 +235,7 @@ DATASETS = {
     "limdi_REL606": {
         "title": "Limdi REL606 ancestor",
         "load": lambda: limdi_effects("REL606"),
-        "panel_title": "REL606",
+        "panel_title": "REL606 (LB)",
         "xlim": (-0.52, 0.106),
         "fine_bin_width": 0.0025,
         "min_count": 8,
@@ -634,8 +636,14 @@ PANELS = (
         "display_steps": 25,
         # Its cut is 2% where the two Limdi panels are 10%, so it needs its own colour key.
         "legend": "cuts",
-        # The fixed-mutation count the 0K -> 15K cache was built around.
-        "markers": ({"time": 22, "pair": ("couce", "0K", "15K")},),
+        # The fixed-mutation count the 0K -> 15K cache was built around, plus the
+        # shorter 0K -> 2K leg.  The second marker's correlations are supplied
+        # directly rather than recomputed from the segment tables: they come from
+        # the same ranked-|s| ladder, so they carry the same meaning as the ones
+        # ``empirical_ladder`` returns, and they are keyed by retained fraction to
+        # match this panel's cuts (r100 and r98).
+        "markers": ({"time": 22, "pair": ("couce", "0K", "15K")},
+                    {"time": 9, "ladder": {"r100": 0.48, "r98": 0.25}}),
     },
 )
 
@@ -707,6 +715,18 @@ def empirical_ladder(spec, exclusions):
         ladder[cut_key(excluded)] = float(
             np.corrcoef(ancestor[kept], evolved[kept])[0, 1])
     return ladder
+
+
+def marker_ladder(marker, exclusions):
+    """One marker's ``{cut key: r}``, either stated in the panel or measured here."""
+    if "ladder" in marker:
+        missing = [cut_key(excluded) for excluded in exclusions
+                   if cut_key(excluded) not in marker["ladder"]]
+        if missing:
+            raise SystemExit(f"Marker at t={marker['time']} has no value for "
+                             + ", ".join(missing))
+        return marker["ladder"]
+    return empirical_ladder(marker["pair"], exclusions)
 
 
 def cut_key(excluded):
@@ -976,7 +996,7 @@ def build_autocorr_row(axes):
     for index, (axis, panel) in enumerate(zip(axes, PANELS)):
         curves = load_curves(panel["cache"], panel["display_steps"], panel["cuts"])
         exclusions = tuple(excluded for _, excluded in panel["cuts"])
-        ladders = [(marker["time"], empirical_ladder(marker["pair"], exclusions),
+        ladders = [(marker["time"], marker_ladder(marker, exclusions),
                     marker.get("note"))
                    for marker in panel["markers"]]
         last_time = int(curves["times"][-1])
@@ -984,7 +1004,7 @@ def build_autocorr_row(axes):
                     draw_autocorr_panel(axis, curves, ladders, last_time, panel["cuts"]))
         axis.set_title(panel["title"], pad=10)
         axis.set_xlabel("Fixed background mutations")
-        # The y axis is shared in value across the row, so it is named once, on D.
+        # One shared y axis across the row, so it is named and ticked once, on D.
         if index == 0:
             axis.set_ylabel("Pearson autocorrelation")
         axis.set_xlim(0, last_time)
@@ -992,9 +1012,14 @@ def build_autocorr_row(axes):
         axis.xaxis.set_major_locator(
             FixedLocator(list(range(0, last_time + 1, spacing))))
         style_axis(axis)
+        # After style_axis, not before: its set_ticks_position("left") puts the shared
+        # axis's labels back, exactly as it does in row 1.
+        if index != 0:
+            axis.tick_params(axis="y", labelleft=False)
 
         for (time, ladder, _), marker in zip(ladders, panel["markers"]):
-            print(f"{panel['title']} {'/'.join(marker['pair'])} at t={time}: measured "
+            source = "/".join(marker["pair"]) if "pair" in marker else "stated"
+            print(f"{panel['title']} {source} at t={time}: measured "
                   + ", ".join(f"{key}={value:+.3f}" for key, value in ladder.items())
                   + "   simulated observed "
                   + ", ".join(f"{value:+.3f}" for value in
@@ -1016,8 +1041,13 @@ def build_autocorr_row(axes):
         else:
             cut_legend(axis, panel["cuts"])
 
-    for axis in axes:
-        axis.set_ylim(min(-0.05, np.floor(20.0 * (floor - 0.02)) / 20.0), 1.04)
+    # A fixed [0, 1] frame: r = 1 is the value every curve starts at and r = 0 is no
+    # correlation left, so the row is read against the two ends of the scale rather than
+    # against whatever the lowest band happened to reach.  Anything that dips below zero is
+    # therefore cut off, which is worth saying out loud rather than leaving to the eye.
+    if floor < 0.0:
+        print(f"  note: lowest drawn value is {floor:+.3f}, clipped by the [0, 1] y limits")
+    axes[0].set_ylim(0.0, 1.0)
     return side_by_side
 
 
@@ -1036,19 +1066,22 @@ def place_side_legends(side_by_side):
 
 # ════════════════════════════════════ Assembly ════════════════════════════════════
 def build(payload, path):
-    figure = plt.figure(figsize=(17.6, 12.1))
-    # The rows are laid out separately because they share nothing: row 1 shares one log
-    # density axis across its three panels and suppresses two sets of tick labels, row 2
-    # gives each panel its own step range and keeps them.  Hence the wider wspace below.
+    figure = plt.figure(figsize=(15.0, 12.1))
+    # The rows are laid out separately -- each runs its own scale across its three panels,
+    # and row 2 gives each panel its own step range -- but with only one set of y tick
+    # labels per row they take the same wspace, so the columns line up down the figure.
     outer = figure.add_gridspec(2, 1, hspace=0.36, height_ratios=(1.0, 0.98))
     dfe_grid = outer[0].subgridspec(1, 3, wspace=0.13)
-    walk_grid = outer[1].subgridspec(1, 3, wspace=0.26)
+    walk_grid = outer[1].subgridspec(1, 3, wspace=0.13)
 
     dfe_axes = []
     for column in range(3):
         dfe_axes.append(figure.add_subplot(
             dfe_grid[0, column], sharey=dfe_axes[0] if dfe_axes else None))
-    walk_axes = [figure.add_subplot(walk_grid[0, column]) for column in range(3)]
+    walk_axes = []
+    for column in range(3):
+        walk_axes.append(figure.add_subplot(
+            walk_grid[0, column], sharey=walk_axes[0] if walk_axes else None))
 
     legend, blocks = build_dfe_row(dfe_axes, payload)
     side_by_side = build_autocorr_row(walk_axes)
@@ -1060,11 +1093,11 @@ def build(payload, path):
     place_side_legends(side_by_side)
 
     # Sit the letters above the frame, level with the titles, so all six share one offset
-    # from their panel -- A no longer has to dodge the 10^2 tick label.  Row 2 is pushed a
-    # little further left because every panel there keeps its y tick labels.
-    for axes, tags, offset in ((dfe_axes, "ABC", -0.075), (walk_axes, "DEF", -0.115)):
+    # from their panel -- A no longer has to dodge the 10^2 tick label, and D sits directly
+    # under A.
+    for axes, tags in ((dfe_axes, "ABC"), (walk_axes, "DEF")):
         for axis, tag in zip(axes, tags):
-            axis.text(offset, 1.035, tag, transform=axis.transAxes, ha="left",
+            axis.text(-0.075, 1.035, tag, transform=axis.transAxes, ha="left",
                       va="bottom", fontsize=18, fontweight="heavy")
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
